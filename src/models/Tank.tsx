@@ -67,9 +67,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       tankRef.current.position.y = position[1];
       tankRef.current.position.z = position[2];
 
-      // Apply initial rotation to face forward
-      tankRef.current.rotation.y = tankRotationRef.current;
-
       // Update initial position in the game state - only once at startup
       const initialPos: [number, number, number] = [
         tankRef.current.position.x,
@@ -78,12 +75,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ];
       positionRef.current = initialPos;
       updatePlayerPosition(initialPos);
-      debug.log(
-        "Tank initialized at position:",
-        initialPos,
-        "with rotation:",
-        tankRotationRef.current
-      );
+      debug.log("Tank initialized at position:", initialPos);
     }
 
     // Return cleanup function to preserve state during HMR
