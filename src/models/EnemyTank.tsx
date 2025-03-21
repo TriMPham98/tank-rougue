@@ -23,6 +23,14 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   // Get direct access to the store's getState function
   const getState = useRef(useGameState.getState).current;
 
+  // Store max health in a ref to use for health bar calculation
+  const maxHealthRef = useRef(enemy.health);
+
+  // Set max health once when component mounts
+  useEffect(() => {
+    maxHealthRef.current = enemy.health;
+  }, []);
+
   // Set initial position and rotation from enemy data
   useEffect(() => {
     if (tankRef.current) {
@@ -98,7 +106,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   };
 
   // Calculate health percentage for the health bar
-  const healthPercent = healthRef.current / 100;
+  const healthPercent = healthRef.current / maxHealthRef.current;
 
   return (
     <group ref={tankRef}>
