@@ -15,7 +15,12 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   // Use refs for values that shouldn't trigger re-renders
   const tankRotationRef = useRef(0);
   const turretRotationRef = useRef(0);
-  const healthRef = useRef(enemy.health);
+
+  // Remove the healthRef, we'll get the health directly from the state
+  // const healthRef = useRef(enemy.health);
+
+  // State for health bar rendering
+  const [healthPercent, setHealthPercent] = useState(1);
 
   // Only use the damageEnemy function from the store
   const damageEnemy = useGameState((state) => state.damageEnemy);
@@ -36,13 +41,9 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     if (tankRef.current) {
       tankRef.current.position.set(...enemy.position);
     }
-    healthRef.current = enemy.health;
   }, []);
 
-  // Update health ref when enemy health changes
-  useEffect(() => {
-    healthRef.current = enemy.health;
-  }, [enemy.health]);
+  // Remove the effect that updates healthRef since we're not using it anymore
 
   // Enemy tank behavior
   useFrame((state, delta) => {
@@ -50,6 +51,18 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
     // Get the latest player position directly from the store
     const playerTankPosition = getState().playerTankPosition;
+
+    // Get the latest enemy data to update health bar
+    const enemies = getState().enemies;
+    const currentEnemy = enemies.find((e) => e.id === enemy.id);
+
+    // Update health percentage if we found the enemy in the state
+    if (currentEnemy) {
+      const newHealthPercent = currentEnemy.health / maxHealthRef.current;
+      if (newHealthPercent !== healthPercent) {
+        setHealthPercent(newHealthPercent);
+      }
+    }
 
     if (!playerTankPosition) return;
 
@@ -105,8 +118,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     damageEnemy(enemy.id, damage);
   };
 
-  // Calculate health percentage for the health bar
-  const healthPercent = healthRef.current / maxHealthRef.current;
+  // No need to calculate health percentage here anymore as we're doing it in useFrame
 
   return (
     <group ref={tankRef}>
