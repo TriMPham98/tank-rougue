@@ -240,10 +240,17 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           </Box>
         </group>
 
-        {/* Tank tracks */}
+        {/* Tank tracks - left and right sides */}
         <Box
-          args={[1.7, 0.2, 2.2]}
-          position={[0, -0.3, 0]}
+          args={[0.3, 0.2, 2.2]}
+          position={[-0.7, -0.3, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial color="black" />
+        </Box>
+        <Box
+          args={[0.3, 0.2, 2.2]}
+          position={[0.7, -0.3, 0]}
           castShadow
           receiveShadow>
           <meshStandardMaterial color="black" />

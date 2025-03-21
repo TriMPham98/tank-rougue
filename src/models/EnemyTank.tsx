@@ -167,17 +167,38 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         </Box>
       </group>
 
-      {/* Enemy tank/turret base */}
-      <Box
-        args={enemy.type === "tank" ? [1.7, 0.2, 2.2] : [2, 0.3, 2]}
-        position={[0, -0.3, 0]}
-        castShadow
-        receiveShadow
-        onClick={() => handleHit(25)}>
-        <meshStandardMaterial
-          color={enemy.type === "tank" ? "black" : "navy"}
-        />
-      </Box>
+
+      {/* Enemy tank tracks - left and right sides */}
+      {enemy.type === "tank" ? (
+        <>
+          <Box
+            args={[0.3, 0.2, 2.2]}
+            position={[-0.7, -0.3, 0]}
+            castShadow
+            receiveShadow
+            onClick={() => handleHit(25)}>
+            <meshStandardMaterial color="black" />
+          </Box>
+          <Box
+            args={[0.3, 0.2, 2.2]}
+            position={[0.7, -0.3, 0]}
+            castShadow
+            receiveShadow
+            onClick={() => handleHit(25)}>
+            <meshStandardMaterial color="black" />
+          </Box>
+        </>
+      ) : (
+        // Keep the original base for turret type
+        <Box
+          args={[2, 0.3, 2]}
+          position={[0, -0.3, 0]}
+          castShadow
+          receiveShadow
+          onClick={() => handleHit(25)}>
+          <meshStandardMaterial color="navy" />
+        </Box>
+      )}
 
       {/* Health indicator */}
       <Box
