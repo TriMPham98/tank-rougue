@@ -271,8 +271,6 @@ const GameScene = () => {
     return () => console.log("Canvas container unmounted");
   }, []);
 
-  console.log("GameScene returning JSX structure");
-
   return (
     <ErrorBoundary>
       <div

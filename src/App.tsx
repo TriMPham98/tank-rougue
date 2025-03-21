@@ -81,8 +81,6 @@ function App() {
 
   // Handle escape key for pausing
   useEffect(() => {
-    console.log("Setting up keyboard handler");
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         console.log("Toggle pause");
@@ -93,7 +91,6 @@ function App() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      console.log("Removing keyboard handler");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [togglePause]);
