@@ -71,7 +71,6 @@ class ErrorBoundary extends Component<
 
 // Component to follow the player's tank with the camera
 const FollowCamera = memo(() => {
-  console.log("FollowCamera component rendered");
   const { camera } = useThree();
 
   // Get a direct reference to the store's getState function
@@ -110,7 +109,6 @@ const FollowCamera = memo(() => {
 
 // Separate component to handle spotlight updates inside the Canvas
 const SpotlightUpdater = () => {
-  console.log("SpotlightUpdater component rendered");
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
   const spotLightRef = useRef<THREE.SpotLight>(null);
@@ -143,7 +141,6 @@ const SpotlightUpdater = () => {
 
 // Scene Content as a separate component to load within Canvas
 const SceneContent = memo(({ playerTank }) => {
-  console.log("SceneContent component rendered");
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
 
@@ -198,7 +195,6 @@ const SceneContent = memo(({ playerTank }) => {
 
 // Main game scene component
 const GameScene = () => {
-  console.log("GameScene component render started");
   const [enemies, setEnemies] = useState(0);
   const [powerUps, setPowerUps] = useState(0);
 

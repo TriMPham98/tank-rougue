@@ -10,8 +10,6 @@ function App() {
   const { restartGame, togglePause, isPaused, spawnEnemy, spawnPowerUp } =
     useGameState();
 
-  console.log("App component rendered");
-
   // Initialize game on first render
   useEffect(() => {
     console.log(
