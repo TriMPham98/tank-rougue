@@ -110,54 +110,68 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   return (
     <group ref={tankRef}>
-      {/* Enemy tank body */}
+      {/* Enemy tank/turret body */}
       <Box
-        args={[1.5, 0.5, 2]}
+        args={enemy.type === "tank" ? [1.5, 0.5, 2] : [1.8, 0.7, 1.8]}
         castShadow
         receiveShadow
         onClick={() => handleHit(25)}>
         <meshStandardMaterial
-          color={enemy.type === "tank" ? "red" : "darkred"}
+          color={enemy.type === "tank" ? "red" : "darkblue"}
         />
       </Box>
 
-      {/* Enemy tank turret */}
+      {/* Enemy tank/turret turret */}
       <group position={[0, 0.5, 0]} ref={turretRef}>
         <Cylinder
-          args={[0.6, 0.6, 0.4, 16]}
+          args={
+            enemy.type === "tank" ? [0.6, 0.6, 0.4, 16] : [0.7, 0.5, 0.6, 8]
+          }
           position={[0, 0.2, 0]}
           castShadow
           onClick={() => handleHit(25)}>
-          <meshStandardMaterial color="darkred" />
+          <meshStandardMaterial
+            color={enemy.type === "tank" ? "darkred" : "royalblue"}
+          />
         </Cylinder>
 
-        {/* Enemy tank cannon */}
+        {/* Enemy tank/turret cannon */}
         <Box
-          args={[0.2, 0.2, 1.5]}
-          position={[0, 0.2, 1]}
+          args={enemy.type === "tank" ? [0.2, 0.2, 1.5] : [0.25, 0.25, 2]}
+          position={[0, 0.2, enemy.type === "tank" ? 1 : 1.2]}
           castShadow
           onClick={() => handleHit(25)}>
-          <meshStandardMaterial color="darkred" />
+          <meshStandardMaterial
+            color={enemy.type === "tank" ? "darkred" : "royalblue"}
+          />
         </Box>
       </group>
 
-      {/* Enemy tank tracks */}
+      {/* Enemy tank/turret base */}
       <Box
-        args={[1.7, 0.2, 2.2]}
+        args={enemy.type === "tank" ? [1.7, 0.2, 2.2] : [2, 0.3, 2]}
         position={[0, -0.3, 0]}
         castShadow
         receiveShadow
         onClick={() => handleHit(25)}>
-        <meshStandardMaterial color="black" />
+        <meshStandardMaterial
+          color={enemy.type === "tank" ? "black" : "navy"}
+        />
       </Box>
 
       {/* Health indicator */}
-      <Box args={[1, 0.1, 0.1]} position={[0, 1.2, 0]}>
+      <Box
+        args={[1, 0.1, 0.1]}
+        position={[0, enemy.type === "tank" ? 1.2 : 1.5, 0]}>
         <meshBasicMaterial color="red" />
       </Box>
       <Box
         args={[healthPercent, 0.1, 0.1]}
-        position={[-(0.5 - healthPercent / 2), 1.2, 0]}>
+        position={[
+          -(0.5 - healthPercent / 2),
+          enemy.type === "tank" ? 1.2 : 1.5,
+          0,
+        ]}>
         <meshBasicMaterial color="green" />
       </Box>
     </group>

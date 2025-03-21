@@ -41,7 +41,7 @@ function App() {
         spawnEnemy({
           position: [-8, 0.5, -8],
           health: 80,
-          type: "turret",
+          type: "tank",
         });
 
         // Add some power-ups
