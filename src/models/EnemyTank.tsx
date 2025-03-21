@@ -13,22 +13,21 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const turretRef = useRef<Mesh>(null);
   const [tankRotation, setTankRotation] = useState(0);
   const [turretRotation, setTurretRotation] = useState(0);
+  const [localHealth, setLocalHealth] = useState(enemy.health);
 
   // Get player position from game state
-  const { playerTankPosition, takeDamage, removeEnemy, increaseScore } =
-    useGameState((state) => ({
-      playerTankPosition: state.playerTankPosition,
-      takeDamage: state.takeDamage,
-      removeEnemy: state.removeEnemy,
-      increaseScore: state.increaseScore,
-    }));
+  const { playerTankPosition, damageEnemy } = useGameState((state) => ({
+    playerTankPosition: state.playerTankPosition,
+    damageEnemy: state.damageEnemy,
+  }));
 
   // Set initial position from enemy data
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...enemy.position);
     }
-  }, [enemy.position]);
+    setLocalHealth(enemy.health);
+  }, [enemy.position, enemy.health]);
 
   // Enemy tank behavior
   useFrame((state, delta) => {
@@ -83,12 +82,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   // Function to handle enemy being hit
   const handleHit = (damage: number) => {
-    // Update health in game state
-    // If enemy health reaches 0, remove enemy and increase score
-    enemy.health -= damage;
-    if (enemy.health <= 0) {
-      removeEnemy(enemy.id);
-      increaseScore(enemy.type === "tank" ? 100 : 150);
+    const isDestroyed = damageEnemy(enemy.id, damage);
+    if (!isDestroyed) {
+      // Only update local health if enemy is not destroyed
+      setLocalHealth((prev) => Math.max(0, prev - damage));
     }
   };
 
@@ -140,8 +137,8 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         <meshBasicMaterial color="red" />
       </Box>
       <Box
-        args={[enemy.health / 100, 0.1, 0.1]}
-        position={[-(0.5 - enemy.health / 200), 1.2, 0]}>
+        args={[localHealth / 100, 0.1, 0.1]}
+        position={[-(0.5 - localHealth / 200), 1.2, 0]}>
         <meshBasicMaterial color="green" />
       </Box>
     </group>

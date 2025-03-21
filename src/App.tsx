@@ -1,25 +1,69 @@
-import { useState, useEffect } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import GameScene from "./components/GameScene";
 import GameUI from "./components/GameUI";
 import { useGameState } from "./utils/gameState";
-import { generateLevel } from "./utils/levelGenerator";
 
 function App() {
-  const { level, restartGame, togglePause, isPaused } = useGameState();
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  // Use a ref to ensure initialization only happens once
+  const initialized = useRef(false);
+  const { restartGame, togglePause, isPaused, spawnEnemy, spawnPowerUp } =
+    useGameState();
 
-  // Initialize game when first loaded
+  // Initialize game on first render
   useEffect(() => {
-    if (isFirstLoad) {
+    // Only run initialization once
+    if (!initialized.current) {
+      console.log("Initializing game...");
+
+      // Set game to initial state
       restartGame();
-      // Generate first level with player at center position
-      generateLevel(1, [0, 0.5, 0]);
-      setIsFirstLoad(false);
+
+      // Generate initial enemies and power-ups
+      try {
+        // Generate some enemies at different positions
+        spawnEnemy({
+          position: [5, 0.5, 5],
+          health: 100,
+          type: "tank",
+        });
+
+        spawnEnemy({
+          position: [-5, 0.5, 5],
+          health: 100,
+          type: "turret",
+        });
+
+        spawnEnemy({
+          position: [8, 0.5, -8],
+          health: 120,
+          type: "tank",
+        });
+
+        spawnEnemy({
+          position: [-8, 0.5, -8],
+          health: 80,
+          type: "turret",
+        });
+
+        // Add some power-ups
+        spawnPowerUp({
+          position: [3, 0.5, -3],
+          type: "health",
+        });
+
+        spawnPowerUp({
+          position: [-3, 0.5, 3],
+          type: "damage",
+        });
+
+        console.log("Enemies and power-ups spawned");
+        initialized.current = true;
+      } catch (error) {
+        console.error("Error initializing game:", error);
+      }
     }
-  }, [isFirstLoad, restartGame]);
+  }, [restartGame, spawnEnemy, spawnPowerUp]);
 
   // Handle escape key for pausing
   useEffect(() => {

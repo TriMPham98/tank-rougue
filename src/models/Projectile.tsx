@@ -23,10 +23,9 @@ const Projectile = ({
   const [hasCollided, setHasCollided] = useState(false);
 
   // Get game state
-  const { enemies, removeEnemy, increaseScore } = useGameState((state) => ({
+  const { enemies, damageEnemy } = useGameState((state) => ({
     enemies: state.enemies,
-    removeEnemy: state.removeEnemy,
-    increaseScore: state.increaseScore,
+    damageEnemy: state.damageEnemy,
   }));
 
   // Projectile movement and collision detection
@@ -63,15 +62,8 @@ const Projectile = ({
       const distanceToEnemy = enemyPos.distanceTo(projectilePos);
 
       if (distanceToEnemy < 1.5) {
-        // Collision detected
-        // Update enemy health
-        enemy.health -= damage;
-
-        // If enemy health is depleted, remove it and increase score
-        if (enemy.health <= 0) {
-          removeEnemy(enemy.id);
-          increaseScore(enemy.type === "tank" ? 100 : 150);
-        }
+        // Collision detected - damage the enemy using store function
+        damageEnemy(enemy.id, damage);
 
         // Mark projectile as collided and remove it
         setHasCollided(true);

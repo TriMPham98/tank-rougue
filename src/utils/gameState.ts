@@ -47,10 +47,12 @@ interface GameState {
   restartGame: () => void;
   togglePause: () => void;
   advanceLevel: () => void;
+  updatePlayerPosition: (position: [number, number, number]) => void;
+  damageEnemy: (id: string, amount: number) => boolean; // Returns true if enemy is destroyed
 }
 
 // Create the game state store
-export const useGameState = create<GameState>((set) => ({
+export const useGameState = create<GameState>((set, get) => ({
   // Initial player stats
   playerHealth: 100,
   playerMaxHealth: 100,
@@ -169,4 +171,39 @@ export const useGameState = create<GameState>((set) => ({
       playerMaxHealth: state.playerMaxHealth + 10,
       playerHealth: state.playerHealth + 10,
     })),
+
+  updatePlayerPosition: (position) =>
+    set((state) => {
+      if (
+        state.playerTankPosition[0] === position[0] &&
+        state.playerTankPosition[1] === position[1] &&
+        state.playerTankPosition[2] === position[2]
+      ) {
+        return state;
+      }
+      return { playerTankPosition: position };
+    }),
+
+  damageEnemy: (id, amount) => {
+    const state = get();
+    const enemy = state.enemies.find((e) => e.id === id);
+
+    if (!enemy) return false;
+
+    const newHealth = enemy.health - amount;
+    const isDestroyed = newHealth <= 0;
+
+    if (isDestroyed) {
+      get().removeEnemy(id);
+      get().increaseScore(enemy.type === "tank" ? 100 : 150);
+      return true;
+    } else {
+      set((state) => ({
+        enemies: state.enemies.map((e) =>
+          e.id === id ? { ...e, health: newHealth } : e
+        ),
+      }));
+      return false;
+    }
+  },
 }));

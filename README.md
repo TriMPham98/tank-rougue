@@ -9,7 +9,9 @@ A roguelike tank game built with React and Three.js where you control a tank in 
 - Different types of enemies (tanks and turrets)
 - Power-up system (health, speed, damage)
 - Game state management with score, health, and levels
-- First-person and third-person camera views
+- Third-person camera that follows the player
+- Advanced state management with Zustand
+- Optimized rendering with React Three Fiber
 
 ## Controls
 
@@ -28,6 +30,24 @@ A roguelike tank game built with React and Three.js where you control a tank in 
 
 - **Red Tanks** - Mobile enemies that chase the player
 - **Dark Red Turrets** - Stationary enemies that rotate to aim at the player
+
+## Recent Improvements
+
+- Fixed state management issues that caused performance problems
+- Implemented centralized player position tracking in the game state
+- Added proper enemy damage handling through the game state
+- Improved camera following mechanics
+- Enhanced lighting and shadows for better visuals
+- Fixed initialization of enemies and power-ups
+
+## Architecture
+
+The game uses a centralized state management approach with Zustand:
+
+1. **Game State**: Core state management for player stats, enemies, power-ups, and game status
+2. **Components**: React components for UI and game elements
+3. **Models**: 3D models and behavior for tanks, enemies, and projectiles
+4. **Hooks**: Custom React hooks for keyboard controls and other functionality
 
 ## Development
 
@@ -77,6 +97,8 @@ A roguelike tank game built with React and Three.js where you control a tank in 
 - Create more weapon types
 - Implement a minimap
 - Add local storage for saving high scores
+- Implement game levels with increasing difficulty
+- Add mobile device support with touch controls
 
 ## License
 

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
@@ -8,10 +8,9 @@ import Projectile from "./Projectile";
 
 interface TankProps {
   position: [number, number, number];
-  onPositionChange?: (position: [number, number, number]) => void;
 }
 
-const Tank = ({ position = [0, 0, 0], onPositionChange }: TankProps) => {
+const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const tankRef = useRef<Mesh>(null);
   const turretRef = useRef<Mesh>(null);
   const [tankRotation, setTankRotation] = useState(0);
@@ -21,20 +20,48 @@ const Tank = ({ position = [0, 0, 0], onPositionChange }: TankProps) => {
   >([]);
   const [lastShootTime, setLastShootTime] = useState(0);
 
+  // Create position ref to track current position without re-renders
+  const positionRef = useRef<[number, number, number]>([...position]);
+
   // Get keyboard controls
   const { forward, backward, left, right, turretLeft, turretRight, shoot } =
     useKeyboardControls();
 
   // Get game state
-  const { playerDamage, isPaused } = useGameState((state) => ({
-    playerDamage: state.playerDamage,
-    isPaused: state.isPaused,
-  }));
+  const { playerDamage, isPaused, updatePlayerPosition } = useGameState(
+    (state) => ({
+      playerDamage: state.playerDamage,
+      isPaused: state.isPaused,
+      updatePlayerPosition: state.updatePlayerPosition,
+    })
+  );
+
+  // Memoize update function to avoid creating it on every render
+  const updatePosition = useCallback(
+    (newPosition: [number, number, number]) => {
+      // Only update if position has actually changed
+      if (
+        positionRef.current[0] !== newPosition[0] ||
+        positionRef.current[1] !== newPosition[1] ||
+        positionRef.current[2] !== newPosition[2]
+      ) {
+        positionRef.current = [...newPosition];
+        updatePlayerPosition(newPosition);
+      }
+    },
+    [updatePlayerPosition]
+  );
 
   // Set initial position
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...position);
+      // Update initial position in the game state
+      updatePosition([
+        tankRef.current.position.x,
+        tankRef.current.position.y,
+        tankRef.current.position.z,
+      ]);
     }
   }, []);
 
@@ -103,9 +130,9 @@ const Tank = ({ position = [0, 0, 0], onPositionChange }: TankProps) => {
       setLastShootTime(state.clock.getElapsedTime());
     }
 
-    // Notify parent of position change
-    if (moved && onPositionChange) {
-      onPositionChange([
+    // Update position in game state if moved
+    if (moved) {
+      updatePosition([
         tankRef.current.position.x,
         tankRef.current.position.y,
         tankRef.current.position.z,
