@@ -202,16 +202,8 @@ export const useGameState = create<GameState>((set, get) => ({
         baseRequirement + scalingFactor * Math.log10(newLevel + 1) * newLevel
       );
 
-      // Calculate health bonus based on level
-      const healthBonus = 10 + Math.floor(Math.sqrt(newLevel) * 5);
-
       return {
         level: newLevel,
-        playerMaxHealth: state.playerMaxHealth + healthBonus,
-        playerHealth: Math.min(
-          state.playerHealth + healthBonus,
-          state.playerMaxHealth + healthBonus
-        ),
         playerDamage: state.playerDamage + Math.floor(newLevel / 2),
         enemiesDefeated: 0, // Reset counter for the new level
         enemiesRequiredForNextLevel: nextLevelRequirement,

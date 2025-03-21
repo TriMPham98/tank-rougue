@@ -71,15 +71,15 @@ const GameUI = () => {
               alignItems: "center",
               gap: "8px",
             }}>
-            <span>Level: {level}</span>
+            <span>Level</span>
             <div
               className="level-indicator"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "30px",
-                height: "30px",
+                width: "36px",
+                height: "36px",
                 borderRadius: "50%",
                 backgroundColor: getLevelColor(),
                 color: "#fff",
