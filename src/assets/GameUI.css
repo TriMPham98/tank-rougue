@@ -56,6 +56,12 @@
   font-weight: bold;
 }
 
+.score-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 /* Overlay for pause and game over */
 .overlay {
   position: absolute;
