@@ -4,6 +4,7 @@ import { Box, Cylinder } from "@react-three/drei";
 import { Mesh, Vector3, Group } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
+import { debug } from "../utils/debug";
 import Projectile from "./Projectile";
 
 interface TankProps {
@@ -74,13 +75,13 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ];
       positionRef.current = initialPos;
       updatePlayerPosition(initialPos);
-      console.log("Tank initialized at position:", initialPos);
+      debug.log("Tank initialized at position:", initialPos);
     }
 
     // Return cleanup function to preserve state during HMR
     return () => {
       // Don't reset isInitialized on unmount to prevent reinitializing on HMR
-      console.log("Tank component cleanup - preserve position state");
+      debug.log("Tank component cleanup - preserve position state");
     };
   }, [position, updatePlayerPosition]);
 
@@ -98,7 +99,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       turretRight ||
       shoot
     ) {
-      console.log("Control states:", {
+      debug.log("Control states:", {
         forward,
         backward,
         left,
@@ -126,7 +127,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     if (forward) {
       // Log position before movement
-      console.log("Before move - Position:", [
+      debug.log("Before move - Position:", [
         tankRef.current.position.x,
         tankRef.current.position.y,
         tankRef.current.position.z,
@@ -139,7 +140,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       moved = true;
 
       // Log position after movement
-      console.log("After move - Position:", [
+      debug.log("After move - Position:", [
         tankRef.current.position.x,
         tankRef.current.position.y,
         tankRef.current.position.z,
@@ -206,7 +207,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ) {
         positionRef.current = newPosition;
         updatePlayerPosition(newPosition);
-        console.log("Updated position:", newPosition);
+        debug.log("Updated position:", newPosition);
       }
     }
   });

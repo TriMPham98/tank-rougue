@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { debug } from "../utils/debug";
 
 interface KeyboardControls {
   forward: boolean;
@@ -23,12 +24,12 @@ export const useKeyboardControls = (): KeyboardControls => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log(
+      debug.log(
         "Key pressed:",
         e.key,
         e.type,
         "Active element:",
-        document.activeElement.tagName
+        document.activeElement?.tagName || "none"
       );
 
       switch (e.key.toLowerCase()) {
@@ -57,12 +58,12 @@ export const useKeyboardControls = (): KeyboardControls => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      console.log(
+      debug.log(
         "Key released:",
         e.key,
         e.type,
         "Active element:",
-        document.activeElement.tagName
+        document.activeElement?.tagName || "none"
       );
 
       switch (e.key.toLowerCase()) {

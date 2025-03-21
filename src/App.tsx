@@ -4,6 +4,7 @@ import GameScene from "./components/GameScene";
 import GameUI from "./components/GameUI";
 import { useGameState } from "./utils/gameState";
 import { generateLevel } from "./utils/levelGenerator";
+import { debug } from "./utils/debug";
 
 function App() {
   // Use a ref to ensure initialization only happens once
@@ -28,7 +29,7 @@ function App() {
 
         initialized.current = true;
       } catch (error) {
-        console.error("Error initializing game:", error);
+        debug.error("Error initializing game:", error);
       }
     }
   }, [restartGame]);

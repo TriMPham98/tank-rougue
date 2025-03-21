@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
 import { useGameState } from "../utils/gameState";
+import { debug } from "../utils/debug";
 
 interface ProjectileProps {
   id: string;
@@ -55,7 +56,7 @@ const Projectile = ({
 
     // Log available enemies for debugging
     if (enemies.length > 0 && Math.random() < 0.01) {
-      console.log(`Projectile ${id} tracking ${enemies.length} enemies`);
+      debug.log(`Projectile ${id} tracking ${enemies.length} enemies`);
     }
 
     // Check for collisions with enemies
@@ -72,40 +73,45 @@ const Projectile = ({
       // Use a larger collision radius for tanks since they're bigger and moving
       const collisionRadius = enemy.type === "tank" ? 2.5 : 1.5;
 
+      // If hit detection range is smaller than visual size, log it
       if (distanceToEnemy < collisionRadius) {
-        // Collision detected - log the hit
-        console.log(
-          `Hit enemy ${enemy.id} (${
-            enemy.type
-          }) with damage ${damage}. Health before: ${
-            enemy.health
-          }, distance: ${distanceToEnemy.toFixed(2)}`
-        );
+        if (!hasCollidedRef.current) {
+          hasCollidedRef.current = true;
+          debug.log(
+            `Projectile hit enemy ${
+              enemy.id
+            } at distance ${distanceToEnemy.toFixed(2)}`
+          );
 
-        // Damage the enemy and get the result
-        const wasDestroyed = damageEnemy(enemy.id, damage);
+          // Apply damage to the enemy
+          damageEnemy(enemy.id, damage);
 
-        // Log the result of the hit
-        if (wasDestroyed) {
-          console.log(`Enemy ${enemy.id} was destroyed!`);
-        } else {
-          // Get updated health
-          const updatedEnemy = getState().enemies.find(
+          // Check if enemy was destroyed
+          const updatedEnemies = getState().enemies;
+          const enemyStillExists = updatedEnemies.some(
             (e) => e.id === enemy.id
           );
-          if (updatedEnemy) {
-            console.log(
-              `Enemy ${enemy.id} health after hit: ${updatedEnemy.health}`
-            );
-          } else {
-            console.log(`Enemy ${enemy.id} not found after hit`);
-          }
-        }
 
-        // Mark projectile as collided and remove it
-        hasCollidedRef.current = true;
-        onRemove(id);
-        break;
+          if (!enemyStillExists) {
+            debug.log(`Enemy ${enemy.id} was destroyed!`);
+          }
+
+          // Remove the projectile
+          onRemove(id);
+
+          // Log enemy damage application
+          debug.log(
+            `Applied ${damage} damage to enemy ${
+              enemy.id
+            }, destroyed: ${!enemyStillExists}`
+          );
+          break;
+        }
+      } else {
+        // Log near misses for debugging
+        if (distanceToEnemy < 3 && Math.random() < 0.05) {
+          debug.log(`Enemy ${enemy.id} not found after hit`);
+        }
       }
     }
   });

@@ -26,6 +26,7 @@ import { useGameState } from "../utils/gameState";
 import { SpotLightHelper, Vector3, SpotLight as ThreeSpotLight } from "three";
 import "./GameScene.css";
 import { useRespawnManager } from "../utils/respawnManager";
+import { debug } from "../utils/debug";
 
 // Error boundary component to catch and display errors
 class ErrorBoundary extends Component<
@@ -42,7 +43,7 @@ class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Canvas error caught by boundary:", error, errorInfo);
+    debug.error("Canvas error caught by boundary:", error, errorInfo);
   }
 
   render() {
@@ -248,12 +249,12 @@ const GameScene = () => {
       // Force focus on click
       const handleCanvasClick = () => {
         canvas.focus();
-        console.log("Canvas focused");
+        debug.log("Canvas focused");
       };
 
       // Add direct keyboard event listener for debugging
       const handleKeyDown = (e: KeyboardEvent) => {
-        console.log("Canvas keydown event:", e.key);
+        debug.log("Canvas keydown event:", e.key);
       };
 
       canvas.addEventListener("click", handleCanvasClick);
@@ -296,7 +297,7 @@ const GameScene = () => {
           shadows
           camera={{ position: [0, 8, -12], fov: 60 }}
           style={{ width: "100vw", height: "100vh" }}
-          onCreated={() => console.log("Canvas created")}>
+          onCreated={() => debug.log("Canvas created")}>
           <color attach="background" args={["#87CEEB"]} />
           <fog attach="fog" args={["#87CEEB", 30, 100]} />
           <Stats />

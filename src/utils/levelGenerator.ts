@@ -1,4 +1,5 @@
 import { Enemy, PowerUp, useGameState } from "./gameState";
+import { debug } from "./debug";
 
 interface LevelConfig {
   gridSize: number;
@@ -22,35 +23,45 @@ const isTooClose = (
 export const generateRandomPosition = (
   gridSize: number,
   existingPositions: [number, number, number][],
-  minDistance: number = 5
+  minDistanceFromExisting = 5
 ): [number, number, number] => {
-  const halfGrid = gridSize / 2;
-
+  // Try to find a position that is far enough from existing entities
   let attempts = 0;
-  let position: [number, number, number];
+  while (attempts < 100) {
+    // Generate random x, z coordinates within the grid
+    const x = (Math.random() - 0.5) * gridSize;
+    const z = (Math.random() - 0.5) * gridSize;
+    const y = 0.5; // Keep y-position consistent for now
+    const potentialPosition: [number, number, number] = [x, y, z];
 
-  do {
-    // Generate a random position within the grid
-    position = [
-      Math.random() * gridSize - halfGrid,
-      0.5, // Fixed y position for now
-      Math.random() * gridSize - halfGrid,
-    ];
+    // Check if this position is far enough from all existing positions
+    let isFarEnough = true;
+    for (const pos of existingPositions) {
+      const dx = pos[0] - x;
+      const dz = pos[2] - z;
+      const distance = Math.sqrt(dx * dx + dz * dz);
 
-    attempts++;
-
-    // Prevent infinite loop by limiting attempts
-    if (attempts > 100) {
-      console.warn("Could not find a suitable position after 100 attempts");
-      break;
+      if (distance < minDistanceFromExisting) {
+        isFarEnough = false;
+        break;
+      }
     }
 
-    // Check if the position is too close to any existing positions
-  } while (
-    existingPositions.some((pos) => isTooClose(pos, position, minDistance))
-  );
+    // If position is valid, return it
+    if (isFarEnough) {
+      return potentialPosition;
+    }
 
-  return position;
+    attempts++;
+  }
+
+  // If we couldn't find a suitable position, log warning and return a fallback
+  debug.warn("Could not find a suitable position after 100 attempts");
+
+  // Fallback to a random position regardless of distance constraints
+  const x = (Math.random() - 0.5) * gridSize;
+  const z = (Math.random() - 0.5) * gridSize;
+  return [x, 0.5, z];
 };
 
 // Generate enemies for the current level

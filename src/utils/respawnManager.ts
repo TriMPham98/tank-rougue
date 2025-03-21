@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useGameState } from "./gameState";
 import { generateRandomPosition } from "./levelGenerator";
+import { debug } from "./debug";
 
 // Function to monitor enemy destruction and spawn new enemies
 export const useRespawnManager = () => {
@@ -11,15 +12,15 @@ export const useRespawnManager = () => {
 
   // Listen for changes in the enemies array
   useEffect(() => {
-    console.log("🔄 Respawn manager initialized");
+    debug.log("🔄 Respawn manager initialized");
 
     // Initialize the previous enemy count and IDs
     const initialState = useGameState.getState();
     prevEnemyCountRef.current = initialState.enemies.length;
     prevEnemiesRef.current = initialState.enemies.map((e) => e.id);
 
-    console.log(`🏁 Initial enemy count: ${prevEnemyCountRef.current}`);
-    console.log(`🏁 Initial enemies: ${prevEnemiesRef.current.join(", ")}`);
+    debug.log(`🏁 Initial enemy count: ${prevEnemyCountRef.current}`);
+    debug.log(`🏁 Initial enemies: ${prevEnemiesRef.current.join(", ")}`);
 
     // Create a subscription to the game state
     const unsubscribe = useGameState.subscribe((state) => {
@@ -33,16 +34,16 @@ export const useRespawnManager = () => {
 
       // Check if an enemy was just destroyed (removed from the array)
       if (prevEnemyCountRef.current > currentEnemyCount) {
-        console.log(
+        debug.log(
           `🔴 Enemy destroyed: previous count ${prevEnemyCountRef.current}, current count ${currentEnemyCount}`
         );
-        console.log(`🔴 Deleted enemy IDs: ${deletedEnemyIds.join(", ")}`);
+        debug.log(`🔴 Deleted enemy IDs: ${deletedEnemyIds.join(", ")}`);
 
         // Get current player position for enemy generation
         const playerPos = state.playerTankPosition;
 
         // Log current enemies for debugging
-        console.log(`🔍 Current enemies: ${currentEnemyIds.join(", ")}`);
+        debug.log(`🔍 Current enemies: ${currentEnemyIds.join(", ")}`);
 
         // Get all existing enemy positions to avoid overlap
         const existingPositions = [
@@ -71,7 +72,7 @@ export const useRespawnManager = () => {
             ? turretBaseHealth + linearScale + exponentialScale
             : tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
 
-        console.log(
+        debug.log(
           `🟢 Preparing to spawn new ${type} at position [${position[0].toFixed(
             2
           )}, ${position[1].toFixed(2)}, ${position[2].toFixed(2)}]`
@@ -91,10 +92,10 @@ export const useRespawnManager = () => {
                 type,
               });
 
-              console.log(`✅ Spawned new ${type} with health ${health}`);
+              debug.log(`✅ Spawned new ${type} with health ${health}`);
             }
           } catch (error) {
-            console.error(`❌ Error spawning enemy: ${error}`);
+            debug.error(`❌ Error spawning enemy: ${error}`);
           }
         }, respawnDelay);
       } else if (prevEnemyCountRef.current < currentEnemyCount) {
@@ -102,7 +103,7 @@ export const useRespawnManager = () => {
         const newEnemyIds = currentEnemyIds.filter(
           (id) => !prevEnemiesRef.current.includes(id)
         );
-        console.log(`🟢 New enemies detected: ${newEnemyIds.join(", ")}`);
+        debug.log(`🟢 New enemies detected: ${newEnemyIds.join(", ")}`);
       }
 
       // Update the previous enemy count and IDs
