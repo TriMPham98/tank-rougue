@@ -10,12 +10,65 @@ import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
 import PowerUpItem from "../models/PowerUpItem";
 import Ground from "../models/Ground";
-import { Suspense, useRef, useEffect, useMemo, memo } from "react";
+import {
+  Suspense,
+  useRef,
+  useEffect,
+  useMemo,
+  memo,
+  Component,
+  ErrorInfo,
+  ReactNode,
+} from "react";
 import { useGameState } from "../utils/gameState";
 import { SpotLightHelper, Vector3 } from "three";
 
+// Error boundary component to catch and display errors
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Canvas error caught by boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            color: "red",
+            padding: "20px",
+            backgroundColor: "black",
+            border: "1px solid red",
+            borderRadius: "4px",
+          }}>
+          <h2>Something went wrong in the 3D scene</h2>
+          <p>{this.state.error?.message}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}>
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Component to follow the player's tank with the camera
 const FollowCamera = memo(() => {
+  console.log("FollowCamera component rendered");
   const { camera } = useThree();
 
   // Get a direct reference to the store's getState function
@@ -54,6 +107,7 @@ const FollowCamera = memo(() => {
 
 // Separate component to handle spotlight updates inside the Canvas
 const SpotlightUpdater = () => {
+  console.log("SpotlightUpdater component rendered");
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
   const spotLightRef = useRef<THREE.SpotLight>(null);
@@ -84,7 +138,64 @@ const SpotlightUpdater = () => {
   );
 };
 
+// Scene Content as a separate component to load within Canvas
+const SceneContent = () => {
+  console.log("SceneContent component rendered");
+  // Get direct access to the store state
+  const getState = useRef(useGameState.getState).current;
+
+  return (
+    <Suspense fallback={null}>
+      {/* Ambient light for overall scene brightness */}
+      <ambientLight intensity={0.5} />
+
+      {/* Main directional light (sun) */}
+      <directionalLight
+        position={[10, 20, 10]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={50}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
+      />
+
+      {/* Player spotlight with its own updater component */}
+      <SpotlightUpdater />
+
+      {/* Player tank */}
+      <Tank position={[0, 0.5, 0]} />
+
+      {/* Enemy tanks - Using component instances ensures they handle their own updates */}
+      {getState().enemies.map((enemy) => (
+        <EnemyTank key={enemy.id} enemy={enemy} />
+      ))}
+
+      {/* Power-ups */}
+      {getState().powerUps.map((powerUp) => (
+        <PowerUpItem key={powerUp.id} powerUp={powerUp} />
+      ))}
+
+      <Ground />
+      <Sky sunPosition={[100, 100, 20]} />
+
+      {/* Camera that follows player */}
+      <FollowCamera />
+
+      {/* Dev controls - enable for development */}
+      <OrbitControls enabled={true} />
+
+      <Environment preset="sunset" />
+    </Suspense>
+  );
+};
+
 const GameScene = () => {
+  console.log("GameScene component render started");
+
   // Get direct access to the store state that's read-only and doesn't trigger re-renders
   const getState = useRef(useGameState.getState).current;
 
@@ -94,6 +205,8 @@ const GameScene = () => {
 
   // Subscribe to state changes outside of render to update refs
   useEffect(() => {
+    console.log("GameScene effect: setting up store subscription");
+
     const unsubscribe = useGameState.subscribe((state) => {
       enemiesRef.current = state.enemies;
       powerUpsRef.current = state.powerUps;
@@ -110,58 +223,26 @@ const GameScene = () => {
     });
   }, []);
 
+  // Using this effect to log when Canvas is created
+  useEffect(() => {
+    console.log("Canvas container mounted");
+    return () => console.log("Canvas container unmounted");
+  }, []);
+
+  console.log("GameScene returning JSX structure");
+
   return (
-    <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
-      <color attach="background" args={["#87CEEB"]} />
-      <fog attach="fog" args={["#87CEEB", 30, 100]} />
-      <Stats />
-
-      <Suspense fallback={null}>
-        {/* Ambient light for overall scene brightness */}
-        <ambientLight intensity={0.5} />
-
-        {/* Main directional light (sun) */}
-        <directionalLight
-          position={[10, 20, 10]}
-          intensity={1.5}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={50}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
-        />
-
-        {/* Player spotlight with its own updater component */}
-        <SpotlightUpdater />
-
-        {/* Player tank */}
-        <Tank position={[0, 0.5, 0]} />
-
-        {/* Enemy tanks - Using component instances ensures they handle their own updates */}
-        {getState().enemies.map((enemy) => (
-          <EnemyTank key={enemy.id} enemy={enemy} />
-        ))}
-
-        {/* Power-ups */}
-        {getState().powerUps.map((powerUp) => (
-          <PowerUpItem key={powerUp.id} powerUp={powerUp} />
-        ))}
-
-        <Ground />
-        <Sky sunPosition={[100, 100, 20]} />
-
-        {/* Camera that follows player */}
-        <FollowCamera />
-
-        {/* Dev controls - enable for development */}
-        <OrbitControls enabled={true} />
-
-        <Environment preset="sunset" />
-      </Suspense>
-    </Canvas>
+    <ErrorBoundary>
+      <Canvas
+        shadows
+        camera={{ position: [0, 10, 20], fov: 60 }}
+        onCreated={(state) => console.log("Canvas created")}>
+        <color attach="background" args={["#87CEEB"]} />
+        <fog attach="fog" args={["#87CEEB", 30, 100]} />
+        <Stats />
+        <SceneContent />
+      </Canvas>
+    </ErrorBoundary>
   );
 };
 

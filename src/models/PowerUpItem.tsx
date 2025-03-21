@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
@@ -10,27 +10,29 @@ interface PowerUpItemProps {
 
 const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
   const powerUpRef = useRef<Mesh>(null);
-  const [rotation, setRotation] = useState(0);
+  const rotationRef = useRef(0);
 
-  // Get game state
-  const { collectPowerUp, playerTankPosition } = useGameState((state) => ({
-    collectPowerUp: state.collectPowerUp,
-    playerTankPosition: state.playerTankPosition,
-  }));
+  // Get only the collectPowerUp function, use direct store access for position
+  const collectPowerUp = useGameState((state) => state.collectPowerUp);
+  const getState = useRef(useGameState.getState).current;
 
   // Hover animation and collision detection with player tank
   useFrame((state, delta) => {
-    if (!powerUpRef.current || !playerTankPosition) return;
+    if (!powerUpRef.current) return;
 
-    // Animate rotation and hover effect
-    setRotation((prev) => prev + delta * 2);
+    // Access player position directly from store
+    const playerTankPosition = getState().playerTankPosition;
+    if (!playerTankPosition) return;
+
+    // Animate rotation and hover effect using ref instead of state
+    rotationRef.current += delta * 2;
 
     // Hover up and down
     const hoverHeight = Math.sin(state.clock.getElapsedTime() * 2) * 0.2;
     powerUpRef.current.position.y = powerUp.position[1] + hoverHeight;
 
-    // Apply rotation
-    powerUpRef.current.rotation.y = rotation;
+    // Apply rotation directly
+    powerUpRef.current.rotation.y = rotationRef.current;
 
     // Check for collision with player tank
     const playerPos = new Vector3(...playerTankPosition);
