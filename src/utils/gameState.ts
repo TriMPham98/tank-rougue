@@ -49,6 +49,7 @@ interface GameState {
   advanceLevel: () => void;
   updatePlayerPosition: (position: [number, number, number]) => void;
   damageEnemy: (id: string, amount: number) => boolean; // Returns true if enemy is destroyed
+  updateEnemyPosition: (id: string, position: [number, number, number]) => void; // Add function to update enemy position
 }
 
 // Create the game state store
@@ -183,6 +184,12 @@ export const useGameState = create<GameState>((set, get) => ({
       }
       return { playerTankPosition: position };
     }),
+
+  // Add function to update enemy position in state
+  updateEnemyPosition: (id, position) =>
+    set((state) => ({
+      enemies: state.enemies.map((e) => (e.id === id ? { ...e, position } : e)),
+    })),
 
   damageEnemy: (id, amount) => {
     const state = get();

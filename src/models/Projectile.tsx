@@ -69,10 +69,17 @@ const Projectile = ({
 
       const distanceToEnemy = enemyPos.distanceTo(projectilePos);
 
-      if (distanceToEnemy < 1.5) {
+      // Use a larger collision radius for tanks since they're bigger and moving
+      const collisionRadius = enemy.type === "tank" ? 2.5 : 1.5;
+
+      if (distanceToEnemy < collisionRadius) {
         // Collision detected - log the hit
         console.log(
-          `Hit enemy ${enemy.id} (${enemy.type}) with damage ${damage}. Health before: ${enemy.health}`
+          `Hit enemy ${enemy.id} (${
+            enemy.type
+          }) with damage ${damage}. Health before: ${
+            enemy.health
+          }, distance: ${distanceToEnemy.toFixed(2)}`
         );
 
         // Damage the enemy and get the result

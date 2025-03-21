@@ -16,14 +16,14 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const tankRotationRef = useRef(0);
   const turretRotationRef = useRef(0);
 
-  // Remove the healthRef, we'll get the health directly from the state
-  // const healthRef = useRef(enemy.health);
-
   // State for health bar rendering
   const [healthPercent, setHealthPercent] = useState(1);
 
-  // Only use the damageEnemy function from the store
+  // Only use required functions from the store
   const damageEnemy = useGameState((state) => state.damageEnemy);
+  const updateEnemyPosition = useGameState(
+    (state) => state.updateEnemyPosition
+  );
 
   // Get direct access to the store's getState function
   const getState = useRef(useGameState.getState).current;
@@ -42,8 +42,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       tankRef.current.position.set(...enemy.position);
     }
   }, []);
-
-  // Remove the effect that updates healthRef since we're not using it anymore
 
   // Enemy tank behavior
   useFrame((state, delta) => {
@@ -109,6 +107,18 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           Math.sin(tankRotationRef.current) * delta * moveSpeed;
         tankRef.current.position.z +=
           Math.cos(tankRotationRef.current) * delta * moveSpeed;
+
+        // Update the enemy position in the game state to ensure accurate hit detection
+        const newPosition: [number, number, number] = [
+          tankRef.current.position.x,
+          tankRef.current.position.y,
+          tankRef.current.position.z,
+        ];
+
+        // Update position every few frames to reduce state updates
+        if (Math.random() < 0.1) {
+          updateEnemyPosition(enemy.id, newPosition);
+        }
       }
     }
   });
@@ -117,8 +127,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const handleHit = (damage: number) => {
     damageEnemy(enemy.id, damage);
   };
-
-  // No need to calculate health percentage here anymore as we're doing it in useFrame
 
   return (
     <group ref={tankRef}>
