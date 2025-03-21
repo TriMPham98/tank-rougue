@@ -17,7 +17,6 @@ const GameUI = () => {
     showUpgradeUI,
     availableUpgrades,
     upgradeStat,
-    dismissUpgradeUI,
     playerSpeed,
     playerFireRate,
     playerCameraRange,
@@ -58,7 +57,7 @@ const GameUI = () => {
       case "maxHealth":
         return "Max Health";
       case "healthRegen":
-        return "Health Regeneration";
+        return "Health Regen";
     }
   };
 
@@ -223,76 +222,125 @@ const GameUI = () => {
           <div
             className="upgrade-content"
             style={{
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-              padding: "20px",
-              borderRadius: "10px",
-              width: "500px",
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              padding: "25px",
+              borderRadius: "12px",
+              width: "550px",
               color: "white",
+              boxShadow: "0 0 20px rgba(0, 200, 0, 0.3)",
+              border: "1px solid rgba(76, 175, 80, 0.3)",
             }}>
-            <h2 style={{ color: "#4caf50", textAlign: "center" }}>
+            <h2
+              style={{
+                color: "#4caf50",
+                textAlign: "center",
+                fontSize: "1.8em",
+                marginBottom: "25px",
+                textShadow: "0 0 10px rgba(76, 175, 80, 0.5)",
+              }}>
               Level Up! Choose an Upgrade
             </h2>
 
             <div
               style={{
                 display: "flex",
-                justifyContent: "space-between",
-                marginTop: "20px",
+                justifyContent: "center",
+                gap: "15px",
               }}>
               {availableUpgrades.map((stat) => (
                 <div
                   key={stat}
                   onClick={() => upgradeStat(stat)}
                   style={{
-                    width: "30%",
+                    width: "160px",
+                    height: "200px",
                     padding: "15px",
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    borderRadius: "8px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    borderRadius: "10px",
                     cursor: "pointer",
                     textAlign: "center",
-                    transition: "transform 0.2s, background-color 0.2s",
+                    transition: "all 0.2s ease",
+                    border: "1px solid rgba(33, 150, 243, 0.3)",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                    transform: "translateY(0)",
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
                     ":hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
-                      transform: "scale(1.05)",
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
                     },
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      "rgba(255, 255, 255, 0.15)";
+                    e.currentTarget.style.transform = "translateY(-5px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 12px rgba(0, 0, 0, 0.3)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      "rgba(255, 255, 255, 0.08)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 8px rgba(0, 0, 0, 0.2)";
                   }}>
                   <div
                     style={{
-                      fontSize: "1.2em",
+                      fontSize: "1.3em",
                       fontWeight: "bold",
-                      marginBottom: "10px",
+                      marginBottom: "20px",
                       color: "#2196f3",
+                      textShadow: "0 0 5px rgba(33, 150, 243, 0.5)",
+                      height: "60px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      padding: "0 5px",
+                      wordWrap: "break-word",
+                      hyphens: "auto",
                     }}>
                     {getStatDisplayName(stat)}
                   </div>
-                  <div style={{ marginBottom: "5px" }}>
-                    Current: {getStatCurrentValue(stat)}
+                  <div
+                    style={{
+                      marginBottom: "20px",
+                      height: "50px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                    <div style={{ fontSize: "0.9em", marginBottom: "5px" }}>
+                      Current:
+                    </div>
+                    <div style={{ fontSize: "1.1em" }}>
+                      {getStatCurrentValue(stat)}
+                    </div>
                   </div>
-                  <div style={{ color: "#4caf50" }}>
-                    Upgrade: {getStatUpgradeAmount(stat)}
+                  <div
+                    style={{
+                      color: "#4caf50",
+                      fontWeight: "bold",
+                      height: "50px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                    <div style={{ fontSize: "0.9em", marginBottom: "5px" }}>
+                      Upgrade:
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1em",
+                        textShadow: "0 0 5px rgba(76, 175, 80, 0.3)",
+                      }}>
+                      {getStatUpgradeAmount(stat)}
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Skip button */}
-            <div
-              style={{
-                marginTop: "20px",
-                textAlign: "center",
-              }}>
-              <button
-                onClick={dismissUpgradeUI}
-                style={{
-                  padding: "8px 20px",
-                  backgroundColor: "#555",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}>
-                Skip Upgrade
-              </button>
             </div>
           </div>
         </div>

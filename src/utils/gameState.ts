@@ -69,7 +69,6 @@ interface GameState {
   updateEnemyPosition: (id: string, position: [number, number, number]) => void; // Add function to update enemy position
   incrementEnemyDefeatCount: () => void; // New function to track enemy defeats
   upgradeStat: (stat: UpgradeableStat) => void; // New function to upgrade a stat
-  dismissUpgradeUI: () => void; // Hide the upgrade UI
 }
 
 // Create the game state store
@@ -321,6 +320,4 @@ export const useGameState = create<GameState>((set, get) => ({
 
       return updates;
     }),
-
-  dismissUpgradeUI: () => set({ showUpgradeUI: false }),
 }));
