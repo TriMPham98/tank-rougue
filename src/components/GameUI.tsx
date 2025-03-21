@@ -75,7 +75,7 @@ const GameUI = () => {
 
       {/* Controls info */}
       <div className="controls-info">
-        <p>WASD: Move | Q/E: Rotate Turret | Space: Shoot | ESC: Pause</p>
+        <p>WASD: Move | J/K: Rotate Turret | Space: Shoot | ESC: Pause</p>
       </div>
     </div>
   );

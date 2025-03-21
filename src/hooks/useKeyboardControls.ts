@@ -44,10 +44,10 @@ export const useKeyboardControls = (): KeyboardControls => {
         case "d":
           setKeys((keys) => ({ ...keys, right: true }));
           break;
-        case "q":
+        case "j":
           setKeys((keys) => ({ ...keys, turretLeft: true }));
           break;
-        case "e":
+        case "k":
           setKeys((keys) => ({ ...keys, turretRight: true }));
           break;
         case " ":
@@ -78,10 +78,10 @@ export const useKeyboardControls = (): KeyboardControls => {
         case "d":
           setKeys((keys) => ({ ...keys, right: false }));
           break;
-        case "q":
+        case "j":
           setKeys((keys) => ({ ...keys, turretLeft: false }));
           break;
-        case "e":
+        case "k":
           setKeys((keys) => ({ ...keys, turretRight: false }));
           break;
         case " ":
