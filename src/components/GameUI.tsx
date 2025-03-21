@@ -1,8 +1,12 @@
 import { useGameState } from "../utils/gameState";
 import "../assets/GameUI.css";
 import { UpgradeableStat } from "../utils/gameState";
+import { useState, useCallback } from "react";
 
 const GameUI = () => {
+  // Add state to track if upgrade is in progress
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
   const {
     playerHealth,
     playerMaxHealth,
@@ -22,6 +26,22 @@ const GameUI = () => {
     playerCameraRange,
     playerHealthRegen,
   } = useGameState();
+
+  // Create a debounced version of upgradeStat
+  const handleUpgrade = useCallback(
+    (stat: UpgradeableStat) => {
+      if (isUpgrading) return; // Prevent multiple clicks
+
+      setIsUpgrading(true);
+      upgradeStat(stat);
+
+      // Reset after 1 second (longer than needed, just to be safe)
+      setTimeout(() => {
+        setIsUpgrading(false);
+      }, 1000);
+    },
+    [upgradeStat, isUpgrading]
+  );
 
   // Calculate health percentage for health bar
   const healthPercentage = (playerHealth / playerMaxHealth) * 100;
@@ -250,7 +270,7 @@ const GameUI = () => {
               {availableUpgrades.map((stat) => (
                 <div
                   key={stat}
-                  onClick={() => upgradeStat(stat)}
+                  onClick={() => handleUpgrade(stat)}
                   style={{
                     width: "160px",
                     height: "200px",

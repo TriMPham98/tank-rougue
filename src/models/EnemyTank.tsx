@@ -167,7 +167,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         </Box>
       </group>
 
-
       {/* Enemy tank tracks - left and right sides */}
       {enemy.type === "tank" ? (
         <>
