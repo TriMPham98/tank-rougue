@@ -129,6 +129,7 @@ const GameUI = () => {
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              marginBottom: "8px",
             }}>
             <span>Level</span>
             <div
@@ -137,8 +138,8 @@ const GameUI = () => {
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "36px",
-                height: "36px",
+                width: "30px",
+                height: "30px",
                 borderRadius: "50%",
                 backgroundColor: getLevelColor(),
                 color: "#fff",
@@ -151,7 +152,12 @@ const GameUI = () => {
           </div>
           <div
             className="level-info"
-            style={{ fontSize: "0.8em", opacity: 0.8 }}>
+            style={{
+              fontSize: "0.8em",
+              opacity: 0.8,
+              marginTop: "4px",
+              marginBottom: "6px",
+            }}>
             Enemies: {Math.floor(3 + 2.5 * Math.log10(level + 1))}
           </div>
 
@@ -194,7 +200,7 @@ const GameUI = () => {
         style={{
           position: "absolute",
           right: "20px",
-          top: "120px",
+          top: "165px",
           backgroundColor: "rgba(0, 0, 0, 0.6)",
           padding: "10px",
           borderRadius: "5px",
