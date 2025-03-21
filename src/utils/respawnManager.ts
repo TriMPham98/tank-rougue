@@ -50,16 +50,26 @@ export const useRespawnManager = () => {
           ...state.enemies.map((e) => e.position),
         ];
 
+        // Set grid size based on level
+        const gridSize = Math.min(40 + state.level * 2, 70);
+
         // Generate a random position for the new enemy
-        const position = generateRandomPosition(50, existingPositions);
+        const position = generateRandomPosition(gridSize, existingPositions);
 
-        // Determine enemy type - more turrets in later levels
-        const type =
-          Math.random() < 0.3 + state.level * 0.05 ? "turret" : "tank";
+        // Calculate turret probability using the balanced formula
+        const turretProbability = Math.min(0.2 + state.level * 0.03, 0.5);
+        const type = Math.random() < turretProbability ? "turret" : "tank";
 
-        // Scale enemy health with level
+        // Calculate enemy health using the balanced formula
+        const tankBaseHealth = 75;
+        const turretBaseHealth = 50;
+        const linearScale = state.level * 10;
+        const exponentialScale = Math.floor(Math.sqrt(state.level) * 5);
+
         const health =
-          type === "turret" ? 50 + state.level * 10 : 75 + state.level * 15;
+          type === "turret"
+            ? turretBaseHealth + linearScale + exponentialScale
+            : tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
 
         console.log(
           `🟢 Preparing to spawn new ${type} at position [${position[0].toFixed(
@@ -68,19 +78,25 @@ export const useRespawnManager = () => {
         );
 
         // Spawn the new enemy with a delay
+        // Use a delay that decreases as level increases for more challenge
+        const respawnDelay = Math.max(3000 - state.level * 200, 1000);
+
         setTimeout(() => {
           try {
-            state.spawnEnemy({
-              position,
-              health,
-              type,
-            });
+            // Only spawn a new enemy if the game is still running
+            if (!state.isGameOver && !state.isPaused) {
+              state.spawnEnemy({
+                position,
+                health,
+                type,
+              });
 
-            console.log(`✅ Spawned new ${type} with health ${health}`);
+              console.log(`✅ Spawned new ${type} with health ${health}`);
+            }
           } catch (error) {
             console.error(`❌ Error spawning enemy: ${error}`);
           }
-        }, 3000); // 3 seconds delay
+        }, respawnDelay);
       } else if (prevEnemyCountRef.current < currentEnemyCount) {
         // New enemy appeared (either through respawn or level generation)
         const newEnemyIds = currentEnemyIds.filter(

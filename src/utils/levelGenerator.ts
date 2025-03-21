@@ -58,9 +58,23 @@ export const generateEnemies = (
   level: number,
   playerPosition: [number, number, number]
 ): Omit<Enemy, "id">[] => {
+  // More balanced difficulty progression formula
+  // Base count + logarithmic growth function for better scaling
+  const baseEnemyCount = 3;
+  const maxEnemies = 25;
+  const growthFactor = 2.5;
+
+  const enemyCount = Math.min(
+    Math.floor(baseEnemyCount + growthFactor * Math.log10(level + 1)),
+    maxEnemies
+  );
+
+  // Adjust grid size based on level to make early levels more manageable
+  const gridSize = Math.min(40 + level * 2, 70);
+
   const config: LevelConfig = {
-    gridSize: 50,
-    enemyCount: Math.min(3 + level * 2, 20), // Increase enemies with level, max 20
+    gridSize,
+    enemyCount,
     powerUpCount: Math.min(1 + Math.floor(level / 2), 5), // Increase power-ups with level, max 5
   };
 
@@ -73,10 +87,22 @@ export const generateEnemies = (
     existingPositions.push(position);
 
     // Determine enemy type - more turrets in later levels
-    const type = Math.random() < 0.3 + level * 0.05 ? "turret" : "tank";
+    // Gradually increase turret probability with level
+    const turretProbability = Math.min(0.2 + level * 0.03, 0.5);
+    const type = Math.random() < turretProbability ? "turret" : "tank";
 
-    // Scale enemy health with level
-    const health = type === "turret" ? 50 + level * 10 : 75 + level * 15;
+    // More balanced health scaling with level
+    // Tanks: Base health + linear scaling + small exponential component
+    // Turrets: Less health but more scaling for higher levels (more dangerous)
+    const tankBaseHealth = 75;
+    const turretBaseHealth = 50;
+    const linearScale = level * 10;
+    const exponentialScale = Math.floor(Math.sqrt(level) * 5);
+
+    const health =
+      type === "turret"
+        ? turretBaseHealth + linearScale + exponentialScale
+        : tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
 
     enemies.push({
       position,
@@ -94,10 +120,25 @@ export const generatePowerUps = (
   playerPosition: [number, number, number],
   enemyPositions: [number, number, number][]
 ): Omit<PowerUp, "id">[] => {
+  // More balanced progression formula for power-ups
+  const basePowerUpCount = 1;
+  const maxPowerUps = 6;
+  const powerUpGrowthFactor = 0.5;
+
+  const powerUpCount = Math.min(
+    Math.floor(
+      basePowerUpCount + powerUpGrowthFactor * Math.log10(level + 1) * 2
+    ),
+    maxPowerUps
+  );
+
+  // Adjust grid size to match enemy generation
+  const gridSize = Math.min(40 + level * 2, 70);
+
   const config: LevelConfig = {
-    gridSize: 50,
-    enemyCount: Math.min(3 + level * 2, 20),
-    powerUpCount: Math.min(1 + Math.floor(level / 2), 5),
+    gridSize,
+    enemyCount: 0, // Not used in this function
+    powerUpCount,
   };
 
   const powerUps: Omit<PowerUp, "id">[] = [];

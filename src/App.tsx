@@ -3,12 +3,12 @@ import "./App.css";
 import GameScene from "./components/GameScene";
 import GameUI from "./components/GameUI";
 import { useGameState } from "./utils/gameState";
+import { generateLevel } from "./utils/levelGenerator";
 
 function App() {
   // Use a ref to ensure initialization only happens once
   const initialized = useRef(false);
-  const { restartGame, togglePause, isPaused, spawnEnemy, spawnPowerUp } =
-    useGameState();
+  const { restartGame, togglePause, isPaused, level } = useGameState();
 
   // Initialize game on first render
   useEffect(() => {
@@ -17,50 +17,17 @@ function App() {
       // Set game to initial state
       restartGame();
 
-      // Generate initial enemies and power-ups
+      // Generate initial enemies and power-ups based on level 1
       try {
-        // Generate some enemies at different positions
-        spawnEnemy({
-          position: [5, 0.5, 5],
-          health: 100,
-          type: "tank",
-        });
-
-        spawnEnemy({
-          position: [-5, 0.5, 5],
-          health: 100,
-          type: "turret",
-        });
-
-        spawnEnemy({
-          position: [8, 0.5, -8],
-          health: 120,
-          type: "tank",
-        });
-
-        spawnEnemy({
-          position: [-8, 0.5, -8],
-          health: 80,
-          type: "tank",
-        });
-
-        // Add some power-ups
-        spawnPowerUp({
-          position: [3, 0.5, -3],
-          type: "health",
-        });
-
-        spawnPowerUp({
-          position: [-3, 0.5, 3],
-          type: "damage",
-        });
+        const playerPosition: [number, number, number] = [0, 0.5, 0];
+        generateLevel(1, playerPosition);
 
         initialized.current = true;
       } catch (error) {
         console.error("Error initializing game:", error);
       }
     }
-  }, [restartGame, spawnEnemy, spawnPowerUp]);
+  }, [restartGame]);
 
   // Handle escape key for pausing
   useEffect(() => {

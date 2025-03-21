@@ -24,6 +24,8 @@ interface GameState {
   playerDamage: number;
   score: number;
   level: number;
+  enemiesDefeated: number;
+  enemiesRequiredForNextLevel: number;
 
   // Player position for tracking
   playerTankPosition: [number, number, number];
@@ -50,6 +52,7 @@ interface GameState {
   updatePlayerPosition: (position: [number, number, number]) => void;
   damageEnemy: (id: string, amount: number) => boolean; // Returns true if enemy is destroyed
   updateEnemyPosition: (id: string, position: [number, number, number]) => void; // Add function to update enemy position
+  incrementEnemyDefeatCount: () => void; // New function to track enemy defeats
 }
 
 // Create the game state store
@@ -61,6 +64,8 @@ export const useGameState = create<GameState>((set, get) => ({
   playerDamage: 25,
   score: 0,
   level: 1,
+  enemiesDefeated: 0,
+  enemiesRequiredForNextLevel: 5, // Initial threshold for level 1→2
 
   // Initial player position
   playerTankPosition: [0, 0.5, 0],
@@ -159,6 +164,8 @@ export const useGameState = create<GameState>((set, get) => ({
       powerUps: [],
       isGameOver: false,
       isPaused: false,
+      enemiesDefeated: 0,
+      enemiesRequiredForNextLevel: 5,
     }),
 
   togglePause: () =>
@@ -166,12 +173,50 @@ export const useGameState = create<GameState>((set, get) => ({
       isPaused: !state.isPaused,
     })),
 
+  incrementEnemyDefeatCount: () => {
+    set((state) => {
+      const newCount = state.enemiesDefeated + 1;
+      const shouldAdvanceLevel = newCount >= state.enemiesRequiredForNextLevel;
+
+      // If reaching the required count, automatically advance level
+      if (shouldAdvanceLevel) {
+        // We'll call advanceLevel from here instead of returning a new object
+        setTimeout(() => {
+          get().advanceLevel();
+        }, 500); // Give a small delay before advancing level
+      }
+
+      return { enemiesDefeated: newCount };
+    });
+  },
+
   advanceLevel: () =>
-    set((state) => ({
-      level: state.level + 1,
-      playerMaxHealth: state.playerMaxHealth + 10,
-      playerHealth: state.playerHealth + 10,
-    })),
+    set((state) => {
+      const newLevel = state.level + 1;
+
+      // Calculate new requirements for next level
+      // Progressively more enemies needed to reach higher levels
+      const baseRequirement = 5;
+      const scalingFactor = 2;
+      const nextLevelRequirement = Math.floor(
+        baseRequirement + scalingFactor * Math.log10(newLevel + 1) * newLevel
+      );
+
+      // Calculate health bonus based on level
+      const healthBonus = 10 + Math.floor(Math.sqrt(newLevel) * 5);
+
+      return {
+        level: newLevel,
+        playerMaxHealth: state.playerMaxHealth + healthBonus,
+        playerHealth: Math.min(
+          state.playerHealth + healthBonus,
+          state.playerMaxHealth + healthBonus
+        ),
+        playerDamage: state.playerDamage + Math.floor(newLevel / 2),
+        enemiesDefeated: 0, // Reset counter for the new level
+        enemiesRequiredForNextLevel: nextLevelRequirement,
+      };
+    }),
 
   updatePlayerPosition: (position) =>
     set((state) => {
@@ -203,6 +248,7 @@ export const useGameState = create<GameState>((set, get) => ({
     if (isDestroyed) {
       get().removeEnemy(id);
       get().increaseScore(enemy.type === "tank" ? 100 : 150);
+      get().incrementEnemyDefeatCount(); // Track the enemy defeat
       return true;
     } else {
       set((state) => ({
