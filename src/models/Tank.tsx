@@ -16,7 +16,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const turretRef = useRef<Group>(null);
 
   // Use refs instead of state for values that shouldn't trigger renders
-  const tankRotationRef = useRef(0);
+  const tankRotationRef = useRef(Math.PI); // Initialize with PI (180 degrees) to face forward
   const turretRotationRef = useRef(0);
   const lastShootTimeRef = useRef(0);
   const positionRef = useRef<[number, number, number]>([...position]);
@@ -67,6 +67,9 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       tankRef.current.position.y = position[1];
       tankRef.current.position.z = position[2];
 
+      // Apply initial rotation to face forward
+      tankRef.current.rotation.y = tankRotationRef.current;
+
       // Update initial position in the game state - only once at startup
       const initialPos: [number, number, number] = [
         tankRef.current.position.x,
@@ -75,7 +78,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ];
       positionRef.current = initialPos;
       updatePlayerPosition(initialPos);
-      debug.log("Tank initialized at position:", initialPos);
+      debug.log(
+        "Tank initialized at position:",
+        initialPos,
+        "with rotation:",
+        tankRotationRef.current
+      );
     }
 
     // Return cleanup function to preserve state during HMR
