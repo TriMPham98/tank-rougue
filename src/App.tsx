@@ -8,7 +8,8 @@ import { generateLevel } from "./utils/levelGenerator";
 function App() {
   // Use a ref to ensure initialization only happens once
   const initialized = useRef(false);
-  const { restartGame, togglePause, isPaused, level } = useGameState();
+  const { restartGame, togglePause, isPaused, level, showUpgradeUI } =
+    useGameState();
 
   // Initialize game on first render
   useEffect(() => {
@@ -32,7 +33,7 @@ function App() {
   // Handle escape key for pausing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && !showUpgradeUI) {
         togglePause();
       }
     };
@@ -42,7 +43,14 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [togglePause]);
+  }, [togglePause, showUpgradeUI]);
+
+  // Automatically pause the game when upgrade UI is shown
+  useEffect(() => {
+    if (showUpgradeUI && !isPaused) {
+      togglePause();
+    }
+  }, [showUpgradeUI, isPaused, togglePause]);
 
   return (
     <div

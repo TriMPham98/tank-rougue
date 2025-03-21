@@ -34,10 +34,27 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   // Get game state - only get what's needed
   const playerDamage = useGameState((state) => state.playerDamage);
+  const playerSpeed = useGameState((state) => state.playerSpeed);
+  const playerFireRate = useGameState((state) => state.playerFireRate);
+  const playerHealthRegen = useGameState((state) => state.playerHealthRegen);
   const isPaused = useGameState((state) => state.isPaused);
   const updatePlayerPosition = useGameState(
     (state) => state.updatePlayerPosition
   );
+  const healPlayer = useGameState((state) => state.healPlayer);
+
+  // Handle health regeneration
+  useEffect(() => {
+    if (playerHealthRegen <= 0) return;
+
+    const interval = setInterval(() => {
+      if (!isPaused) {
+        healPlayer(playerHealthRegen);
+      }
+    }, 1000); // Regenerate every second
+
+    return () => clearInterval(interval);
+  }, [playerHealthRegen, healPlayer, isPaused]);
 
   // Set initial position once
   useEffect(() => {
@@ -103,8 +120,8 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     // Apply rotation directly to the mesh
     tankRef.current.rotation.y = tankRotationRef.current;
 
-    // Movement
-    const moveSpeed = 3;
+    // Movement - use playerSpeed from game state
+    const moveSpeed = playerSpeed;
     let moved = false;
 
     if (forward) {
@@ -147,12 +164,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
-    // Handle shooting - use ref for timing check
+    // Handle shooting - use playerFireRate from game state
     if (
       shoot &&
-      state.clock.getElapsedTime() - lastShootTimeRef.current > 0.5
+      state.clock.getElapsedTime() - lastShootTimeRef.current > playerFireRate
     ) {
-      // Can shoot every 0.5 seconds
       const shootPosition: [number, number, number] = [
         tankRef.current.position.x +
           Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,

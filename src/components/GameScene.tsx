@@ -91,11 +91,14 @@ const FollowCamera = memo(() => {
   useFrame(() => {
     // Access state directly from the store
     const playerPosition = getState().playerTankPosition;
+    const cameraRange = getState().playerCameraRange;
 
     if (playerPosition) {
-      // Update offset based on camera rotation
-      offsetRef.current.x = -Math.sin(camera.rotation.y) * 12;
-      offsetRef.current.z = -Math.cos(camera.rotation.y) * 12;
+      // Update offset based on camera rotation and camera range
+      const distanceBehind = -cameraRange;
+      offsetRef.current.x = -Math.sin(camera.rotation.y) * distanceBehind;
+      offsetRef.current.y = 8 + (cameraRange - 12) * 0.3; // Adjust height slightly based on range
+      offsetRef.current.z = -Math.cos(camera.rotation.y) * distanceBehind;
 
       // Calculate target position
       targetPositionRef.current.set(
