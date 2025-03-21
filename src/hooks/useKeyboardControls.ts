@@ -23,6 +23,14 @@ export const useKeyboardControls = (): KeyboardControls => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log(
+        "Key pressed:",
+        e.key,
+        e.type,
+        "Active element:",
+        document.activeElement.tagName
+      );
+
       switch (e.key.toLowerCase()) {
         case "w":
           setKeys((keys) => ({ ...keys, forward: true }));
@@ -49,6 +57,14 @@ export const useKeyboardControls = (): KeyboardControls => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      console.log(
+        "Key released:",
+        e.key,
+        e.type,
+        "Active element:",
+        document.activeElement.tagName
+      );
+
       switch (e.key.toLowerCase()) {
         case "w":
           setKeys((keys) => ({ ...keys, forward: false }));
@@ -74,12 +90,12 @@ export const useKeyboardControls = (): KeyboardControls => {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keyup", handleKeyUp, true);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keyup", handleKeyUp, true);
     };
   }, []);
 

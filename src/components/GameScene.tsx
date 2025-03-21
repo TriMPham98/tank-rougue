@@ -5,6 +5,7 @@ import {
   Environment,
   useHelper,
   Stats,
+  SpotLight,
 } from "@react-three/drei";
 import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
@@ -19,9 +20,11 @@ import {
   Component,
   ErrorInfo,
   ReactNode,
+  useState,
 } from "react";
 import { useGameState } from "../utils/gameState";
 import { SpotLightHelper, Vector3 } from "three";
+import "./GameScene.css";
 
 // Error boundary component to catch and display errors
 class ErrorBoundary extends Component<
@@ -139,7 +142,7 @@ const SpotlightUpdater = () => {
 };
 
 // Scene Content as a separate component to load within Canvas
-const SceneContent = () => {
+const SceneContent = memo(({ playerTank }) => {
   console.log("SceneContent component rendered");
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
@@ -166,8 +169,8 @@ const SceneContent = () => {
       {/* Player spotlight with its own updater component */}
       <SpotlightUpdater />
 
-      {/* Player tank */}
-      <Tank position={[0, 0.5, 0]} />
+      {/* Player tank - use the memoized instance */}
+      {playerTank}
 
       {/* Enemy tanks - Using component instances ensures they handle their own updates */}
       {getState().enemies.map((enemy) => (
@@ -185,16 +188,59 @@ const SceneContent = () => {
       {/* Camera that follows player */}
       <FollowCamera />
 
-      {/* Dev controls - enable for development */}
-      <OrbitControls enabled={true} />
+      {/* Dev controls - disabled to prevent keyboard input interference */}
+      <OrbitControls enabled={false} />
 
       <Environment preset="sunset" />
     </Suspense>
   );
-};
+});
 
+// Main game scene component
 const GameScene = () => {
   console.log("GameScene component render started");
+  const [enemies, setEnemies] = useState(0);
+  const [powerUps, setPowerUps] = useState(0);
+
+  // Create a memoized player tank component that won't re-render
+  const PlayerTank = useMemo(() => {
+    console.log("Creating memoized player tank");
+    return <Tank position={[0, 0.5, 0]} />;
+  }, []);
+
+  // Canvas reference for handling focus
+  const canvasRef = useRef(null);
+
+  // Effect for focusing the canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      // Set tabIndex to make canvas focusable
+      canvas.tabIndex = 0;
+
+      // Force focus on click
+      const handleCanvasClick = () => {
+        canvas.focus();
+        console.log("Canvas focused");
+      };
+
+      // Add direct keyboard event listener for debugging
+      const handleKeyDown = (e) => {
+        console.log("Canvas keydown event:", e.key);
+      };
+
+      canvas.addEventListener("click", handleCanvasClick);
+      canvas.addEventListener("keydown", handleKeyDown);
+
+      // Focus canvas initially
+      canvas.focus();
+
+      return () => {
+        canvas.removeEventListener("click", handleCanvasClick);
+        canvas.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, []);
 
   // Get direct access to the store state that's read-only and doesn't trigger re-renders
   const getState = useRef(useGameState.getState).current;
@@ -233,15 +279,20 @@ const GameScene = () => {
 
   return (
     <ErrorBoundary>
-      <Canvas
-        shadows
-        camera={{ position: [0, 10, 20], fov: 60 }}
-        onCreated={(state) => console.log("Canvas created")}>
-        <color attach="background" args={["#87CEEB"]} />
-        <fog attach="fog" args={["#87CEEB", 30, 100]} />
-        <Stats />
-        <SceneContent />
-      </Canvas>
+      <div
+        ref={canvasRef}
+        className="canvas-container"
+        style={{ height: "100vh" }}>
+        <Canvas
+          shadows
+          camera={{ position: [0, 8, -12], fov: 60 }}
+          onCreated={() => console.log("Canvas created")}>
+          <color attach="background" args={["#87CEEB"]} />
+          <fog attach="fog" args={["#87CEEB", 30, 100]} />
+          <Stats />
+          <SceneContent playerTank={PlayerTank} />
+        </Canvas>
+      </div>
     </ErrorBoundary>
   );
 };

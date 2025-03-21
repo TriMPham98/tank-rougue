@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
-import { Mesh, Vector3 } from "three";
+import { Mesh, Vector3, Group } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import Projectile from "./Projectile";
@@ -11,14 +11,17 @@ interface TankProps {
 }
 
 const Tank = ({ position = [0, 0, 0] }: TankProps) => {
-  const tankRef = useRef<Mesh>(null);
-  const turretRef = useRef<Mesh>(null);
+  const tankRef = useRef<Group>(null);
+  const turretRef = useRef<Group>(null);
 
   // Use refs instead of state for values that shouldn't trigger renders
   const tankRotationRef = useRef(0);
   const turretRotationRef = useRef(0);
   const lastShootTimeRef = useRef(0);
   const positionRef = useRef<[number, number, number]>([...position]);
+
+  // Add a ref to track if tank is already initialized
+  const isInitializedRef = useRef(false);
 
   // Keep projectiles in state since we need to render them
   const [projectiles, setProjectiles] = useState<
@@ -38,8 +41,14 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   // Set initial position once
   useEffect(() => {
-    if (tankRef.current) {
-      tankRef.current.position.set(...position);
+    if (tankRef.current && !isInitializedRef.current) {
+      // Only initialize once
+      isInitializedRef.current = true;
+
+      tankRef.current.position.x = position[0];
+      tankRef.current.position.y = position[1];
+      tankRef.current.position.z = position[2];
+
       // Update initial position in the game state - only once at startup
       const initialPos: [number, number, number] = [
         tankRef.current.position.x,
@@ -48,12 +57,40 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ];
       positionRef.current = initialPos;
       updatePlayerPosition(initialPos);
+      console.log("Tank initialized at position:", initialPos);
     }
-  }, []);
+
+    // Return cleanup function to preserve state during HMR
+    return () => {
+      // Don't reset isInitialized on unmount to prevent reinitializing on HMR
+      console.log("Tank component cleanup - preserve position state");
+    };
+  }, [position, updatePlayerPosition]);
 
   // Tank movement and rotation - minimizing state updates
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused) return;
+
+    // More detailed debug logging
+    if (
+      forward ||
+      backward ||
+      left ||
+      right ||
+      turretLeft ||
+      turretRight ||
+      shoot
+    ) {
+      console.log("Control states:", {
+        forward,
+        backward,
+        left,
+        right,
+        turretLeft,
+        turretRight,
+        shoot,
+      });
+    }
 
     // Rotation - directly modify the ref instead of using setState
     if (left) {
@@ -71,11 +108,25 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     let moved = false;
 
     if (forward) {
+      // Log position before movement
+      console.log("Before move - Position:", [
+        tankRef.current.position.x,
+        tankRef.current.position.y,
+        tankRef.current.position.z,
+      ]);
+
       tankRef.current.position.x +=
         Math.sin(tankRotationRef.current) * delta * moveSpeed;
       tankRef.current.position.z +=
         Math.cos(tankRotationRef.current) * delta * moveSpeed;
       moved = true;
+
+      // Log position after movement
+      console.log("After move - Position:", [
+        tankRef.current.position.x,
+        tankRef.current.position.y,
+        tankRef.current.position.z,
+      ]);
     }
     if (backward) {
       tankRef.current.position.x -=
@@ -139,6 +190,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ) {
         positionRef.current = newPosition;
         updatePlayerPosition(newPosition);
+        console.log("Updated position:", newPosition);
       }
     }
   });
@@ -150,7 +202,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   return (
     <>
-      <group position={new Vector3(...position)} ref={tankRef}>
+      <group ref={tankRef}>
         {/* Tank body */}
         <Box args={[1.5, 0.5, 2]} castShadow receiveShadow>
           <meshStandardMaterial color="green" />

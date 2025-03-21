@@ -1,0 +1,18 @@
+.canvas-container {
+  width: 100%;
+  height: 100vh;
+  outline: none; /* Remove outline when focused */
+  cursor: pointer; /* Indicate it's clickable */
+  position: relative;
+}
+
+.canvas-container:focus {
+  outline: none; /* Ensure no outline on focus */
+}
+
+/* Ensure canvas container covers full viewport */
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
