@@ -85,7 +85,7 @@ export const useGameState = create<GameState>((set, get) => ({
   score: 0,
   level: 1,
   enemiesDefeated: 0,
-  enemiesRequiredForNextLevel: 5, // Initial threshold for level 1→2
+  enemiesRequiredForNextLevel: 1, // Changed: Initial threshold - level 1 only needs 1 enemy
 
   // Upgrade system
   showUpgradeUI: false,
@@ -192,7 +192,7 @@ export const useGameState = create<GameState>((set, get) => ({
       isGameOver: false,
       isPaused: false,
       enemiesDefeated: 0,
-      enemiesRequiredForNextLevel: 5,
+      enemiesRequiredForNextLevel: 1,
       showUpgradeUI: false,
       availableUpgrades: [],
     }),
@@ -223,13 +223,8 @@ export const useGameState = create<GameState>((set, get) => ({
     set((state) => {
       const newLevel = state.level + 1;
 
-      // Calculate new requirements for next level
-      // Progressively more enemies needed to reach higher levels
-      const baseRequirement = 5;
-      const scalingFactor = 2;
-      const nextLevelRequirement = Math.floor(
-        baseRequirement + scalingFactor * Math.log10(newLevel + 1) * newLevel
-      );
+      // Simplified level requirement - just use the level number
+      const nextLevelRequirement = newLevel;
 
       // Generate random upgrade options (3 options)
       const allUpgrades: UpgradeableStat[] = [
