@@ -19,7 +19,7 @@ const isTooClose = (
 };
 
 // Generate a random position on the grid, ensuring it's not too close to other entities
-const generateRandomPosition = (
+export const generateRandomPosition = (
   gridSize: number,
   existingPositions: [number, number, number][],
   minDistance: number = 5

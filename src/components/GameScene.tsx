@@ -25,6 +25,7 @@ import {
 import { useGameState } from "../utils/gameState";
 import { SpotLightHelper, Vector3, SpotLight as ThreeSpotLight } from "three";
 import "./GameScene.css";
+import { useRespawnManager } from "../utils/respawnManager";
 
 // Error boundary component to catch and display errors
 class ErrorBoundary extends Component<
@@ -68,6 +69,13 @@ class ErrorBoundary extends Component<
     return this.props.children;
   }
 }
+
+// Component to handle the respawning of enemies
+const EnemyRespawnManager = () => {
+  // Use the respawn manager hook
+  useRespawnManager();
+  return null;
+};
 
 // Component to follow the player's tank with the camera
 const FollowCamera = memo(() => {
@@ -148,8 +156,25 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
 
+  // Use state to trigger re-renders when enemies change
+  const [enemies, setEnemies] = useState(getState().enemies);
+
+  // Subscribe to changes in the enemy list
+  useEffect(() => {
+    const unsubscribe = useGameState.subscribe((state) => {
+      if (state.enemies !== enemies) {
+        setEnemies(state.enemies);
+      }
+    });
+
+    return unsubscribe;
+  }, [enemies]);
+
   return (
     <Suspense fallback={null}>
+      {/* Enemy respawn manager */}
+      <EnemyRespawnManager />
+
       {/* Ambient light for overall scene brightness */}
       <ambientLight intensity={0.5} />
 
@@ -174,13 +199,13 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       {playerTank}
 
       {/* Enemy tanks - Using component instances ensures they handle their own updates */}
-      {getState().enemies.map((enemy) => (
-        <EnemyTank key={enemy.id} enemy={enemy} />
+      {enemies.map((enemy) => (
+        <EnemyTank key={`enemy-${enemy.id}`} enemy={enemy} />
       ))}
 
       {/* Power-ups */}
       {getState().powerUps.map((powerUp) => (
-        <PowerUpItem key={powerUp.id} powerUp={powerUp} />
+        <PowerUpItem key={`powerup-${powerUp.id}`} powerUp={powerUp} />
       ))}
 
       <Ground />
