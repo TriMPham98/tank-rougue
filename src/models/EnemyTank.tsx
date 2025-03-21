@@ -182,17 +182,19 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       {/* Health indicator */}
       <Box
         args={[1, 0.1, 0.1]}
-        position={[0, enemy.type === "tank" ? 1.2 : 1.5, 0]}>
-        <meshBasicMaterial color="red" />
+        position={[0, enemy.type === "tank" ? 1.2 : 1.5, 0]}
+        renderOrder={1}>
+        <meshBasicMaterial color="red" transparent depthTest={false} />
       </Box>
       <Box
         args={[healthPercent, 0.1, 0.1]}
         position={[
           -(0.5 - healthPercent / 2),
           enemy.type === "tank" ? 1.2 : 1.5,
-          0,
-        ]}>
-        <meshBasicMaterial color="green" />
+          0.00g1,
+        ]}
+        renderOrder={2}>
+        <meshBasicMaterial color="green" transparent depthTest={false} />
       </Box>
     </group>
   );
