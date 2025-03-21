@@ -52,23 +52,51 @@ const FollowCamera = memo(() => {
   return null;
 });
 
-const GameScene = () => {
+// Separate component to handle spotlight updates inside the Canvas
+const SpotlightUpdater = () => {
+  // Get direct access to the store state
+  const getState = useRef(useGameState.getState).current;
   const spotLightRef = useRef<THREE.SpotLight>(null);
 
+  // Update spotlight position on every frame
+  useFrame(() => {
+    const playerTankPosition = getState().playerTankPosition;
+
+    if (spotLightRef.current && playerTankPosition) {
+      spotLightRef.current.position.set(
+        playerTankPosition[0],
+        playerTankPosition[1] + 10,
+        playerTankPosition[2]
+      );
+    }
+  });
+
+  return (
+    <spotLight
+      ref={spotLightRef}
+      position={[0, 10, 0]} // Default position, will be updated in useFrame
+      angle={0.4}
+      penumbra={0.5}
+      intensity={1.0}
+      castShadow
+      shadow-bias={-0.001}
+    />
+  );
+};
+
+const GameScene = () => {
   // Get direct access to the store state that's read-only and doesn't trigger re-renders
   const getState = useRef(useGameState.getState).current;
 
   // Refs for values needed in rendering
   const enemiesRef = useRef(getState().enemies);
   const powerUpsRef = useRef(getState().powerUps);
-  const playerPositionRef = useRef(getState().playerTankPosition);
 
   // Subscribe to state changes outside of render to update refs
   useEffect(() => {
     const unsubscribe = useGameState.subscribe((state) => {
       enemiesRef.current = state.enemies;
       powerUpsRef.current = state.powerUps;
-      playerPositionRef.current = state.playerTankPosition;
     });
 
     return unsubscribe;
@@ -81,24 +109,6 @@ const GameScene = () => {
       powerUps: powerUpsRef.current.length,
     });
   }, []);
-
-  // Calculate spotlight position
-  const updateSpotlightPosition = useMemo(() => {
-    return () => {
-      if (spotLightRef.current && playerPositionRef.current) {
-        spotLightRef.current.position.set(
-          playerPositionRef.current[0],
-          playerPositionRef.current[1] + 10,
-          playerPositionRef.current[2]
-        );
-      }
-    };
-  }, []);
-
-  // Update spotlight position on every frame
-  useFrame(() => {
-    updateSpotlightPosition();
-  });
 
   return (
     <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
@@ -124,16 +134,8 @@ const GameScene = () => {
           shadow-camera-bottom={-20}
         />
 
-        {/* Player spotlight */}
-        <spotLight
-          ref={spotLightRef}
-          position={[0, 10, 0]} // Default position, will be updated in useFrame
-          angle={0.4}
-          penumbra={0.5}
-          intensity={1.0}
-          castShadow
-          shadow-bias={-0.001}
-        />
+        {/* Player spotlight with its own updater component */}
+        <SpotlightUpdater />
 
         {/* Player tank */}
         <Tank position={[0, 0.5, 0]} />
