@@ -223,8 +223,8 @@ export const useGameState = create<GameState>((set, get) => ({
     set((state) => {
       const newLevel = state.level + 1;
 
-      // Simplified level requirement - just use the level number
-      const nextLevelRequirement = newLevel;
+      // Modified: Always require only 1 enemy per level for faster debugging
+      const nextLevelRequirement = 1;
 
       // Generate random upgrade options (3 options)
       const allUpgrades: UpgradeableStat[] = [
