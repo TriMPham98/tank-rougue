@@ -191,7 +191,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         position={[
           -(0.5 - healthPercent / 2),
           enemy.type === "tank" ? 1.2 : 1.5,
-          0.00g1,
+          0.001,
         ]}
         renderOrder={2}>
         <meshBasicMaterial color="green" transparent depthTest={false} />
