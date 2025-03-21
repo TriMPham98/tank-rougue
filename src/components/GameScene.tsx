@@ -262,12 +262,6 @@ const GameScene = () => {
     });
   }, []);
 
-  // Using this effect to log when Canvas is created
-  useEffect(() => {
-    console.log("Canvas container mounted");
-    return () => console.log("Canvas container unmounted");
-  }, []);
-
   return (
     <ErrorBoundary>
       <div

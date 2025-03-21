@@ -14,16 +14,11 @@ function App() {
   useEffect(() => {
     // Only run initialization once
     if (!initialized.current) {
-      console.log("Initializing game...");
-
       // Set game to initial state
       restartGame();
-      console.log("Game restarted");
 
       // Generate initial enemies and power-ups
       try {
-        console.log("Spawning enemies and power-ups...");
-
         // Generate some enemies at different positions
         spawnEnemy({
           position: [5, 0.5, 5],
