@@ -254,14 +254,6 @@ const GameScene = () => {
     return unsubscribe;
   }, []);
 
-  // Debug: log state changes
-  useEffect(() => {
-    console.log("GameScene rendered", {
-      enemies: enemiesRef.current.length,
-      powerUps: powerUpsRef.current.length,
-    });
-  }, []);
-
   return (
     <ErrorBoundary>
       <div
