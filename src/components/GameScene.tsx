@@ -200,7 +200,6 @@ const GameScene = () => {
 
   // Create a memoized player tank component that won't re-render
   const PlayerTank = useMemo(() => {
-    console.log("Creating memoized player tank");
     return <Tank position={[0, 0.5, 0]} />;
   }, []);
 
@@ -247,8 +246,6 @@ const GameScene = () => {
 
   // Subscribe to state changes outside of render to update refs
   useEffect(() => {
-    console.log("GameScene effect: setting up store subscription");
-
     const unsubscribe = useGameState.subscribe((state) => {
       enemiesRef.current = state.enemies;
       powerUpsRef.current = state.powerUps;
