@@ -23,7 +23,7 @@ import {
   useState,
 } from "react";
 import { useGameState } from "../utils/gameState";
-import { SpotLightHelper, Vector3 } from "three";
+import { SpotLightHelper, Vector3, SpotLight as ThreeSpotLight } from "three";
 import "./GameScene.css";
 
 // Error boundary component to catch and display errors
@@ -111,7 +111,7 @@ const FollowCamera = memo(() => {
 const SpotlightUpdater = () => {
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
-  const spotLightRef = useRef<THREE.SpotLight>(null);
+  const spotLightRef = useRef<ThreeSpotLight>(null);
 
   // Update spotlight position on every frame
   useFrame(() => {
@@ -140,7 +140,11 @@ const SpotlightUpdater = () => {
 };
 
 // Scene Content as a separate component to load within Canvas
-const SceneContent = memo(({ playerTank }) => {
+interface SceneContentProps {
+  playerTank: React.ReactNode;
+}
+
+const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
 
@@ -204,7 +208,7 @@ const GameScene = () => {
   }, []);
 
   // Canvas reference for handling focus
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // Effect for focusing the canvas
   useEffect(() => {
@@ -220,7 +224,7 @@ const GameScene = () => {
       };
 
       // Add direct keyboard event listener for debugging
-      const handleKeyDown = (e) => {
+      const handleKeyDown = (e: KeyboardEvent) => {
         console.log("Canvas keydown event:", e.key);
       };
 
