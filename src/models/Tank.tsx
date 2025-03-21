@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
@@ -13,108 +13,101 @@ interface TankProps {
 const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const tankRef = useRef<Mesh>(null);
   const turretRef = useRef<Mesh>(null);
-  const [tankRotation, setTankRotation] = useState(0);
-  const [turretRotation, setTurretRotation] = useState(0);
+
+  // Use refs instead of state for values that shouldn't trigger renders
+  const tankRotationRef = useRef(0);
+  const turretRotationRef = useRef(0);
+  const lastShootTimeRef = useRef(0);
+  const positionRef = useRef<[number, number, number]>([...position]);
+
+  // Keep projectiles in state since we need to render them
   const [projectiles, setProjectiles] = useState<
     { id: string; position: [number, number, number]; rotation: number }[]
   >([]);
-  const [lastShootTime, setLastShootTime] = useState(0);
-
-  // Create position ref to track current position without re-renders
-  const positionRef = useRef<[number, number, number]>([...position]);
 
   // Get keyboard controls
   const { forward, backward, left, right, turretLeft, turretRight, shoot } =
     useKeyboardControls();
 
-  // Get game state
-  const { playerDamage, isPaused, updatePlayerPosition } = useGameState(
-    (state) => ({
-      playerDamage: state.playerDamage,
-      isPaused: state.isPaused,
-      updatePlayerPosition: state.updatePlayerPosition,
-    })
+  // Get game state - only get what's needed
+  const playerDamage = useGameState((state) => state.playerDamage);
+  const isPaused = useGameState((state) => state.isPaused);
+  const updatePlayerPosition = useGameState(
+    (state) => state.updatePlayerPosition
   );
 
-  // Memoize update function to avoid creating it on every render
-  const updatePosition = useCallback(
-    (newPosition: [number, number, number]) => {
-      // Only update if position has actually changed
-      if (
-        positionRef.current[0] !== newPosition[0] ||
-        positionRef.current[1] !== newPosition[1] ||
-        positionRef.current[2] !== newPosition[2]
-      ) {
-        positionRef.current = [...newPosition];
-        updatePlayerPosition(newPosition);
-      }
-    },
-    [updatePlayerPosition]
-  );
-
-  // Set initial position
+  // Set initial position once
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...position);
-      // Update initial position in the game state
-      updatePosition([
+      // Update initial position in the game state - only once at startup
+      const initialPos: [number, number, number] = [
         tankRef.current.position.x,
         tankRef.current.position.y,
         tankRef.current.position.z,
-      ]);
+      ];
+      positionRef.current = initialPos;
+      updatePlayerPosition(initialPos);
     }
   }, []);
 
-  // Tank movement and rotation
+  // Tank movement and rotation - minimizing state updates
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused) return;
 
-    // Rotation
+    // Rotation - directly modify the ref instead of using setState
     if (left) {
-      setTankRotation((prev) => prev + delta * 2);
+      tankRotationRef.current += delta * 2;
     }
     if (right) {
-      setTankRotation((prev) => prev - delta * 2);
+      tankRotationRef.current -= delta * 2;
     }
 
-    // Apply rotation
-    tankRef.current.rotation.y = tankRotation;
+    // Apply rotation directly to the mesh
+    tankRef.current.rotation.y = tankRotationRef.current;
 
     // Movement
     const moveSpeed = 3;
     let moved = false;
 
     if (forward) {
-      tankRef.current.position.x += Math.sin(tankRotation) * delta * moveSpeed;
-      tankRef.current.position.z += Math.cos(tankRotation) * delta * moveSpeed;
+      tankRef.current.position.x +=
+        Math.sin(tankRotationRef.current) * delta * moveSpeed;
+      tankRef.current.position.z +=
+        Math.cos(tankRotationRef.current) * delta * moveSpeed;
       moved = true;
     }
     if (backward) {
-      tankRef.current.position.x -= Math.sin(tankRotation) * delta * moveSpeed;
-      tankRef.current.position.z -= Math.cos(tankRotation) * delta * moveSpeed;
+      tankRef.current.position.x -=
+        Math.sin(tankRotationRef.current) * delta * moveSpeed;
+      tankRef.current.position.z -=
+        Math.cos(tankRotationRef.current) * delta * moveSpeed;
       moved = true;
     }
 
-    // Turret rotation
+    // Turret rotation - directly modify the ref
     if (turretRef.current) {
       if (turretLeft) {
-        setTurretRotation((prev) => prev + delta);
+        turretRotationRef.current += delta;
       }
       if (turretRight) {
-        setTurretRotation((prev) => prev - delta);
+        turretRotationRef.current -= delta;
       }
-      turretRef.current.rotation.y = turretRotation;
+      turretRef.current.rotation.y = turretRotationRef.current;
     }
 
-    // Handle shooting
-    if (shoot && state.clock.getElapsedTime() - lastShootTime > 0.5) {
+    // Handle shooting - use ref for timing check
+    if (
+      shoot &&
+      state.clock.getElapsedTime() - lastShootTimeRef.current > 0.5
+    ) {
       // Can shoot every 0.5 seconds
       const shootPosition: [number, number, number] = [
         tankRef.current.position.x +
-          Math.sin(tankRotation + turretRotation) * 1.5,
+          Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
         tankRef.current.position.y + 0.7,
         tankRef.current.position.z +
-          Math.cos(tankRotation + turretRotation) * 1.5,
+          Math.cos(tankRotationRef.current + turretRotationRef.current) * 1.5,
       ];
 
       // Add new projectile
@@ -123,20 +116,30 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         {
           id: Math.random().toString(36).substr(2, 9),
           position: shootPosition,
-          rotation: tankRotation + turretRotation,
+          rotation: tankRotationRef.current + turretRotationRef.current,
         },
       ]);
 
-      setLastShootTime(state.clock.getElapsedTime());
+      lastShootTimeRef.current = state.clock.getElapsedTime();
     }
 
-    // Update position in game state if moved
+    // Update position in game state if moved - throttle updates
     if (moved) {
-      updatePosition([
+      const newPosition: [number, number, number] = [
         tankRef.current.position.x,
         tankRef.current.position.y,
         tankRef.current.position.z,
-      ]);
+      ];
+
+      // Only update if position changed significantly (more than 0.01 units in any direction)
+      if (
+        Math.abs(positionRef.current[0] - newPosition[0]) > 0.01 ||
+        Math.abs(positionRef.current[1] - newPosition[1]) > 0.01 ||
+        Math.abs(positionRef.current[2] - newPosition[2]) > 0.01
+      ) {
+        positionRef.current = newPosition;
+        updatePlayerPosition(newPosition);
+      }
     }
   });
 

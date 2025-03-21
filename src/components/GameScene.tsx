@@ -15,44 +15,37 @@ import { useGameState } from "../utils/gameState";
 import { SpotLightHelper, Vector3 } from "three";
 
 // Component to follow the player's tank with the camera
-// Memoize this component to prevent unnecessary re-renders
 const FollowCamera = memo(() => {
   const { camera } = useThree();
-  // Use selector function with an === equality check to prevent unnecessary updates
-  const playerPosition = useGameState(
-    (state) => state.playerTankPosition,
-    (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2]
-  );
 
-  // Store the current position in a ref to avoid recreating vectors on each frame
-  const positionRef = useRef(playerPosition);
+  // Get a direct reference to the store's getState function
+  const getState = useRef(useGameState.getState).current;
 
-  // Update the ref when playerPosition changes
-  useEffect(() => {
-    positionRef.current = playerPosition;
-  }, [playerPosition]);
+  // Create refs to store values without causing re-renders
+  const offsetRef = useRef(new Vector3(0, 8, -12));
+  const targetPositionRef = useRef(new Vector3());
 
   useFrame(() => {
-    const currentPosition = positionRef.current;
-    if (currentPosition) {
-      // Position camera behind and above the player tank
-      const offset = new Vector3(
-        -Math.sin(camera.rotation.y) * 12,
-        8,
-        -Math.cos(camera.rotation.y) * 12
-      );
+    // Access state directly from the store
+    const playerPosition = getState().playerTankPosition;
 
-      const targetPosition = new Vector3(
-        currentPosition[0] + offset.x,
-        currentPosition[1] + offset.y,
-        currentPosition[2] + offset.z
+    if (playerPosition) {
+      // Update offset based on camera rotation
+      offsetRef.current.x = -Math.sin(camera.rotation.y) * 12;
+      offsetRef.current.z = -Math.cos(camera.rotation.y) * 12;
+
+      // Calculate target position
+      targetPositionRef.current.set(
+        playerPosition[0] + offsetRef.current.x,
+        playerPosition[1] + offsetRef.current.y,
+        playerPosition[2] + offsetRef.current.z
       );
 
       // Smoothly interpolate camera position
-      camera.position.lerp(targetPosition, 0.05);
+      camera.position.lerp(targetPositionRef.current, 0.05);
 
       // Make camera look at the player
-      camera.lookAt(currentPosition[0], currentPosition[1], currentPosition[2]);
+      camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
     }
   });
 
@@ -62,46 +55,50 @@ const FollowCamera = memo(() => {
 const GameScene = () => {
   const spotLightRef = useRef<THREE.SpotLight>(null);
 
-  // Get game state - only read values, don't update within the component
-  // Use useMemo to prevent recreation on every render
-  const gameState = useGameState();
+  // Get direct access to the store state that's read-only and doesn't trigger re-renders
+  const getState = useRef(useGameState.getState).current;
 
-  const { enemies, powerUps, isPaused, playerTankPosition } = useMemo(
-    () => ({
-      enemies: gameState.enemies,
-      powerUps: gameState.powerUps,
-      isPaused: gameState.isPaused,
-      playerTankPosition: gameState.playerTankPosition,
-    }),
-    [
-      gameState.enemies,
-      gameState.powerUps,
-      gameState.isPaused,
-      gameState.playerTankPosition,
-    ]
-  );
+  // Refs for values needed in rendering
+  const enemiesRef = useRef(getState().enemies);
+  const powerUpsRef = useRef(getState().powerUps);
+  const playerPositionRef = useRef(getState().playerTankPosition);
 
-  // Only log on significant state changes to reduce renders
+  // Subscribe to state changes outside of render to update refs
   useEffect(() => {
-    console.log("GameScene rendered", { enemies, powerUps, isPaused });
-  }, [enemies.length, powerUps.length, isPaused]);
+    const unsubscribe = useGameState.subscribe((state) => {
+      enemiesRef.current = state.enemies;
+      powerUpsRef.current = state.powerUps;
+      playerPositionRef.current = state.playerTankPosition;
+    });
 
-  // Debug: display light helper
-  useEffect(() => {
-    if (spotLightRef.current) {
-      console.log("Spotlight created");
-    }
+    return unsubscribe;
   }, []);
 
-  // Memoize the position so it doesn't create a new array each render
-  const spotlightPosition = useMemo(
-    () => [
-      playerTankPosition[0],
-      playerTankPosition[1] + 10,
-      playerTankPosition[2],
-    ],
-    [playerTankPosition[0], playerTankPosition[1], playerTankPosition[2]]
-  );
+  // Debug: log state changes
+  useEffect(() => {
+    console.log("GameScene rendered", {
+      enemies: enemiesRef.current.length,
+      powerUps: powerUpsRef.current.length,
+    });
+  }, []);
+
+  // Calculate spotlight position
+  const updateSpotlightPosition = useMemo(() => {
+    return () => {
+      if (spotLightRef.current && playerPositionRef.current) {
+        spotLightRef.current.position.set(
+          playerPositionRef.current[0],
+          playerPositionRef.current[1] + 10,
+          playerPositionRef.current[2]
+        );
+      }
+    };
+  }, []);
+
+  // Update spotlight position on every frame
+  useFrame(() => {
+    updateSpotlightPosition();
+  });
 
   return (
     <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
@@ -130,7 +127,7 @@ const GameScene = () => {
         {/* Player spotlight */}
         <spotLight
           ref={spotLightRef}
-          position={spotlightPosition}
+          position={[0, 10, 0]} // Default position, will be updated in useFrame
           angle={0.4}
           penumbra={0.5}
           intensity={1.0}
@@ -141,13 +138,13 @@ const GameScene = () => {
         {/* Player tank */}
         <Tank position={[0, 0.5, 0]} />
 
-        {/* Enemy tanks */}
-        {enemies.map((enemy) => (
+        {/* Enemy tanks - Using component instances ensures they handle their own updates */}
+        {getState().enemies.map((enemy) => (
           <EnemyTank key={enemy.id} enemy={enemy} />
         ))}
 
         {/* Power-ups */}
-        {powerUps.map((powerUp) => (
+        {getState().powerUps.map((powerUp) => (
           <PowerUpItem key={powerUp.id} powerUp={powerUp} />
         ))}
 

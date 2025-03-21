@@ -11,27 +11,39 @@ interface EnemyTankProps {
 const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const tankRef = useRef<Mesh>(null);
   const turretRef = useRef<Mesh>(null);
-  const [tankRotation, setTankRotation] = useState(0);
-  const [turretRotation, setTurretRotation] = useState(0);
-  const [localHealth, setLocalHealth] = useState(enemy.health);
 
-  // Get player position from game state
-  const { playerTankPosition, damageEnemy } = useGameState((state) => ({
-    playerTankPosition: state.playerTankPosition,
-    damageEnemy: state.damageEnemy,
-  }));
+  // Use refs for values that shouldn't trigger re-renders
+  const tankRotationRef = useRef(0);
+  const turretRotationRef = useRef(0);
+  const healthRef = useRef(enemy.health);
 
-  // Set initial position from enemy data
+  // Only use the damageEnemy function from the store
+  const damageEnemy = useGameState((state) => state.damageEnemy);
+
+  // Get direct access to the store's getState function
+  const getState = useRef(useGameState.getState).current;
+
+  // Set initial position and rotation from enemy data
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...enemy.position);
     }
-    setLocalHealth(enemy.health);
-  }, [enemy.position, enemy.health]);
+    healthRef.current = enemy.health;
+  }, []);
+
+  // Update health ref when enemy health changes
+  useEffect(() => {
+    healthRef.current = enemy.health;
+  }, [enemy.health]);
 
   // Enemy tank behavior
   useFrame((state, delta) => {
-    if (!tankRef.current || !turretRef.current || !playerTankPosition) return;
+    if (!tankRef.current || !turretRef.current) return;
+
+    // Get the latest player position directly from the store
+    const playerTankPosition = getState().playerTankPosition;
+
+    if (!playerTankPosition) return;
 
     // Calculate direction to player
     const directionToPlayer = new Vector3(
@@ -45,8 +57,8 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       directionToPlayer.x,
       directionToPlayer.z
     );
-    setTurretRotation(targetTurretRotation);
-    turretRef.current.rotation.y = turretRotation;
+    turretRotationRef.current = targetTurretRotation;
+    turretRef.current.rotation.y = turretRotationRef.current;
 
     // Only tank-type enemies move
     if (enemy.type === "tank") {
@@ -57,10 +69,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       );
 
       // Smoothly rotate towards target rotation
-      const rotationDiff = targetRotation - tankRotation;
+      const rotationDiff = targetRotation - tankRotationRef.current;
       const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      setTankRotation(tankRotation + wrappedDiff * delta);
-      tankRef.current.rotation.y = tankRotation;
+      tankRotationRef.current += wrappedDiff * delta;
+      tankRef.current.rotation.y = tankRotationRef.current;
 
       // Move towards player
       const moveSpeed = 1.5;
@@ -73,21 +85,20 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       // Only move if not too close to player
       if (distanceToPlayer > 5) {
         tankRef.current.position.x +=
-          Math.sin(tankRotation) * delta * moveSpeed;
+          Math.sin(tankRotationRef.current) * delta * moveSpeed;
         tankRef.current.position.z +=
-          Math.cos(tankRotation) * delta * moveSpeed;
+          Math.cos(tankRotationRef.current) * delta * moveSpeed;
       }
     }
   });
 
   // Function to handle enemy being hit
   const handleHit = (damage: number) => {
-    const isDestroyed = damageEnemy(enemy.id, damage);
-    if (!isDestroyed) {
-      // Only update local health if enemy is not destroyed
-      setLocalHealth((prev) => Math.max(0, prev - damage));
-    }
+    damageEnemy(enemy.id, damage);
   };
+
+  // Calculate health percentage for the health bar
+  const healthPercent = healthRef.current / 100;
 
   return (
     <group ref={tankRef}>
@@ -137,8 +148,8 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         <meshBasicMaterial color="red" />
       </Box>
       <Box
-        args={[localHealth / 100, 0.1, 0.1]}
-        position={[-(0.5 - localHealth / 200), 1.2, 0]}>
+        args={[healthPercent, 0.1, 0.1]}
+        position={[-(0.5 - healthPercent / 2), 1.2, 0]}>
         <meshBasicMaterial color="green" />
       </Box>
     </group>

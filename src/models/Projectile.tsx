@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
@@ -20,17 +20,17 @@ const Projectile = ({
   onRemove,
 }: ProjectileProps) => {
   const projectileRef = useRef<Mesh>(null);
-  const [hasCollided, setHasCollided] = useState(false);
+  const hasCollidedRef = useRef(false);
 
-  // Get game state
-  const { enemies, damageEnemy } = useGameState((state) => ({
-    enemies: state.enemies,
-    damageEnemy: state.damageEnemy,
-  }));
+  // Access only the damageEnemy function
+  const damageEnemy = useGameState((state) => state.damageEnemy);
+
+  // Get direct store access
+  const getState = useRef(useGameState.getState).current;
 
   // Projectile movement and collision detection
   useFrame((state, delta) => {
-    if (!projectileRef.current || hasCollided) return;
+    if (!projectileRef.current || hasCollidedRef.current) return;
 
     const speed = 15;
 
@@ -50,6 +50,9 @@ const Projectile = ({
       return;
     }
 
+    // Get fresh enemies data
+    const enemies = getState().enemies;
+
     // Check for collisions with enemies
     for (const enemy of enemies) {
       const enemyPos = new Vector3(...enemy.position);
@@ -62,11 +65,11 @@ const Projectile = ({
       const distanceToEnemy = enemyPos.distanceTo(projectilePos);
 
       if (distanceToEnemy < 1.5) {
-        // Collision detected - damage the enemy using store function
+        // Collision detected - damage the enemy
         damageEnemy(enemy.id, damage);
 
         // Mark projectile as collided and remove it
-        setHasCollided(true);
+        hasCollidedRef.current = true;
         onRemove(id);
         break;
       }
