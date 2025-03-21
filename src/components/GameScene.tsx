@@ -282,10 +282,11 @@ const GameScene = () => {
       <div
         ref={canvasRef}
         className="canvas-container"
-        style={{ height: "100vh" }}>
+        style={{ width: "100vw", height: "100vh" }}>
         <Canvas
           shadows
           camera={{ position: [0, 8, -12], fov: 60 }}
+          style={{ width: "100vw", height: "100vh" }}
           onCreated={() => console.log("Canvas created")}>
           <color attach="background" args={["#87CEEB"]} />
           <fog attach="fog" args={["#87CEEB", 30, 100]} />

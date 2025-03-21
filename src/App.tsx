@@ -101,7 +101,9 @@ function App() {
   }, [togglePause]);
 
   return (
-    <div className="app">
+    <div
+      className="app"
+      style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       <GameScene />
       <GameUI />
     </div>
