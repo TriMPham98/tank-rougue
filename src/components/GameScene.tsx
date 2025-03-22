@@ -246,25 +246,17 @@ const GameScene = () => {
       // Set tabIndex to make canvas focusable
       canvas.tabIndex = 0;
 
-      // Force focus on click
-      const handleCanvasClick = () => {
-        canvas.focus();
-        debug.log("Canvas focused");
-      };
-
       // Add direct keyboard event listener for debugging
       const handleKeyDown = (e: KeyboardEvent) => {
         debug.log("Canvas keydown event:", e.key);
       };
 
-      canvas.addEventListener("click", handleCanvasClick);
       canvas.addEventListener("keydown", handleKeyDown);
 
       // Focus canvas initially
       canvas.focus();
 
       return () => {
-        canvas.removeEventListener("click", handleCanvasClick);
         canvas.removeEventListener("keydown", handleKeyDown);
       };
     }

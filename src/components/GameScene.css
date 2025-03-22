@@ -2,7 +2,6 @@
   width: 100vw;
   height: 100vh;
   outline: none; /* Remove outline when focused */
-  cursor: pointer; /* Indicate it's clickable */
   position: relative;
   overflow: hidden;
 }
