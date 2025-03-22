@@ -113,10 +113,10 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     // Rotation - directly modify the ref instead of using setState
     if (left) {
-      tankRotationRef.current += delta * 2;
+      tankRotationRef.current += delta * 3.5;
     }
     if (right) {
-      tankRotationRef.current -= delta * 2;
+      tankRotationRef.current -= delta * 3.5;
     }
 
     // Apply rotation directly to the mesh
@@ -158,10 +158,10 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     // Turret rotation - directly modify the ref
     if (turretRef.current) {
       if (turretLeft) {
-        turretRotationRef.current += delta;
+        turretRotationRef.current += delta * 2.5;
       }
       if (turretRight) {
-        turretRotationRef.current -= delta;
+        turretRotationRef.current -= delta * 2.5;
       }
       turretRef.current.rotation.y = turretRotationRef.current;
     }
