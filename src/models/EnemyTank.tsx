@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
-import { Mesh, Vector3, Group } from "three";
+import { Mesh, Vector3, Group, Quaternion } from "three";
 import { Enemy, useGameState } from "../utils/gameState";
 import EnemyProjectile from "./EnemyProjectile";
 import { debug } from "../utils/debug";
@@ -14,56 +14,41 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
 
-  // Use refs for values that shouldn't trigger re-renders
   const tankRotationRef = useRef(0);
   const turretRotationRef = useRef(0);
   const lastShootTimeRef = useRef(0);
 
-  // State for health bar rendering
   const [healthPercent, setHealthPercent] = useState(1);
-
-  // State for enemy projectiles
   const [projectiles, setProjectiles] = useState<
     { id: string; position: [number, number, number]; rotation: number }[]
   >([]);
 
-  // Only use required functions from the store
   const damageEnemy = useGameState((state) => state.damageEnemy);
   const updateEnemyPosition = useGameState(
     (state) => state.updateEnemyPosition
   );
   const isPaused = useGameState((state) => state.isPaused);
-
-  // Get direct access to the store's getState function
   const getState = useRef(useGameState.getState).current;
 
-  // Store max health in a ref to use for health bar calculation
   const maxHealthRef = useRef(enemy.health);
 
-  // Set max health once when component mounts
   useEffect(() => {
     maxHealthRef.current = enemy.health;
   }, []);
 
-  // Set initial position and rotation from enemy data
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...enemy.position);
     }
   }, []);
 
-  // Enemy tank behavior
   useFrame((state, delta) => {
     if (!tankRef.current || !turretRef.current || isPaused) return;
 
-    // Get the latest player position directly from the store
     const playerTankPosition = getState().playerTankPosition;
-
-    // Get the latest enemy data to update health bar
     const enemies = getState().enemies;
     const currentEnemy = enemies.find((e) => e.id === enemy.id);
 
-    // Update health percentage if we found the enemy in the state
     if (currentEnemy) {
       const newHealthPercent = currentEnemy.health / maxHealthRef.current;
       if (newHealthPercent !== healthPercent) {
@@ -73,107 +58,63 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
     if (!playerTankPosition) return;
 
-    // Calculate direction to player
     const directionToPlayer = new Vector3(
       playerTankPosition[0] - tankRef.current.position.x,
       0,
       playerTankPosition[2] - tankRef.current.position.z
     ).normalize();
 
-    // Make the turret look at the player - calculate rotation
     const targetTurretRotation = Math.atan2(
       directionToPlayer.x,
       directionToPlayer.z
     );
 
-    // For tanks, we need to set the turret rotation relative to the tank body
     if (enemy.type === "tank") {
-      // Calculate how much the turret should rotate relative to the tank body
       const relativeRotation = targetTurretRotation - tankRotationRef.current;
-      // Smoothly rotate the turret
       const turretRotationDiff = relativeRotation - turretRotationRef.current;
       const wrappedTurretDiff =
         ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      turretRotationRef.current += wrappedTurretDiff * delta * 3; // Fast rotation for better tracking
+      turretRotationRef.current += wrappedTurretDiff * delta * 3;
     } else {
-      // For stationary turrets, we can set the absolute rotation directly
       turretRotationRef.current = targetTurretRotation;
     }
 
-    // Apply rotation to the turret
     turretRef.current.rotation.y =
-      enemy.type === "tank"
-        ? turretRotationRef.current // For tanks, use the smoothed rotation
-        : targetTurretRotation; // For turrets, use direct rotation
+      enemy.type === "tank" ? turretRotationRef.current : targetTurretRotation;
 
-    // Calculate distance to player
     const distanceToPlayer = new Vector3(
       playerTankPosition[0] - tankRef.current.position.x,
       0,
       playerTankPosition[2] - tankRef.current.position.z
     ).length();
 
-    // Shooting logic - enemies shoot periodically when player is in range
-    const shootingRange = enemy.type === "tank" ? 20 : 25; // Turrets have slightly longer range
-    const fireRate = enemy.type === "tank" ? 2.5 : 3.0; // Time between shots in seconds
+    const shootingRange = enemy.type === "tank" ? 20 : 25;
+    const fireRate = enemy.type === "tank" ? 2.5 : 3.0;
 
     if (distanceToPlayer < shootingRange) {
-      // Check if enough time has passed since last shot
       if (state.clock.getElapsedTime() - lastShootTimeRef.current > fireRate) {
-        // Get tank position
-        const tankPosition = new Vector3(
-          tankRef.current.position.x,
-          tankRef.current.position.y,
-          tankRef.current.position.z
+        const barrelEndLocalZ = enemy.type === "tank" ? 1.75 : 2.2;
+        const barrelEndLocal = new Vector3(0, 0.2, barrelEndLocalZ);
+        const barrelEndWorld = turretRef.current!.localToWorld(
+          barrelEndLocal.clone()
         );
+        const shootPosition: [number, number, number] = [
+          barrelEndWorld.x,
+          barrelEndWorld.y,
+          barrelEndWorld.z,
+        ];
 
-        // Calculate barrel parameters based on enemy type
-        let shootPosition: [number, number, number];
+        const worldQuaternion = new Quaternion();
+        turretRef.current!.getWorldQuaternion(worldQuaternion);
+        const direction = new Vector3(0, 0, 1).applyQuaternion(worldQuaternion);
+        const projectileRotation = Math.atan2(direction.x, direction.z);
 
-        if (enemy.type === "tank") {
-          // For tanks, we need to account for both the tank rotation and the turret rotation
-          // The turret is already rotated relative to the tank body
-          const barrelLength = 1.5;
-          const turretHeight = 0.5;
-          const barrelYOffset = 0.2;
-          const barrelZOffset = 0.75; // Half the barrel length
-
-          // Use the actual turret rotation (which is correctly pointing at the player)
-          const actualRotation = turretRef.current!.rotation.y;
-
-          shootPosition = [
-            tankPosition.x + Math.sin(actualRotation) * (1 + barrelZOffset),
-            tankPosition.y + turretHeight + barrelYOffset,
-            tankPosition.z + Math.cos(actualRotation) * (1 + barrelZOffset),
-          ];
-        } else {
-          // For stationary turrets
-          const barrelLength = 2;
-          const turretHeight = 0.5;
-          const barrelYOffset = 0.2;
-          const barrelZOffset = 1.2;
-
-          shootPosition = [
-            tankPosition.x +
-              Math.sin(targetTurretRotation) *
-                (barrelZOffset + barrelLength / 2),
-            tankPosition.y + turretHeight + barrelYOffset,
-            tankPosition.z +
-              Math.cos(targetTurretRotation) *
-                (barrelZOffset + barrelLength / 2),
-          ];
-        }
-
-        // Create a new projectile
         setProjectiles((prev) => [
           ...prev,
           {
             id: Math.random().toString(36).substr(2, 9),
             position: shootPosition,
-            rotation:
-              enemy.type === "tank"
-                ? targetTurretRotation // Use the target rotation (direction to player) rather than the actual rotation
-                : targetTurretRotation,
+            rotation: projectileRotation,
           },
         ]);
 
@@ -182,38 +123,28 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       }
     }
 
-    // Only tank-type enemies move
     if (enemy.type === "tank") {
-      // Calculate target rotation towards player
       const targetRotation = Math.atan2(
         directionToPlayer.x,
         directionToPlayer.z
       );
-
-      // Smoothly rotate towards target rotation
       const rotationDiff = targetRotation - tankRotationRef.current;
       const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
       tankRotationRef.current += wrappedDiff * delta;
       tankRef.current.rotation.y = tankRotationRef.current;
 
-      // Move towards player
       const moveSpeed = 1.5;
-
-      // Only move if not too close to player
       if (distanceToPlayer > 5) {
         tankRef.current.position.x +=
           Math.sin(tankRotationRef.current) * delta * moveSpeed;
         tankRef.current.position.z +=
           Math.cos(tankRotationRef.current) * delta * moveSpeed;
 
-        // Update the enemy position in the game state to ensure accurate hit detection
         const newPosition: [number, number, number] = [
           tankRef.current.position.x,
           tankRef.current.position.y,
           tankRef.current.position.z,
         ];
-
-        // Update position every few frames to reduce state updates
         if (Math.random() < 0.1) {
           updateEnemyPosition(enemy.id, newPosition);
         }
@@ -221,12 +152,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     }
   });
 
-  // Function to handle enemy being hit
   const handleHit = (damage: number) => {
     damageEnemy(enemy.id, damage);
   };
 
-  // Remove projectiles that are too far away or have hit the player
   const removeProjectile = (id: string) => {
     setProjectiles((prev) => prev.filter((p) => p.id !== id));
   };
@@ -234,7 +163,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   return (
     <>
       <group ref={tankRef}>
-        {/* Enemy tank/turret body */}
         <Box
           args={enemy.type === "tank" ? [1.5, 0.5, 2] : [1.8, 0.7, 1.8]}
           castShadow
@@ -244,8 +172,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             color={enemy.type === "tank" ? "red" : "darkblue"}
           />
         </Box>
-
-        {/* Enemy tank/turret turret */}
         <group position={[0, 0.5, 0]} ref={turretRef}>
           <Cylinder
             args={
@@ -258,8 +184,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               color={enemy.type === "tank" ? "darkred" : "royalblue"}
             />
           </Cylinder>
-
-          {/* Enemy tank/turret cannon */}
           <Box
             args={enemy.type === "tank" ? [0.2, 0.2, 1.5] : [0.25, 0.25, 2]}
             position={[0, 0.2, enemy.type === "tank" ? 1 : 1.2]}
@@ -270,8 +194,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             />
           </Box>
         </group>
-
-        {/* Enemy tank tracks - left and right sides */}
         {enemy.type === "tank" ? (
           <>
             <Box
@@ -292,7 +214,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             </Box>
           </>
         ) : (
-          // Keep the original base for turret type
           <Box
             args={[2, 0.3, 2]}
             position={[0, -0.3, 0]}
@@ -302,8 +223,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             <meshStandardMaterial color="navy" />
           </Box>
         )}
-
-        {/* Health indicator */}
         <Box
           args={[1, 0.1, 0.1]}
           position={[0, enemy.type === "tank" ? 1.2 : 1.5, 0]}
@@ -321,15 +240,13 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           <meshBasicMaterial color="green" transparent depthTest={false} />
         </Box>
       </group>
-
-      {/* Enemy Projectiles */}
       {projectiles.map((projectile) => (
         <EnemyProjectile
           key={projectile.id}
           id={projectile.id}
           position={projectile.position}
           rotation={projectile.rotation}
-          damage={enemy.type === "tank" ? 10 : 15} // Turrets do more damage
+          damage={enemy.type === "tank" ? 10 : 15}
           onRemove={removeProjectile}
         />
       ))}
