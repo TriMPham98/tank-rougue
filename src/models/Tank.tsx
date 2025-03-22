@@ -35,6 +35,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   // Get game state - only get what's needed
   const playerDamage = useGameState((state) => state.playerDamage);
+  const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
   const playerSpeed = useGameState((state) => state.playerSpeed);
   const playerFireRate = useGameState((state) => state.playerFireRate);
   const playerHealthRegen = useGameState((state) => state.playerHealthRegen);
@@ -264,7 +265,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           id={projectile.id}
           position={projectile.position}
           rotation={projectile.rotation}
-          damage={playerDamage}
+          damage={playerTurretDamage}
           onRemove={removeProjectile}
         />
       ))}

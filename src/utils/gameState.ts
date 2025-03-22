@@ -21,7 +21,8 @@ export type UpgradeableStat =
   | "fireRate"
   | "cameraRange"
   | "maxHealth"
-  | "healthRegen";
+  | "healthRegen"
+  | "turretDamage";
 
 // Define the game state
 interface GameState {
@@ -30,6 +31,7 @@ interface GameState {
   playerMaxHealth: number;
   playerSpeed: number;
   playerDamage: number;
+  playerTurretDamage: number; // New stat for turret damage
   playerFireRate: number; // Time between shots in seconds
   playerCameraRange: number; // Camera zoom range
   playerHealthRegen: number; // Health regenerated per second
@@ -78,6 +80,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerMaxHealth: 100,
   playerSpeed: 3,
   playerDamage: 25,
+  playerTurretDamage: 25, // Initialize turret damage at the same value as playerDamage
   playerFireRate: 0.5, // 0.5 seconds between shots
   playerCameraRange: 12, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
@@ -180,6 +183,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerMaxHealth: 100,
       playerSpeed: 3,
       playerDamage: 25,
+      playerTurretDamage: 25,
       playerFireRate: 0.5,
       playerCameraRange: 12,
       playerHealthRegen: 0,
@@ -241,6 +245,7 @@ export const useGameState = create<GameState>((set, get) => ({
         "cameraRange",
         "maxHealth",
         "healthRegen",
+        "turretDamage",
       ];
 
       const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
@@ -248,7 +253,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
       return {
         level: newLevel,
-        playerDamage: state.playerDamage + Math.floor(newLevel / 3), // Small damage boost per level
+        playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
         enemiesDefeated: 0, // Reset counter for the new level
         enemiesRequiredForNextLevel: nextLevelRequirement,
         showUpgradeUI: true, // Show upgrade UI after level up
@@ -308,22 +313,25 @@ export const useGameState = create<GameState>((set, get) => ({
 
       switch (stat) {
         case "tankSpeed":
-          updates.playerSpeed = state.playerSpeed + 0.5;
+          updates.playerSpeed = state.playerSpeed + 0.5; // Linear increase by 0.5
           break;
         case "fireRate":
           // Lower number = faster firing
-          updates.playerFireRate = Math.max(0.1, state.playerFireRate - 0.05);
+          updates.playerFireRate = Math.max(0.1, state.playerFireRate - 0.05); // Linear decrease by 0.05
           break;
         case "cameraRange":
-          updates.playerCameraRange = state.playerCameraRange + 2;
+          updates.playerCameraRange = state.playerCameraRange + 2; // Linear increase by 2
           break;
         case "maxHealth":
-          updates.playerMaxHealth = state.playerMaxHealth + 25;
+          updates.playerMaxHealth = state.playerMaxHealth + 25; // Linear increase by 25
           // Also heal the player when max health increases
           updates.playerHealth = state.playerHealth + 25;
           break;
         case "healthRegen":
-          updates.playerHealthRegen = state.playerHealthRegen + 1;
+          updates.playerHealthRegen = state.playerHealthRegen + 1; // Linear increase by 1
+          break;
+        case "turretDamage":
+          updates.playerTurretDamage = state.playerTurretDamage + 5; // Linear increase by 5
           break;
       }
 

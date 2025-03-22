@@ -24,6 +24,7 @@ const GameUI = () => {
     playerFireRate,
     playerCameraRange,
     playerHealthRegen,
+    playerTurretDamage,
   } = useGameState();
 
   const handleUpgrade = useCallback(
@@ -65,6 +66,8 @@ const GameUI = () => {
         return "Max Health";
       case "healthRegen":
         return "Health Regen";
+      case "turretDamage":
+        return "Turret Damage";
     }
   };
 
@@ -80,6 +83,8 @@ const GameUI = () => {
         return `${playerMaxHealth}`;
       case "healthRegen":
         return `${playerHealthRegen}/sec`;
+      case "turretDamage":
+        return `${playerTurretDamage}`;
     }
   };
 
@@ -96,6 +101,8 @@ const GameUI = () => {
         return `${playerMaxHealth + 25}`;
       case "healthRegen":
         return `${playerHealthRegen + 1}/sec`;
+      case "turretDamage":
+        return `${playerTurretDamage + 5}`;
     }
   };
 
@@ -111,6 +118,8 @@ const GameUI = () => {
         return "Increases the maximum health of the tank.";
       case "healthRegen":
         return "Increases the rate at which health regenerates over time.";
+      case "turretDamage":
+        return "Increases the damage dealt by the tank's turret.";
     }
   };
 
@@ -232,6 +241,7 @@ const GameUI = () => {
         <div>Camera Range: {playerCameraRange.toFixed(0)} units</div>
         <div>Max Health: {playerMaxHealth}</div>
         <div>Health Regen: {playerHealthRegen}/sec</div>
+        <div>Turret Damage: {playerTurretDamage}</div>
       </div>
 
       {/* Upgrade UI Overlay */}
