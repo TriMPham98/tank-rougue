@@ -236,12 +236,12 @@ const GameUI = () => {
           }}>
           Tank Stats
         </div>
-        <div>Speed: {playerSpeed.toFixed(1)}</div>
+        <div>Turret Damage: {playerTurretDamage}</div>
         <div>Fire Rate: {(1 / playerFireRate).toFixed(1)} shots/sec</div>
-        <div>Camera Range: {playerCameraRange.toFixed(0)} units</div>
+        <div>Speed: {playerSpeed.toFixed(1)}</div>
         <div>Max Health: {playerMaxHealth}</div>
         <div>Health Regen: {playerHealthRegen}/sec</div>
-        <div>Turret Damage: {playerTurretDamage}</div>
+        <div>Camera Range: {playerCameraRange.toFixed(0)} units</div>
       </div>
 
       {/* Upgrade UI Overlay */}
