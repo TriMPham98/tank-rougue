@@ -80,12 +80,19 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       playerTankPosition[2] - tankRef.current.position.z
     ).normalize();
 
-    // Make the turret look at the player
+    // Make the turret look at the player - calculate rotation
     const targetTurretRotation = Math.atan2(
       directionToPlayer.x,
       directionToPlayer.z
     );
-    turretRotationRef.current = targetTurretRotation;
+
+    // Smoothly rotate turret toward player
+    const turretRotationDiff = targetTurretRotation - turretRotationRef.current;
+    const wrappedTurretDiff =
+      ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+    turretRotationRef.current += wrappedTurretDiff * delta * 2; // Faster rotation for turret
+
+    // Apply rotation to the turret
     turretRef.current.rotation.y = turretRotationRef.current;
 
     // Calculate distance to player
@@ -102,14 +109,32 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     if (distanceToPlayer < shootingRange) {
       // Check if enough time has passed since last shot
       if (state.clock.getElapsedTime() - lastShootTimeRef.current > fireRate) {
-        // Calculate barrel end position
+        // Get tank and turret positions
+        const tankPosition = new Vector3(
+          tankRef.current.position.x,
+          tankRef.current.position.y,
+          tankRef.current.position.z
+        );
+
+        // Calculate barrel parameters
+        const turretHeight = 0.5; // Turret's y-offset from tank
+        const barrelYOffset = 0.2; // Barrel's y-offset within turret
         const barrelLength = enemy.type === "tank" ? 1.5 : 2;
+        const barrelZOffset = enemy.type === "tank" ? 1 : 1.2; // Barrel's z-offset within turret
+
+        // Calculate the barrel tip position in world space:
+        // 1. Start from tank position
+        // 2. Add turret height
+        // 3. Add barrel's own y-offset
+        // 4. Add rotated barrel tip position
         const shootPosition: [number, number, number] = [
-          tankRef.current.position.x +
-            Math.sin(turretRotationRef.current) * barrelLength,
-          tankRef.current.position.y + 0.7,
-          tankRef.current.position.z +
-            Math.cos(turretRotationRef.current) * barrelLength,
+          tankPosition.x +
+            Math.sin(turretRotationRef.current) *
+              (barrelZOffset + barrelLength / 2),
+          tankPosition.y + turretHeight + barrelYOffset,
+          tankPosition.z +
+            Math.cos(turretRotationRef.current) *
+              (barrelZOffset + barrelLength / 2),
         ];
 
         // Create a new projectile
@@ -123,7 +148,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         ]);
 
         lastShootTimeRef.current = state.clock.getElapsedTime();
-        debug.log(`Enemy ${enemy.id} fired at player`);
+        debug.log(`Enemy ${enemy.id} fired at player from barrel tip`);
       }
     }
 

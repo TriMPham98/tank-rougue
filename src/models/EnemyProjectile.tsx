@@ -35,7 +35,7 @@ const EnemyProjectile = ({
 
     const speed = 12; // Slightly slower than player projectiles
 
-    // Move projectile
+    // Move projectile in the direction of rotation
     projectileRef.current.position.x += Math.sin(rotation) * delta * speed;
     projectileRef.current.position.z += Math.cos(rotation) * delta * speed;
 
@@ -66,8 +66,8 @@ const EnemyProjectile = ({
 
     const distanceToPlayer = playerPos.distanceTo(projectilePos);
 
-    // Player has a larger collision radius
-    const collisionRadius = 2.0;
+    // Player has a larger collision radius - use 1.5 to avoid hitting too early
+    const collisionRadius = 1.5;
 
     if (distanceToPlayer < collisionRadius) {
       if (!hasCollidedRef.current) {
@@ -91,12 +91,8 @@ const EnemyProjectile = ({
 
   return (
     <Sphere ref={projectileRef} args={[0.2, 8, 8]} position={position}>
-      <meshStandardMaterial
-        color="red"
-        emissive="orange"
-        emissiveIntensity={2}
-      />
-      <pointLight color="orange" intensity={0.8} distance={3} decay={2} />
+      <meshStandardMaterial color="red" emissive="red" emissiveIntensity={2} />
+      <pointLight color="red" intensity={0.8} distance={3} decay={2} />
     </Sphere>
   );
 };
