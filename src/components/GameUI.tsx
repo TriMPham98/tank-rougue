@@ -4,7 +4,6 @@ import { UpgradeableStat } from "../utils/gameState";
 import { useState, useCallback } from "react";
 
 const GameUI = () => {
-  // Add state to track if upgrade is in progress
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   const {
@@ -27,46 +26,34 @@ const GameUI = () => {
     playerHealthRegen,
   } = useGameState();
 
-  // Create a debounced version of upgradeStat
   const handleUpgrade = useCallback(
     (stat: UpgradeableStat) => {
-      if (isUpgrading) return; // Prevent multiple clicks
-
+      if (isUpgrading) return;
       setIsUpgrading(true);
       upgradeStat(stat);
-
-      // Reset after 1 second (longer than needed, just to be safe)
-      setTimeout(() => {
-        setIsUpgrading(false);
-      }, 1000);
+      setTimeout(() => setIsUpgrading(false), 1000);
     },
     [upgradeStat, isUpgrading]
   );
 
-  // Calculate health percentage for health bar
   const healthPercentage = (playerHealth / playerMaxHealth) * 100;
-
-  // Calculate level progress percentage
   const levelProgressPercentage =
     (enemiesDefeated / enemiesRequiredForNextLevel) * 100;
 
-  // Define health bar color based on health percentage
   const getHealthColor = () => {
     if (healthPercentage > 60) return "#4caf50";
-    if (healthPercentage > 30) return "#ffc107";
+    if (healthPercentage > 30) return "#ff9800";
     return "#f44336";
   };
 
-  // Define level color based on level
   const getLevelColor = () => {
-    if (level <= 3) return "#4caf50"; // Green for early levels
-    if (level <= 7) return "#2196f3"; // Blue for mid levels
-    if (level <= 12) return "#ff9800"; // Orange for higher levels
-    return "#f44336"; // Red for very high levels
+    if (level <= 3) return "#4caf50";
+    if (level <= 7) return "#2196f3";
+    if (level <= 12) return "#ff9800";
+    return "#f44336";
   };
 
-  // Get the display name for a stat
-  const getStatDisplayName = (stat: UpgradeableStat): string => {
+  const getStatDisplayName = (stat: UpgradeableStat) => {
     switch (stat) {
       case "tankSpeed":
         return "Tank Speed";
@@ -81,8 +68,7 @@ const GameUI = () => {
     }
   };
 
-  // Get the current value for a stat
-  const getStatCurrentValue = (stat: UpgradeableStat): string => {
+  const getStatCurrentValue = (stat: UpgradeableStat) => {
     switch (stat) {
       case "tankSpeed":
         return `${playerSpeed.toFixed(1)}`;
@@ -97,8 +83,7 @@ const GameUI = () => {
     }
   };
 
-  // Get the upgrade amount for a stat
-  const getStatUpgradeAmount = (stat: UpgradeableStat): string => {
+  const getStatUpgradeAmount = (stat: UpgradeableStat) => {
     switch (stat) {
       case "tankSpeed":
         return "+0.5";
@@ -115,12 +100,34 @@ const GameUI = () => {
     }
   };
 
+  const getStatDescription = (stat: UpgradeableStat) => {
+    switch (stat) {
+      case "tankSpeed":
+        return "Increases movement speed of the tank.";
+      case "fireRate":
+        return "Increases the rate at which the tank can fire shots.";
+      case "cameraRange":
+        return "Increases the visible area around the tank.";
+      case "maxHealth":
+        return "Increases the maximum health of the tank.";
+      case "healthRegen":
+        return "Increases the rate at which health regenerates over time.";
+    }
+  };
+
   return (
     <div className="game-ui">
       {/* Top HUD */}
-      <div className="top-hud">
+      <div
+        className="top-hud"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          padding: "15px",
+          color: "white",
+        }}>
         <div className="health-container">
-          <div className="health-label">
+          <div className="health-label" style={{ fontSize: "1em" }}>
             HP: {playerHealth}/{playerMaxHealth}
           </div>
           <div className="health-bar-container">
@@ -133,18 +140,18 @@ const GameUI = () => {
             />
           </div>
         </div>
-
         <div className="score-container">
-          <div className="score-label">Score: {score}</div>
+          <div className="score-label" style={{ fontSize: "1em" }}>
+            Score: {score}
+          </div>
         </div>
-
         <div className="level-container">
           <div
             className="level-label"
             style={{
               color: getLevelColor(),
-              fontWeight: "bold",
               fontSize: "1.2em",
+              fontWeight: "bold",
               display: "flex",
               alignItems: "center",
               gap: "8px",
@@ -154,9 +161,6 @@ const GameUI = () => {
             <div
               className="level-indicator"
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
                 width: "30px",
                 height: "30px",
                 borderRadius: "50%",
@@ -164,23 +168,18 @@ const GameUI = () => {
                 color: "#fff",
                 fontSize: "1.1em",
                 fontWeight: "bold",
-                boxShadow: "0 0 8px rgba(0,0,0,0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}>
               {level}
             </div>
           </div>
           <div
             className="level-info"
-            style={{
-              fontSize: "0.8em",
-              opacity: 0.8,
-              marginTop: "4px",
-              marginBottom: "6px",
-            }}>
+            style={{ fontSize: "0.8em", opacity: 0.8 }}>
             Enemies: {Math.floor(3 + 2.5 * Math.log10(level + 1))}
           </div>
-
-          {/* Level progress bar */}
           <div
             className="level-progress-container"
             style={{
@@ -188,8 +187,6 @@ const GameUI = () => {
               height: "6px",
               backgroundColor: "#333",
               borderRadius: "3px",
-              marginTop: "5px",
-              overflow: "hidden",
             }}>
             <div
               className="level-progress-bar"
@@ -203,161 +200,130 @@ const GameUI = () => {
           </div>
           <div
             className="level-progress-label"
-            style={{
-              fontSize: "0.75em",
-              textAlign: "right",
-              marginTop: "2px",
-            }}>
+            style={{ fontSize: "0.8em", textAlign: "right" }}>
             {enemiesDefeated}/{enemiesRequiredForNextLevel} for next level
           </div>
         </div>
       </div>
 
-      {/* Player Stats Display (right side) */}
+      {/* Player Stats Display */}
       <div
         className="player-stats"
         style={{
           position: "absolute",
           right: "20px",
           top: "165px",
-          backgroundColor: "rgba(0, 0, 0, 0.6)",
-          padding: "10px",
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          padding: "15px",
           borderRadius: "5px",
           color: "white",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
           fontSize: "0.8em",
         }}>
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
+        <div
+          style={{
+            fontSize: "1.2em",
+            fontWeight: "bold",
+            marginBottom: "10px",
+          }}>
           Tank Stats
         </div>
         <div>Speed: {playerSpeed.toFixed(1)}</div>
         <div>Fire Rate: {(1 / playerFireRate).toFixed(1)} shots/sec</div>
-        <div>Camera Range: {playerCameraRange.toFixed(0)}</div>
+        <div>Camera Range: {playerCameraRange.toFixed(0)} units</div>
         <div>Max Health: {playerMaxHealth}</div>
         <div>Health Regen: {playerHealthRegen}/sec</div>
       </div>
 
-      {/* Upgrade UI overlay */}
+      {/* Upgrade UI Overlay */}
       {showUpgradeUI && (
         <div className="overlay">
           <div
             className="upgrade-content"
             style={{
-              backgroundColor: "rgba(0, 0, 0, 0.85)",
-              padding: "25px",
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              padding: "15px",
               borderRadius: "12px",
-              width: "550px",
+              width: "80%",
+              maxWidth: "1000px", // Increased from 800px
               color: "white",
-              boxShadow: "0 0 20px rgba(0, 200, 0, 0.3)",
-              border: "1px solid rgba(76, 175, 80, 0.3)",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}>
             <h2
               style={{
                 color: "#4caf50",
                 textAlign: "center",
-                fontSize: "1.8em",
-                marginBottom: "25px",
-                textShadow: "0 0 10px rgba(76, 175, 80, 0.5)",
+                fontSize: "1.5em",
+                fontWeight: "bold",
+                marginBottom: "15px",
               }}>
               Level Up! Choose an Upgrade
             </h2>
-
             <div
               style={{
                 display: "flex",
                 justifyContent: "center",
                 gap: "15px",
+                width: "100%",
               }}>
               {availableUpgrades.map((stat) => (
                 <div
                   key={stat}
                   onClick={() => handleUpgrade(stat)}
                   style={{
-                    width: "160px",
-                    height: "200px",
+                    flex: "1 1 0",
+                    minWidth: "250px", // Increased from 200px
+                    maxWidth: "350px", // Increased from 300px
                     padding: "15px",
-                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    backgroundColor: "rgba(255,255,255,0.1)",
                     borderRadius: "10px",
                     cursor: "pointer",
                     textAlign: "center",
                     transition: "all 0.2s ease",
-                    border: "1px solid rgba(33, 150, 243, 0.3)",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-                    transform: "translateY(0)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden",
-                    ":hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    },
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.backgroundColor =
-                      "rgba(255, 255, 255, 0.15)";
-                    e.currentTarget.style.transform = "translateY(-5px)";
+                      "rgba(255,255,255,0.2)";
+                    e.currentTarget.style.transform = "translateY(-3px)";
                     e.currentTarget.style.boxShadow =
-                      "0 6px 12px rgba(0, 0, 0, 0.3)";
+                      "0 6px 12px rgba(0,0,0,0.3)";
                   }}
                   onMouseOut={(e) => {
                     e.currentTarget.style.backgroundColor =
-                      "rgba(255, 255, 255, 0.08)";
+                      "rgba(255,255,255,0.1)";
                     e.currentTarget.style.transform = "translateY(0)";
                     e.currentTarget.style.boxShadow =
-                      "0 4px 8px rgba(0, 0, 0, 0.2)";
+                      "0 4px 8px rgba(0,0,0,0.2)";
                   }}>
                   <div
                     style={{
-                      fontSize: "1.3em",
-                      fontWeight: "bold",
-                      marginBottom: "20px",
+                      fontSize: "1.2em",
                       color: "#2196f3",
-                      textShadow: "0 0 5px rgba(33, 150, 243, 0.5)",
-                      height: "60px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "100%",
-                      padding: "0 5px",
-                      wordWrap: "break-word",
-                      hyphens: "auto",
+                      marginBottom: "10px",
                     }}>
                     {getStatDisplayName(stat)}
                   </div>
-                  <div
-                    style={{
-                      marginBottom: "20px",
-                      height: "50px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}>
-                    <div style={{ fontSize: "0.9em", marginBottom: "5px" }}>
-                      Current:
-                    </div>
-                    <div style={{ fontSize: "1.1em" }}>
-                      {getStatCurrentValue(stat)}
-                    </div>
+                  <div style={{ fontSize: "1em", whiteSpace: "nowrap" }}>
+                    {getStatCurrentValue(stat)} →{" "}
+                    <span style={{ color: "#4caf50" }}>
+                      {getStatUpgradeAmount(stat)}
+                    </span>
                   </div>
                   <div
                     style={{
-                      color: "#4caf50",
-                      fontWeight: "bold",
-                      height: "50px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      fontSize: "0.8em",
+                      marginTop: "10px",
+                      color: "#ccc",
                     }}>
-                    <div style={{ fontSize: "0.9em", marginBottom: "5px" }}>
-                      Upgrade:
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1em",
-                        textShadow: "0 0 5px rgba(76, 175, 80, 0.3)",
-                      }}>
-                      {getStatUpgradeAmount(stat)}
-                    </div>
+                    {getStatDescription(stat)}
                   </div>
                 </div>
               ))}
@@ -366,30 +332,113 @@ const GameUI = () => {
         </div>
       )}
 
-      {/* Game over overlay */}
+      {/* Game Over Overlay */}
       {isGameOver && (
         <div className="overlay">
-          <div className="overlay-content">
-            <h2>Game Over</h2>
-            <p>Your score: {score}</p>
-            <p>Level reached: {level}</p>
-            <button onClick={restartGame}>Restart Game</button>
+          <div
+            className="overlay-content"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              padding: "15px",
+              borderRadius: "12px",
+              color: "white",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            }}>
+            <h2
+              style={{
+                color: "#f44336",
+                fontSize: "1.5em",
+                fontWeight: "bold",
+                marginBottom: "15px",
+              }}>
+              Game Over
+            </h2>
+            <p style={{ fontSize: "1em" }}>Your score: {score}</p>
+            <p style={{ fontSize: "1em" }}>Level reached: {level}</p>
+            <button
+              onClick={restartGame}
+              style={{
+                backgroundColor: "#4caf50",
+                color: "white",
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#45a049";
+                e.currentTarget.style.transform = "translateY(-3px)";
+                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "#4caf50";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}>
+              Restart Game
+            </button>
           </div>
         </div>
       )}
 
-      {/* Pause overlay */}
+      {/* Pause Overlay */}
       {isPaused && !isGameOver && !showUpgradeUI && (
         <div className="overlay">
-          <div className="overlay-content">
-            <h2>Game Paused</h2>
-            <button onClick={togglePause}>Resume Game</button>
+          <div
+            className="overlay-content"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              padding: "15px",
+              borderRadius: "12px",
+              color: "white",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            }}>
+            <h2
+              style={{
+                color: "#4caf50",
+                fontSize: "1.5em",
+                fontWeight: "bold",
+                marginBottom: "15px",
+              }}>
+              Game Paused
+            </h2>
+            <button
+              onClick={togglePause}
+              style={{
+                backgroundColor: "#4caf50",
+                color: "white",
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#45a049";
+                e.currentTarget.style.transform = "translateY(-3px)";
+                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "#4caf50";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}>
+              Resume Game
+            </button>
           </div>
         </div>
       )}
 
-      {/* Controls info */}
-      <div className="controls-info">
+      {/* Controls Info */}
+      <div
+        className="controls-info"
+        style={{
+          fontSize: "0.8em",
+          color: "white",
+          textAlign: "center",
+          padding: "10px",
+        }}>
         <p>WASD: Move | J/K: Rotate Turret | Space: Shoot | ESC: Pause</p>
       </div>
     </div>
