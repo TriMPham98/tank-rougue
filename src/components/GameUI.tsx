@@ -83,20 +83,19 @@ const GameUI = () => {
     }
   };
 
-  const getStatUpgradeAmount = (stat: UpgradeableStat) => {
+  const getStatPostUpgradeValue = (stat: UpgradeableStat) => {
     switch (stat) {
       case "tankSpeed":
-        return "+0.5";
+        return `${(playerSpeed + 0.5).toFixed(1)}`;
       case "fireRate":
-        return `+${(1 / (playerFireRate - 0.05) - 1 / playerFireRate).toFixed(
-          1
-        )} shots/sec`;
+        const newFireRate = 1 / (playerFireRate - 0.05); // Inverse of fire rate interval
+        return `${newFireRate.toFixed(1)} shots/sec`;
       case "cameraRange":
-        return "+2 units";
+        return `${(playerCameraRange + 2).toFixed(0)} units`;
       case "maxHealth":
-        return "+25";
+        return `${playerMaxHealth + 25}`;
       case "healthRegen":
-        return "+1/sec";
+        return `${playerHealthRegen + 1}/sec`;
     }
   };
 
@@ -245,7 +244,7 @@ const GameUI = () => {
               padding: "15px",
               borderRadius: "12px",
               width: "80%",
-              maxWidth: "1000px", // Increased from 800px
+              maxWidth: "1000px",
               color: "white",
               boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
               border: "1px solid rgba(255,255,255,0.2)",
@@ -276,8 +275,8 @@ const GameUI = () => {
                   onClick={() => handleUpgrade(stat)}
                   style={{
                     flex: "1 1 0",
-                    minWidth: "250px", // Increased from 200px
-                    maxWidth: "350px", // Increased from 300px
+                    minWidth: "250px",
+                    maxWidth: "350px",
                     padding: "15px",
                     backgroundColor: "rgba(255,255,255,0.1)",
                     borderRadius: "10px",
@@ -314,7 +313,7 @@ const GameUI = () => {
                   <div style={{ fontSize: "1em", whiteSpace: "nowrap" }}>
                     {getStatCurrentValue(stat)} →{" "}
                     <span style={{ color: "#4caf50" }}>
-                      {getStatUpgradeAmount(stat)}
+                      {getStatPostUpgradeValue(stat)}
                     </span>
                   </div>
                   <div
