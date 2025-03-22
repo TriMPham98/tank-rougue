@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
-import { Mesh, Vector3, Group } from "three";
+import { Group } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
@@ -34,7 +34,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     useKeyboardControls();
 
   // Get game state - only get what's needed
-  const playerDamage = useGameState((state) => state.playerDamage);
+  // const playerDamage = useGameState((state) => state.playerDamage);
   const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
   const playerSpeed = useGameState((state) => state.playerSpeed);
   const playerFireRate = useGameState((state) => state.playerFireRate);

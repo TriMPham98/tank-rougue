@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
-import { Mesh, Vector3, Group, Quaternion } from "three";
+import { Vector3, Group, Quaternion } from "three";
 import { Enemy, useGameState } from "../utils/gameState";
 import EnemyProjectile from "./EnemyProjectile";
 import { debug } from "../utils/debug";

@@ -3,9 +3,9 @@ import {
   Sky,
   OrbitControls,
   Environment,
-  useHelper,
+  // useHelper,
   Stats,
-  SpotLight,
+  // SpotLight,
 } from "@react-three/drei";
 import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
@@ -23,7 +23,7 @@ import {
   useState,
 } from "react";
 import { useGameState } from "../utils/gameState";
-import { SpotLightHelper, Vector3, SpotLight as ThreeSpotLight } from "three";
+import { Vector3, SpotLight as ThreeSpotLight } from "three";
 import "./GameScene.css";
 import { useRespawnManager } from "../utils/respawnManager";
 import { debug } from "../utils/debug";
@@ -228,8 +228,8 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 
 // Main game scene component
 const GameScene = () => {
-  const [enemies, setEnemies] = useState(0);
-  const [powerUps, setPowerUps] = useState(0);
+  // const [enemies, setEnemies] = useState(0);
+  // const [powerUps, setPowerUps] = useState(0);
 
   // Create a memoized player tank component that won't re-render
   const PlayerTank = useMemo(() => {
