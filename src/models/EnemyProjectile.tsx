@@ -66,8 +66,8 @@ const EnemyProjectile = ({
 
     const distanceToPlayer = playerPos.distanceTo(projectilePos);
 
-    // Player has a larger collision radius - use 1.5 to avoid hitting too early
-    const collisionRadius = 1.5;
+    // Player has a larger collision radius
+    const collisionRadius = 1.8;
 
     if (distanceToPlayer < collisionRadius) {
       if (!hasCollidedRef.current) {
