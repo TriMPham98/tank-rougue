@@ -28,6 +28,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     (state) => state.updateEnemyPosition
   );
   const isPaused = useGameState((state) => state.isPaused);
+  const isGameOver = useGameState((state) => state.isGameOver);
   const getState = useRef(useGameState.getState).current;
 
   const maxHealthRef = useRef(enemy.health);
@@ -43,7 +44,8 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   }, []);
 
   useFrame((state, delta) => {
-    if (!tankRef.current || !turretRef.current || isPaused) return;
+    if (!tankRef.current || !turretRef.current || isPaused || isGameOver)
+      return;
 
     const playerTankPosition = getState().playerTankPosition;
     const enemies = getState().enemies;

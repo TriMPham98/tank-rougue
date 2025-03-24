@@ -25,13 +25,21 @@ const EnemyProjectile = ({
 
   // Access only the takeDamage function
   const takeDamage = useGameState((state) => state.takeDamage);
+  const isPaused = useGameState((state) => state.isPaused);
+  const isGameOver = useGameState((state) => state.isGameOver);
 
   // Get direct store access
   const getState = useRef(useGameState.getState).current;
 
   // Projectile movement and collision detection
   useFrame((state, delta) => {
-    if (!projectileRef.current || hasCollidedRef.current) return;
+    if (
+      !projectileRef.current ||
+      hasCollidedRef.current ||
+      isPaused ||
+      isGameOver
+    )
+      return;
 
     const speed = 12; // Slightly slower than player projectiles
 

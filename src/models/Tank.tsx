@@ -40,6 +40,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const playerFireRate = useGameState((state) => state.playerFireRate);
   const playerHealthRegen = useGameState((state) => state.playerHealthRegen);
   const isPaused = useGameState((state) => state.isPaused);
+  const isGameOver = useGameState((state) => state.isGameOver);
   const updatePlayerPosition = useGameState(
     (state) => state.updatePlayerPosition
   );
@@ -88,7 +89,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   // Tank movement and rotation - minimizing state updates
   useFrame((state, delta) => {
-    if (!tankRef.current || isPaused) return;
+    if (!tankRef.current || isPaused || isGameOver) return;
 
     // More detailed debug logging
     if (
