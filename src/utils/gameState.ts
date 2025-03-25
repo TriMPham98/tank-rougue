@@ -201,9 +201,15 @@ export const useGameState = create<GameState>((set, get) => ({
     }),
 
   togglePause: () =>
-    set((state) => ({
-      isPaused: !state.isPaused,
-    })),
+    set((state) => {
+      console.log("gameState.ts - togglePause called:", {
+        currentPauseState: state.isPaused,
+        newPauseState: !state.isPaused,
+      });
+      return {
+        isPaused: !state.isPaused,
+      };
+    }),
 
   incrementEnemyDefeatCount: () => {
     set((state) => {

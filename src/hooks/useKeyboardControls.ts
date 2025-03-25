@@ -24,13 +24,12 @@ export const useKeyboardControls = (): KeyboardControls => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      debug.log(
-        "Key pressed:",
-        e.key,
-        e.type,
-        "Active element:",
-        document.activeElement?.tagName || "none"
-      );
+      console.log("useKeyboardControls - keydown:", {
+        key: e.key,
+        type: e.type,
+        activeElement: document.activeElement?.tagName || "none",
+        eventPhase: e.eventPhase, // 1 = capture, 2 = target, 3 = bubble
+      });
 
       switch (e.key.toLowerCase()) {
         case "w":
@@ -58,13 +57,12 @@ export const useKeyboardControls = (): KeyboardControls => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      debug.log(
-        "Key released:",
-        e.key,
-        e.type,
-        "Active element:",
-        document.activeElement?.tagName || "none"
-      );
+      console.log("useKeyboardControls - keyup:", {
+        key: e.key,
+        type: e.type,
+        activeElement: document.activeElement?.tagName || "none",
+        eventPhase: e.eventPhase,
+      });
 
       switch (e.key.toLowerCase()) {
         case "w":
@@ -91,12 +89,14 @@ export const useKeyboardControls = (): KeyboardControls => {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown, true);
-    window.addEventListener("keyup", handleKeyUp, true);
+    console.log("useKeyboardControls - Adding keyboard event listeners");
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("keyup", handleKeyUp, true);
+      console.log("useKeyboardControls - Removing keyboard event listeners");
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, []);
 

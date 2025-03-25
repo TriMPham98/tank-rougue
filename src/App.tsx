@@ -11,6 +11,8 @@ function App() {
   const initialized = useRef(false);
   // Add the wasPaused ref at the top level
   const wasPaused = useRef(false);
+  // Add a ref to track last toggle time
+  const lastToggleTime = useRef(0);
 
   const { restartGame, togglePause, isPaused, level, showUpgradeUI } =
     useGameState();
@@ -38,28 +40,51 @@ function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !showUpgradeUI) {
+        // Prevent multiple toggles within 200ms
+        const now = Date.now();
+        if (now - lastToggleTime.current < 200) {
+          return;
+        }
+
+        console.log("App.tsx - ESC key handler:", {
+          key: e.key,
+          showUpgradeUI,
+          isPaused,
+          activeElement: document.activeElement?.tagName,
+          timeSinceLastToggle: now - lastToggleTime.current,
+        });
+
+        console.log("App.tsx - Toggling pause state");
+        lastToggleTime.current = now;
         togglePause();
       }
     };
 
+    console.log("App.tsx - Adding ESC key event listener");
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      console.log("App.tsx - Removing ESC key event listener");
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [togglePause, showUpgradeUI]);
+  }, [togglePause, showUpgradeUI, isPaused]);
 
   // Only pause the game when upgrade UI is shown, but don't keep it paused after
   useEffect(() => {
-    if (showUpgradeUI && !isPaused) {
-      // Pause the game when upgrade UI appears
-      togglePause();
-      wasPaused.current = false; // Note that it wasn't paused before
-    } else if (!showUpgradeUI && isPaused && wasPaused.current === false) {
-      // Resume the game when upgrade UI is dismissed, but only if we paused it
-      togglePause();
+    // Store the current pause state when upgrade UI changes
+    if (showUpgradeUI) {
+      wasPaused.current = isPaused;
+      if (!isPaused) {
+        // Only pause if not already paused
+        togglePause();
+      }
+    } else if (!wasPaused.current) {
+      // Only unpause if we were the ones who paused it
+      if (isPaused) {
+        togglePause();
+      }
     }
-  }, [showUpgradeUI, isPaused, togglePause]);
+  }, [showUpgradeUI]); // Only run when showUpgradeUI changes
 
   return (
     <div
