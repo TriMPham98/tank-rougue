@@ -22,7 +22,8 @@ export type UpgradeableStat =
   | "cameraRange"
   | "maxHealth"
   | "healthRegen"
-  | "turretDamage";
+  | "turretDamage"
+  | "bulletVelocity";
 
 // Define the game state
 interface GameState {
@@ -35,6 +36,7 @@ interface GameState {
   playerFireRate: number; // Time between shots in seconds
   playerCameraRange: number; // Camera zoom range
   playerHealthRegen: number; // Health regenerated per second
+  playerBulletVelocity: number; // Speed of bullets
   score: number;
   level: number;
   enemiesDefeated: number;
@@ -84,6 +86,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerFireRate: 0.5, // 0.5 seconds between shots
   playerCameraRange: 12, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
+  playerBulletVelocity: 15, // Initial bullet velocity
   score: 0,
   level: 1,
   enemiesDefeated: 0,
@@ -187,6 +190,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerFireRate: 0.5,
       playerCameraRange: 12,
       playerHealthRegen: 0,
+      playerBulletVelocity: 15,
       score: 0,
       level: 1,
       playerTankPosition: [0, 0.5, 0],
@@ -246,6 +250,7 @@ export const useGameState = create<GameState>((set, get) => ({
         "maxHealth",
         "healthRegen",
         "turretDamage",
+        "bulletVelocity",
       ];
 
       const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
@@ -332,6 +337,9 @@ export const useGameState = create<GameState>((set, get) => ({
           break;
         case "turretDamage":
           updates.playerTurretDamage = state.playerTurretDamage + 5; // Linear increase by 5
+          break;
+        case "bulletVelocity":
+          updates.playerBulletVelocity = state.playerBulletVelocity + 2; // Linear increase by 2
           break;
       }
 

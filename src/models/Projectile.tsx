@@ -23,8 +23,11 @@ const Projectile = ({
   const projectileRef = useRef<Mesh>(null);
   const hasCollidedRef = useRef(false);
 
-  // Access only the damageEnemy function
+  // Access only the damageEnemy function and bullet velocity
   const damageEnemy = useGameState((state) => state.damageEnemy);
+  const playerBulletVelocity = useGameState(
+    (state) => state.playerBulletVelocity
+  );
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
 
@@ -41,11 +44,11 @@ const Projectile = ({
     )
       return;
 
-    const speed = 15;
-
-    // Move projectile
-    projectileRef.current.position.x += Math.sin(rotation) * delta * speed;
-    projectileRef.current.position.z += Math.cos(rotation) * delta * speed;
+    // Move projectile using the bullet velocity from game state
+    projectileRef.current.position.x +=
+      Math.sin(rotation) * delta * playerBulletVelocity;
+    projectileRef.current.position.z +=
+      Math.cos(rotation) * delta * playerBulletVelocity;
 
     // Remove projectile if it's too far away
     const distance = new Vector3(

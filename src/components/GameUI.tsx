@@ -25,6 +25,7 @@ const GameUI = () => {
     playerCameraRange,
     playerHealthRegen,
     playerTurretDamage,
+    playerBulletVelocity,
   } = useGameState();
 
   const handleUpgrade = useCallback(
@@ -68,6 +69,8 @@ const GameUI = () => {
         return "Health Regen";
       case "turretDamage":
         return "Turret Damage";
+      case "bulletVelocity":
+        return "Bullet Speed";
     }
   };
 
@@ -85,6 +88,8 @@ const GameUI = () => {
         return `${playerHealthRegen}/sec`;
       case "turretDamage":
         return `${playerTurretDamage}`;
+      case "bulletVelocity":
+        return `${playerBulletVelocity} units/sec`;
     }
   };
 
@@ -103,6 +108,8 @@ const GameUI = () => {
         return `${playerHealthRegen + 1}/sec`;
       case "turretDamage":
         return `${playerTurretDamage + 5}`;
+      case "bulletVelocity":
+        return `${playerBulletVelocity + 2} units/sec`;
     }
   };
 
@@ -120,6 +127,8 @@ const GameUI = () => {
         return "Increases the rate at which health regenerates over time.";
       case "turretDamage":
         return "Increases the damage dealt by the tank's turret.";
+      case "bulletVelocity":
+        return "Increases the speed at which bullets travel.";
     }
   };
 
@@ -236,11 +245,12 @@ const GameUI = () => {
           }}>
           Tank Stats
         </div>
-        <div>Turret Damage: {playerTurretDamage}</div>
-        <div>Fire Rate: {(1 / playerFireRate).toFixed(1)} shots/sec</div>
-        <div>Speed: {playerSpeed.toFixed(1)}</div>
         <div>Max Health: {playerMaxHealth}</div>
         <div>Health Regen: {playerHealthRegen}/sec</div>
+        <div>Turret Damage: {playerTurretDamage}</div>
+        <div>Fire Rate: {(1 / playerFireRate).toFixed(1)} shots/sec</div>
+        <div>Bullet Speed: {playerBulletVelocity} units/sec</div>
+        <div>Movement Speed: {playerSpeed.toFixed(1)}</div>
         <div>Camera Range: {playerCameraRange.toFixed(0)} units</div>
       </div>
 
