@@ -169,8 +169,8 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     // Handle shooting - use playerFireRate from game state
     if (
-      shoot &&
-      state.clock.getElapsedTime() - lastShootTimeRef.current > playerFireRate
+      state.clock.getElapsedTime() - lastShootTimeRef.current >
+      playerFireRate
     ) {
       const shootPosition: [number, number, number] = [
         tankRef.current.position.x +

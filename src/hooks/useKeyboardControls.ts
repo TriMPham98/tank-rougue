@@ -43,9 +43,6 @@ export const useKeyboardControls = (): KeyboardControls => {
         case "k":
           setKeys((keys) => ({ ...keys, turretRight: true }));
           break;
-        case " ":
-          setKeys((keys) => ({ ...keys, shoot: true }));
-          break;
       }
     };
 
@@ -68,9 +65,6 @@ export const useKeyboardControls = (): KeyboardControls => {
           break;
         case "k":
           setKeys((keys) => ({ ...keys, turretRight: false }));
-          break;
-        case " ":
-          setKeys((keys) => ({ ...keys, shoot: false }));
           break;
       }
     };

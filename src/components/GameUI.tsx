@@ -448,7 +448,7 @@ const GameUI = () => {
           textAlign: "center",
           padding: "10px",
         }}>
-        <p>WASD: Move | J/K: Rotate Turret | Space: Shoot | ESC: Pause</p>
+        <p>WASD: Move | J/K: Rotate Turret | ESC: Pause</p>
       </div>
     </div>
   );
