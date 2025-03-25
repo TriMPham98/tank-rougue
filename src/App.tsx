@@ -45,26 +45,14 @@ function App() {
         if (now - lastToggleTime.current < 200) {
           return;
         }
-
-        console.log("App.tsx - ESC key handler:", {
-          key: e.key,
-          showUpgradeUI,
-          isPaused,
-          activeElement: document.activeElement?.tagName,
-          timeSinceLastToggle: now - lastToggleTime.current,
-        });
-
-        console.log("App.tsx - Toggling pause state");
         lastToggleTime.current = now;
         togglePause();
       }
     };
 
-    console.log("App.tsx - Adding ESC key event listener");
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      console.log("App.tsx - Removing ESC key event listener");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [togglePause, showUpgradeUI, isPaused]);
