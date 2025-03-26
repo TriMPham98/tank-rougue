@@ -333,7 +333,7 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerHealth = state.playerHealth + 25;
           break;
         case "healthRegen":
-          updates.playerHealthRegen = state.playerHealthRegen + 1; // Linear increase by 1
+          updates.playerHealthRegen = state.playerHealthRegen + 0.5; // Linear increase by 0.5
           break;
         case "turretDamage":
           updates.playerTurretDamage = state.playerTurretDamage + 5; // Linear increase by 5

@@ -105,7 +105,7 @@ const GameUI = () => {
       case "maxHealth":
         return `${playerMaxHealth + 25}`;
       case "healthRegen":
-        return `${playerHealthRegen + 1}/sec`;
+        return `${playerHealthRegen + 0.5}/sec`;
       case "turretDamage":
         return `${playerTurretDamage + 5}`;
       case "bulletVelocity":
