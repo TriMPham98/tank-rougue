@@ -3,17 +3,17 @@
  */
 export const debug = {
   log: (...args: any[]) => {
-    if (import.meta.env.MODE !== "production") {
+    if (false) {
       console.log(...args);
     }
   },
   error: (...args: any[]) => {
-    if (import.meta.env.MODE !== "production") {
+    if (false) {
       console.error(...args);
     }
   },
   warn: (...args: any[]) => {
-    if (import.meta.env.MODE !== "production") {
+    if (false) {
       console.warn(...args);
     }
   },

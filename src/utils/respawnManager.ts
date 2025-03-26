@@ -4,7 +4,7 @@ import { generateRandomPosition } from "./levelGenerator";
 import { debug } from "./debug";
 
 // Debug flag specifically for spawn statistics
-const SPAWN_STATS_DEBUG = true;
+const SPAWN_STATS_DEBUG = false;
 
 // Base number of enemies at level 1
 const BASE_ENEMIES = 3;
