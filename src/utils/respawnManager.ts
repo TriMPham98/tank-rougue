@@ -60,7 +60,7 @@ export const useRespawnManager = () => {
         // Calculate probabilities based on level
         const turretProbability = Math.min(0.2 + state.level * 0.03, 0.5);
         const bomberProbability =
-          state.level >= 5 ? Math.min(0.1 + (state.level - 5) * 0.02, 0.3) : 0;
+          state.level >= 5 ? Math.min(0.2 + (state.level - 5) * 0.04, 0.4) : 0;
         const random = Math.random();
 
         // Determine enemy type and stats
@@ -71,7 +71,7 @@ export const useRespawnManager = () => {
         if (state.level >= 5 && random < bomberProbability) {
           type = "bomber";
           health = 40 + state.level * 3; // Lower health for bombers
-          speed = 2.5; // Faster movement speed
+          speed = 4.0; // Much faster movement speed
         } else if (random < turretProbability + bomberProbability) {
           type = "turret";
           const turretBaseHealth = 50;
