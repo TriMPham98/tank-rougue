@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
-import { Group } from "three";
+import { Group, Vector3 } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
@@ -45,6 +45,35 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     (state) => state.updatePlayerPosition
   );
   const healPlayer = useGameState((state) => state.healPlayer);
+
+  // Get terrain obstacles from game state
+  const terrainObstacles = useGameState((state) => state.terrainObstacles);
+
+  // Helper function to check collision with terrain obstacles
+  const checkTerrainCollision = (newX: number, newZ: number): boolean => {
+    const tankPosition = new Vector3(newX, 0, newZ);
+    const tankRadius = 1.25; // Slightly larger than tank's width/2
+
+    for (const obstacle of terrainObstacles) {
+      const obstaclePos = new Vector3(
+        obstacle.position[0],
+        0,
+        obstacle.position[2]
+      );
+      const distance = obstaclePos.distanceTo(tankPosition);
+
+      // Different collision radii for different obstacle types
+      const obstacleRadius =
+        obstacle.type === "tree"
+          ? obstacle.size * 0.3 // Tree trunk radius
+          : obstacle.size * 0.75; // Rock radius
+
+      if (distance < tankRadius + obstacleRadius) {
+        return true; // Collision detected
+      }
+    }
+    return false; // No collision
+  };
 
   // Handle health regeneration
   useEffect(() => {
@@ -127,33 +156,22 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     const moveSpeed = playerSpeed;
     let moved = false;
 
-    if (forward) {
-      // Log position before movement
-      debug.log("Before move - Position:", [
-        tankRef.current.position.x,
-        tankRef.current.position.y,
-        tankRef.current.position.z,
-      ]);
+    if (forward || backward) {
+      // Calculate potential new position
+      const moveDirection = forward ? 1 : -1;
+      const potentialX =
+        tankRef.current.position.x +
+        Math.sin(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+      const potentialZ =
+        tankRef.current.position.z +
+        Math.cos(tankRotationRef.current) * delta * moveSpeed * moveDirection;
 
-      tankRef.current.position.x +=
-        Math.sin(tankRotationRef.current) * delta * moveSpeed;
-      tankRef.current.position.z +=
-        Math.cos(tankRotationRef.current) * delta * moveSpeed;
-      moved = true;
-
-      // Log position after movement
-      debug.log("After move - Position:", [
-        tankRef.current.position.x,
-        tankRef.current.position.y,
-        tankRef.current.position.z,
-      ]);
-    }
-    if (backward) {
-      tankRef.current.position.x -=
-        Math.sin(tankRotationRef.current) * delta * moveSpeed;
-      tankRef.current.position.z -=
-        Math.cos(tankRotationRef.current) * delta * moveSpeed;
-      moved = true;
+      // Only move if there's no collision
+      if (!checkTerrainCollision(potentialX, potentialZ)) {
+        tankRef.current.position.x = potentialX;
+        tankRef.current.position.z = potentialZ;
+        moved = true;
+      }
     }
 
     // Turret rotation - directly modify the ref
