@@ -58,6 +58,14 @@ interface GameState {
   isGameOver: boolean;
   isPaused: boolean;
 
+  // Terrain obstacles
+  terrainObstacles: Array<{
+    id: string;
+    position: [number, number, number];
+    type: "rock" | "tree";
+    size: number;
+  }>;
+
   // Actions
   takeDamage: (amount: number) => void;
   healPlayer: (amount: number) => void;
@@ -74,6 +82,12 @@ interface GameState {
   updateEnemyPosition: (id: string, position: [number, number, number]) => void; // Add function to update enemy position
   incrementEnemyDefeatCount: () => void; // New function to track enemy defeats
   upgradeStat: (stat: UpgradeableStat) => void; // New function to upgrade a stat
+  addTerrainObstacle: (obstacle: {
+    position: [number, number, number];
+    type: "rock" | "tree";
+    size: number;
+  }) => void;
+  removeTerrainObstacle: (id: string) => void;
 }
 
 // Create the game state store
@@ -107,6 +121,9 @@ export const useGameState = create<GameState>((set, get) => ({
   // Initial game state flags
   isGameOver: false,
   isPaused: false,
+
+  // Terrain obstacles
+  terrainObstacles: [],
 
   // Actions
   takeDamage: (amount) =>
@@ -203,6 +220,7 @@ export const useGameState = create<GameState>((set, get) => ({
       enemiesRequiredForNextLevel: 1,
       showUpgradeUI: false,
       availableUpgrades: [],
+      terrainObstacles: [],
     }),
 
   togglePause: () =>
@@ -346,4 +364,19 @@ export const useGameState = create<GameState>((set, get) => ({
 
       return updates;
     }),
+
+  addTerrainObstacle: (obstacle) =>
+    set((state) => ({
+      terrainObstacles: [
+        ...state.terrainObstacles,
+        { ...obstacle, id: Math.random().toString(36).substr(2, 9) },
+      ],
+    })),
+
+  removeTerrainObstacle: (id) =>
+    set((state) => ({
+      terrainObstacles: state.terrainObstacles.filter(
+        (obstacle) => obstacle.id !== id
+      ),
+    })),
 }));

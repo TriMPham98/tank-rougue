@@ -30,6 +30,7 @@ const Projectile = ({
   );
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
+  const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
   // Get direct store access
   const getState = useRef(useGameState.getState).current;
@@ -62,6 +63,35 @@ const Projectile = ({
       return;
     }
 
+    // Check for collisions with terrain obstacles
+    const projectilePos = new Vector3(
+      projectileRef.current.position.x,
+      projectileRef.current.position.y,
+      projectileRef.current.position.z
+    );
+
+    for (const obstacle of terrainObstacles) {
+      const obstaclePos = new Vector3(...obstacle.position);
+      const distanceToObstacle = obstaclePos.distanceTo(projectilePos);
+      const collisionRadius =
+        obstacle.type === "rock" ? obstacle.size : obstacle.size * 1.5;
+
+      if (distanceToObstacle < collisionRadius) {
+        if (!hasCollidedRef.current) {
+          hasCollidedRef.current = true;
+          debug.log(
+            `Projectile hit terrain obstacle at distance ${distanceToObstacle.toFixed(
+              2
+            )}`
+          );
+          onRemove(id);
+          break;
+        }
+      }
+    }
+
+    if (hasCollidedRef.current) return;
+
     // Get fresh enemies data
     const enemies = getState().enemies;
 
@@ -73,12 +103,6 @@ const Projectile = ({
     // Check for collisions with enemies
     for (const enemy of enemies) {
       const enemyPos = new Vector3(...enemy.position);
-      const projectilePos = new Vector3(
-        projectileRef.current.position.x,
-        projectileRef.current.position.y,
-        projectileRef.current.position.z
-      );
-
       const distanceToEnemy = enemyPos.distanceTo(projectilePos);
 
       // Use a larger collision radius for tanks since they're bigger and moving

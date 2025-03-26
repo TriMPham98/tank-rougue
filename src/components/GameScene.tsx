@@ -11,6 +11,7 @@ import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
 import PowerUpItem from "../models/PowerUpItem";
 import Ground from "../models/Ground";
+import TerrainObstacle from "../models/TerrainObstacle";
 import {
   Suspense,
   useRef,
@@ -160,19 +161,25 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
 
-  // Use state to trigger re-renders when enemies change
+  // Use state to trigger re-renders when enemies or terrain obstacles change
   const [enemies, setEnemies] = useState(getState().enemies);
+  const [terrainObstacles, setTerrainObstacles] = useState(
+    getState().terrainObstacles
+  );
 
-  // Subscribe to changes in the enemy list
+  // Subscribe to changes in the enemy list and terrain obstacles
   useEffect(() => {
     const unsubscribe = useGameState.subscribe((state) => {
       if (state.enemies !== enemies) {
         setEnemies(state.enemies);
       }
+      if (state.terrainObstacles !== terrainObstacles) {
+        setTerrainObstacles(state.terrainObstacles);
+      }
     });
 
     return unsubscribe;
-  }, [enemies]);
+  }, [enemies, terrainObstacles]);
 
   return (
     <Suspense fallback={null}>
@@ -212,6 +219,16 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
         <PowerUpItem key={`powerup-${powerUp.id}`} powerUp={powerUp} />
       ))}
 
+      {/* Terrain obstacles */}
+      {terrainObstacles.map((obstacle) => (
+        <TerrainObstacle
+          key={`obstacle-${obstacle.id}`}
+          position={obstacle.position}
+          type={obstacle.type}
+          size={obstacle.size}
+        />
+      ))}
+
       <Ground />
       <Sky sunPosition={[100, 100, 20]} />
 
@@ -226,16 +243,38 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   );
 });
 
-// Main game scene component
-const GameScene = () => {
-  // const [enemies, setEnemies] = useState(0);
-  // const [powerUps, setPowerUps] = useState(0);
+// Move terrain obstacle generation to a separate component
+const TerrainObstacleGenerator = () => {
+  const addTerrainObstacle = useGameState((state) => state.addTerrainObstacle);
 
-  // Create a memoized player tank component that won't re-render
-  const PlayerTank = useMemo(() => {
-    return <Tank position={[0, 0.5, 0]} />;
+  useEffect(() => {
+    // Generate some random terrain obstacles
+    const obstacleCount = 20; // Increased count for better coverage
+    for (let i = 0; i < obstacleCount; i++) {
+      const x = (Math.random() - 0.5) * 80;
+      const z = (Math.random() - 0.5) * 80;
+      const type = Math.random() < 0.6 ? "tree" : "rock";
+
+      // Different size ranges for trees and rocks
+      const size =
+        type === "tree"
+          ? 1.5 + Math.random() * 1.5 // Trees are generally taller
+          : 1 + Math.random() * 1.5; // Rocks are more varied in size
+
+      // Set y position to 0 since we'll handle height in the TerrainObstacle component
+      addTerrainObstacle({
+        position: [x, 0, z],
+        type,
+        size,
+      });
+    }
   }, []);
 
+  return null;
+};
+
+// Main game scene component
+const GameScene = () => {
   // Canvas reference for handling focus
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -262,23 +301,6 @@ const GameScene = () => {
     }
   }, []);
 
-  // Get direct access to the store state that's read-only and doesn't trigger re-renders
-  const getState = useRef(useGameState.getState).current;
-
-  // Refs for values needed in rendering
-  const enemiesRef = useRef(getState().enemies);
-  const powerUpsRef = useRef(getState().powerUps);
-
-  // Subscribe to state changes outside of render to update refs
-  useEffect(() => {
-    const unsubscribe = useGameState.subscribe((state) => {
-      enemiesRef.current = state.enemies;
-      powerUpsRef.current = state.powerUps;
-    });
-
-    return unsubscribe;
-  }, []);
-
   return (
     <ErrorBoundary>
       <div
@@ -293,7 +315,8 @@ const GameScene = () => {
           <color attach="background" args={["#87CEEB"]} />
           <fog attach="fog" args={["#87CEEB", 30, 100]} />
           <Stats />
-          <SceneContent playerTank={PlayerTank} />
+          <TerrainObstacleGenerator />
+          <SceneContent playerTank={<Tank position={[0, 0.5, 0]} />} />
         </Canvas>
       </div>
     </ErrorBoundary>
