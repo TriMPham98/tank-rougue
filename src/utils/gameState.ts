@@ -13,7 +13,7 @@ export interface Enemy {
 export interface PowerUp {
   id: string;
   position: [number, number, number];
-  type: "health" | "speed" | "damage";
+  type: "health";
 }
 
 // Define available stats for upgrades
@@ -177,23 +177,11 @@ export const useGameState = create<GameState>((set, get) => ({
       const newPowerUps = state.powerUps.filter((p) => p.id !== id);
       let updates = { powerUps: newPowerUps };
 
-      switch (powerUp.type) {
-        case "health":
-          updates = {
-            ...updates,
-            playerHealth: Math.min(
-              state.playerMaxHealth,
-              state.playerHealth + 25
-            ),
-          };
-          break;
-        case "speed":
-          updates = { ...updates, playerSpeed: state.playerSpeed + 0.5 };
-          break;
-        case "damage":
-          updates = { ...updates, playerDamage: state.playerDamage + 5 };
-          break;
-      }
+      // Only handle health power-up
+      updates = {
+        ...updates,
+        playerHealth: Math.min(state.playerMaxHealth, state.playerHealth + 25),
+      };
 
       return updates;
     }),

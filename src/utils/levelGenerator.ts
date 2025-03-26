@@ -144,10 +144,10 @@ export const generatePowerUps = (
   playerPosition: [number, number, number],
   enemyPositions: [number, number, number][]
 ): Omit<PowerUp, "id">[] => {
-  // More balanced progression formula for power-ups
-  const basePowerUpCount = 1;
-  const maxPowerUps = 6;
-  const powerUpGrowthFactor = 0.5;
+  // Increased base power-up count and adjusted growth for more health power-ups
+  const basePowerUpCount = 2; // Increased from 1
+  const maxPowerUps = 8; // Increased from 6
+  const powerUpGrowthFactor = 0.8; // Increased from 0.5
 
   const powerUpCount = Math.min(
     Math.floor(
@@ -171,25 +171,14 @@ export const generatePowerUps = (
     ...enemyPositions,
   ];
 
-  // Power-up types with weighted probability
-  const powerUpTypes: ("health" | "speed" | "damage")[] = [
-    "health",
-    "health", // Health is more common
-    "speed",
-    "damage",
-  ];
-
-  // Create power-ups
+  // Create power-ups (all health type now)
   for (let i = 0; i < config.powerUpCount; i++) {
     const position = generateRandomPosition(config.gridSize, existingPositions);
     existingPositions.push(position);
 
-    // Select a random power-up type
-    const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-
     powerUps.push({
       position,
-      type,
+      type: "health",
     });
   }
 

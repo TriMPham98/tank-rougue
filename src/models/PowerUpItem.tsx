@@ -48,73 +48,22 @@ const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
 
   // Different colors based on power-up type
   const getColor = () => {
-    switch (powerUp.type) {
-      case "health":
-        return "red";
-      case "speed":
-        return "blue";
-      case "damage":
-        return "orange";
-      default:
-        return "white";
-    }
+    return "red"; // Always red for health
   };
 
   // Different icon based on power-up type
   const renderIcon = () => {
-    switch (powerUp.type) {
-      case "health":
-        // Cross symbol for health
-        return (
-          <>
-            <Box args={[0.3, 0.8, 0.3]} position={[0, 0, 0]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-            <Box args={[0.8, 0.3, 0.3]} position={[0, 0, 0]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-          </>
-        );
-      case "speed":
-        // Arrow symbol for speed
-        return (
-          <>
-            <Box
-              args={[0.6, 0.3, 0.3]}
-              position={[0, 0, 0]}
-              rotation={[0, 0, Math.PI / 4]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-            <Box
-              args={[0.6, 0.3, 0.3]}
-              position={[0, 0, 0]}
-              rotation={[0, 0, -Math.PI / 4]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-          </>
-        );
-      case "damage":
-        // Star symbol for damage
-        return (
-          <>
-            <Box args={[0.6, 0.3, 0.3]} position={[0, 0, 0]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-            <Box
-              args={[0.6, 0.3, 0.3]}
-              position={[0, 0, 0]}
-              rotation={[0, 0, Math.PI / 3]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-            <Box
-              args={[0.6, 0.3, 0.3]}
-              position={[0, 0, 0]}
-              rotation={[0, 0, -Math.PI / 3]}>
-              <meshStandardMaterial color="white" />
-            </Box>
-          </>
-        );
-    }
+    // Cross symbol for health
+    return (
+      <>
+        <Box args={[0.3, 0.8, 0.3]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="white" />
+        </Box>
+        <Box args={[0.8, 0.3, 0.3]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="white" />
+        </Box>
+      </>
+    );
   };
 
   return (
