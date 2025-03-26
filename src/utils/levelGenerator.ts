@@ -7,34 +7,59 @@ interface LevelConfig {
   powerUpCount: number;
 }
 
-// Function to check if a position is too close to another position
-const isTooClose = (
-  pos1: [number, number, number],
-  pos2: [number, number, number],
-  minDistance: number
+// Helper function to check if a position is clear of obstacles
+const isPositionClear = (
+  x: number,
+  z: number,
+  terrainObstacles: Array<{
+    position: [number, number, number];
+    type: "rock" | "tree";
+    size: number;
+  }>,
+  minClearance: number = 3 // Increased clearance to prevent getting stuck
 ): boolean => {
-  const dx = pos1[0] - pos2[0];
-  const dz = pos1[2] - pos2[2];
-  const distanceSquared = dx * dx + dz * dz;
-  return distanceSquared < minDistance * minDistance;
+  for (const obstacle of terrainObstacles) {
+    const dx = obstacle.position[0] - x;
+    const dz = obstacle.position[2] - z;
+    const distance = Math.sqrt(dx * dx + dz * dz);
+
+    // Calculate required clearance based on obstacle type and size
+    const requiredClearance =
+      obstacle.type === "tree"
+        ? obstacle.size * 0.5 + minClearance // Trees need less clearance
+        : obstacle.size * 1.2 + minClearance; // Rocks need more clearance
+
+    if (distance < requiredClearance) {
+      return false;
+    }
+  }
+  return true;
 };
 
-// Generate a random position on the grid, ensuring it's not too close to other entities
+// Generate a random position on the grid, ensuring it's not too close to other entities or obstacles
 export const generateRandomPosition = (
   gridSize: number,
   existingPositions: [number, number, number][],
-  minDistanceFromExisting = 5
+  minDistanceFromExisting = 5,
+  attempts = 100
 ): [number, number, number] => {
-  // Try to find a position that is far enough from existing entities
-  let attempts = 0;
-  while (attempts < 100) {
+  const terrainObstacles = useGameState.getState().terrainObstacles;
+
+  // Try to find a position that is far enough from existing entities and obstacles
+  let attempts_count = 0;
+  while (attempts_count < attempts) {
     // Generate random x, z coordinates within the grid
     const x = (Math.random() - 0.5) * gridSize;
     const z = (Math.random() - 0.5) * gridSize;
     const y = 0.5; // Keep y-position consistent for now
-    const potentialPosition: [number, number, number] = [x, y, z];
 
-    // Check if this position is far enough from all existing positions
+    // Check if position is clear of obstacles
+    if (!isPositionClear(x, z, terrainObstacles)) {
+      attempts_count++;
+      continue;
+    }
+
+    // Check distance from existing positions
     let isFarEnough = true;
     for (const pos of existingPositions) {
       const dx = pos[0] - x;
@@ -47,21 +72,33 @@ export const generateRandomPosition = (
       }
     }
 
-    // If position is valid, return it
     if (isFarEnough) {
-      return potentialPosition;
+      debug.log("Found clear spawn position:", { x, y, z });
+      return [x, y, z];
     }
 
-    attempts++;
+    attempts_count++;
   }
 
-  // If we couldn't find a suitable position, log warning and return a fallback
-  debug.warn("Could not find a suitable position after 100 attempts");
+  // If we couldn't find a good position after max attempts, try with reduced constraints
+  debug.warn(
+    "Could not find ideal spawn position, trying with reduced constraints"
+  );
 
-  // Fallback to a random position regardless of distance constraints
+  // Try one more time with reduced clearance
   const x = (Math.random() - 0.5) * gridSize;
   const z = (Math.random() - 0.5) * gridSize;
-  return [x, 0.5, z];
+  const y = 0.5;
+
+  if (isPositionClear(x, z, terrainObstacles, 1.5)) {
+    // Minimum safe clearance
+    debug.log("Found spawn position with minimum clearance:", { x, y, z });
+    return [x, y, z];
+  }
+
+  // Absolute fallback - spawn at origin with slight offset
+  debug.warn("Using fallback spawn position");
+  return [5, 0.5, 5];
 };
 
 // Generate enemies for the current level

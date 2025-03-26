@@ -246,30 +246,98 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 // Move terrain obstacle generation to a separate component
 const TerrainObstacleGenerator = () => {
   const addTerrainObstacle = useGameState((state) => state.addTerrainObstacle);
+  const [isTerrainReady, setIsTerrainReady] = useState(false);
 
   useEffect(() => {
-    // Generate some random terrain obstacles
-    const obstacleCount = 20; // Increased count for better coverage
-    for (let i = 0; i < obstacleCount; i++) {
-      const x = (Math.random() - 0.5) * 80;
-      const z = (Math.random() - 0.5) * 80;
-      const type = Math.random() < 0.6 ? "tree" : "rock";
+    debug.log("TerrainObstacleGenerator: Starting obstacle generation");
+    try {
+      // Generate some random terrain obstacles
+      const obstacleCount = 20; // Increased count for better coverage
+      const spawnClearanceRadius = 10; // Keep spawn area clear
 
-      // Different size ranges for trees and rocks
-      const size =
-        type === "tree"
-          ? 1.5 + Math.random() * 1.5 // Trees are generally taller
-          : 1 + Math.random() * 1.5; // Rocks are more varied in size
+      for (let i = 0; i < obstacleCount; i++) {
+        let x = (Math.random() - 0.5) * 80;
+        let z = (Math.random() - 0.5) * 80;
 
-      // Set y position to 0 since we'll handle height in the TerrainObstacle component
-      addTerrainObstacle({
-        position: [x, 0, z],
-        type,
-        size,
-      });
+        // Ensure obstacles are not too close to spawn point (0, 0)
+        const distanceFromSpawn = Math.sqrt(x * x + z * z);
+        if (distanceFromSpawn < spawnClearanceRadius) {
+          // If too close to spawn, move it outside the clearance radius
+          const angle = Math.atan2(z, x);
+          x = Math.cos(angle) * spawnClearanceRadius;
+          z = Math.sin(angle) * spawnClearanceRadius;
+          debug.log("Adjusted obstacle position away from spawn area", {
+            x,
+            z,
+          });
+        }
+
+        const obstacleType: "tree" | "rock" =
+          Math.random() < 0.6 ? "tree" : "rock";
+
+        // Different size ranges for trees and rocks
+        const size =
+          obstacleType === "tree"
+            ? 1.5 + Math.random() * 1.5 // Trees are generally taller
+            : 1 + Math.random() * 1.5; // Rocks are more varied in size
+
+        // Check if this position is too close to existing obstacles
+        const existingObstacles = useGameState.getState().terrainObstacles;
+        let isTooClose = false;
+        const minObstacleSpacing = 3; // Minimum spacing between obstacles
+
+        for (const existing of existingObstacles) {
+          const dx = existing.position[0] - x;
+          const dz = existing.position[2] - z;
+          const distance = Math.sqrt(dx * dx + dz * dz);
+          if (distance < (existing.size + size) * 0.5 + minObstacleSpacing) {
+            isTooClose = true;
+            break;
+          }
+        }
+
+        if (!isTooClose) {
+          const obstacle = {
+            position: [x, 0, z] as [number, number, number],
+            type: obstacleType,
+            size,
+          };
+          debug.log(
+            `TerrainObstacleGenerator: Adding obstacle ${
+              i + 1
+            }/${obstacleCount}`,
+            obstacle
+          );
+          addTerrainObstacle(obstacle);
+        } else {
+          // Try again for this obstacle
+          i--;
+          continue;
+        }
+      }
+      setIsTerrainReady(true);
+      debug.log(
+        "TerrainObstacleGenerator: All obstacles generated successfully"
+      );
+    } catch (error) {
+      debug.error(
+        "TerrainObstacleGenerator: Failed to generate obstacles:",
+        error
+      );
     }
-  }, []);
+  }, [addTerrainObstacle]);
 
+  if (!isTerrainReady) {
+    debug.log("TerrainObstacleGenerator: Not ready, showing loading indicator");
+    return (
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="red" />
+      </mesh>
+    );
+  }
+
+  debug.log("TerrainObstacleGenerator: Ready");
   return null;
 };
 
