@@ -44,8 +44,12 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   }, []);
 
   useFrame((state, delta) => {
-    if (!tankRef.current || !turretRef.current || isPaused || isGameOver)
-      return;
+    if (enemy.type === "bomber") {
+      if (!tankRef.current || isPaused || isGameOver) return;
+    } else {
+      if (!tankRef.current || !turretRef.current || isPaused || isGameOver)
+        return;
+    }
 
     const playerTankPosition = getState().playerTankPosition;
     const enemies = getState().enemies;
@@ -71,18 +75,22 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       directionToPlayer.z
     );
 
-    if (enemy.type === "tank") {
-      const relativeRotation = targetTurretRotation - tankRotationRef.current;
-      const turretRotationDiff = relativeRotation - turretRotationRef.current;
-      const wrappedTurretDiff =
-        ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      turretRotationRef.current += wrappedTurretDiff * delta * 3;
-    } else {
-      turretRotationRef.current = targetTurretRotation;
-    }
+    if (enemy.type !== "bomber") {
+      if (enemy.type === "tank") {
+        const relativeRotation = targetTurretRotation - tankRotationRef.current;
+        const turretRotationDiff = relativeRotation - turretRotationRef.current;
+        const wrappedTurretDiff =
+          ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+        turretRotationRef.current += wrappedTurretDiff * delta * 3;
+      } else if (enemy.type === "turret") {
+        turretRotationRef.current = targetTurretRotation;
+      }
 
-    turretRef.current.rotation.y =
-      enemy.type === "tank" ? turretRotationRef.current : targetTurretRotation;
+      turretRef.current!.rotation.y =
+        enemy.type === "tank"
+          ? turretRotationRef.current
+          : targetTurretRotation;
+    }
 
     const distanceToPlayer = new Vector3(
       playerTankPosition[0] - tankRef.current.position.x,
@@ -90,42 +98,49 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       playerTankPosition[2] - tankRef.current.position.z
     ).length();
 
-    const shootingRange = enemy.type === "tank" ? 20 : 25;
-    const fireRate = enemy.type === "tank" ? 2.5 : 3.0;
+    if (enemy.type !== "bomber") {
+      const shootingRange = enemy.type === "tank" ? 20 : 25;
+      const fireRate = enemy.type === "tank" ? 2.5 : 3.0;
 
-    if (distanceToPlayer < shootingRange) {
-      if (state.clock.getElapsedTime() - lastShootTimeRef.current > fireRate) {
-        const barrelEndLocalZ = enemy.type === "tank" ? 1.75 : 2.2;
-        const barrelEndLocal = new Vector3(0, 0.2, barrelEndLocalZ);
-        const barrelEndWorld = turretRef.current!.localToWorld(
-          barrelEndLocal.clone()
-        );
-        const shootPosition: [number, number, number] = [
-          barrelEndWorld.x,
-          barrelEndWorld.y,
-          barrelEndWorld.z,
-        ];
+      if (distanceToPlayer < shootingRange) {
+        if (
+          state.clock.getElapsedTime() - lastShootTimeRef.current >
+          fireRate
+        ) {
+          const barrelEndLocalZ = enemy.type === "tank" ? 1.75 : 2.2;
+          const barrelEndLocal = new Vector3(0, 0.2, barrelEndLocalZ);
+          const barrelEndWorld = turretRef.current!.localToWorld(
+            barrelEndLocal.clone()
+          );
+          const shootPosition: [number, number, number] = [
+            barrelEndWorld.x,
+            barrelEndWorld.y,
+            barrelEndWorld.z,
+          ];
 
-        const worldQuaternion = new Quaternion();
-        turretRef.current!.getWorldQuaternion(worldQuaternion);
-        const direction = new Vector3(0, 0, 1).applyQuaternion(worldQuaternion);
-        const projectileRotation = Math.atan2(direction.x, direction.z);
+          const worldQuaternion = new Quaternion();
+          turretRef.current!.getWorldQuaternion(worldQuaternion);
+          const direction = new Vector3(0, 0, 1).applyQuaternion(
+            worldQuaternion
+          );
+          const projectileRotation = Math.atan2(direction.x, direction.z);
 
-        setProjectiles((prev) => [
-          ...prev,
-          {
-            id: Math.random().toString(36).substr(2, 9),
-            position: shootPosition,
-            rotation: projectileRotation,
-          },
-        ]);
+          setProjectiles((prev) => [
+            ...prev,
+            {
+              id: Math.random().toString(36).substr(2, 9),
+              position: shootPosition,
+              rotation: projectileRotation,
+            },
+          ]);
 
-        lastShootTimeRef.current = state.clock.getElapsedTime();
-        debug.log(`Enemy ${enemy.id} fired at player`);
+          lastShootTimeRef.current = state.clock.getElapsedTime();
+          debug.log(`Enemy ${enemy.id} fired at player`);
+        }
       }
     }
 
-    if (enemy.type === "tank") {
+    if (enemy.type === "tank" || enemy.type === "bomber") {
       const targetRotation = Math.atan2(
         directionToPlayer.x,
         directionToPlayer.z
@@ -135,8 +150,9 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       tankRotationRef.current += wrappedDiff * delta;
       tankRef.current.rotation.y = tankRotationRef.current;
 
-      const moveSpeed = 1.5;
-      if (distanceToPlayer > 5) {
+      const moveSpeed = enemy.speed || (enemy.type === "bomber" ? 2.5 : 1.5);
+
+      if (enemy.type === "bomber" || distanceToPlayer > 5) {
         tankRef.current.position.x +=
           Math.sin(tankRotationRef.current) * delta * moveSpeed;
         tankRef.current.position.z +=
@@ -149,6 +165,13 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         ];
         if (Math.random() < 0.1) {
           updateEnemyPosition(enemy.id, newPosition);
+        }
+
+        if (enemy.type === "bomber" && distanceToPlayer < 2) {
+          debug.log(`Bomber ${enemy.id} exploded on player!`);
+          const takeDamage = getState().takeDamage;
+          takeDamage(50);
+          damageEnemy(enemy.id, 1000);
         }
       }
     }
@@ -166,36 +189,50 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     <>
       <group ref={tankRef}>
         <Box
-          args={enemy.type === "tank" ? [1.5, 0.5, 2] : [1.8, 0.7, 1.8]}
+          args={
+            enemy.type === "bomber"
+              ? [1.2, 0.8, 1.2]
+              : enemy.type === "tank"
+              ? [1.5, 0.5, 2]
+              : [1.8, 0.7, 1.8]
+          }
           castShadow
           receiveShadow
           onClick={() => handleHit(25)}>
           <meshStandardMaterial
-            color={enemy.type === "tank" ? "red" : "darkblue"}
+            color={
+              enemy.type === "bomber"
+                ? "yellow"
+                : enemy.type === "tank"
+                ? "red"
+                : "darkblue"
+            }
           />
         </Box>
-        <group position={[0, 0.5, 0]} ref={turretRef}>
-          <Cylinder
-            args={
-              enemy.type === "tank" ? [0.6, 0.6, 0.4, 16] : [0.7, 0.5, 0.6, 8]
-            }
-            position={[0, 0.2, 0]}
-            castShadow
-            onClick={() => handleHit(25)}>
-            <meshStandardMaterial
-              color={enemy.type === "tank" ? "darkred" : "royalblue"}
-            />
-          </Cylinder>
-          <Box
-            args={enemy.type === "tank" ? [0.2, 0.2, 1.5] : [0.25, 0.25, 2]}
-            position={[0, 0.2, enemy.type === "tank" ? 1 : 1.2]}
-            castShadow
-            onClick={() => handleHit(25)}>
-            <meshStandardMaterial
-              color={enemy.type === "tank" ? "darkred" : "royalblue"}
-            />
-          </Box>
-        </group>
+        {enemy.type !== "bomber" && (
+          <group position={[0, 0.5, 0]} ref={turretRef}>
+            <Cylinder
+              args={
+                enemy.type === "tank" ? [0.6, 0.6, 0.4, 16] : [0.7, 0.5, 0.6, 8]
+              }
+              position={[0, 0.2, 0]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial
+                color={enemy.type === "tank" ? "darkred" : "royalblue"}
+              />
+            </Cylinder>
+            <Box
+              args={enemy.type === "tank" ? [0.2, 0.2, 1.5] : [0.25, 0.25, 2]}
+              position={[0, 0.2, enemy.type === "tank" ? 1 : 1.2]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial
+                color={enemy.type === "tank" ? "darkred" : "royalblue"}
+              />
+            </Box>
+          </group>
+        )}
         {enemy.type === "tank" ? (
           <>
             <Box
@@ -222,12 +259,18 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             castShadow
             receiveShadow
             onClick={() => handleHit(25)}>
-            <meshStandardMaterial color="navy" />
+            <meshStandardMaterial
+              color={enemy.type === "bomber" ? "goldenrod" : "navy"}
+            />
           </Box>
         )}
         <Box
           args={[1, 0.1, 0.1]}
-          position={[0, enemy.type === "tank" ? 1.2 : 1.5, 0]}
+          position={[
+            0,
+            enemy.type === "bomber" ? 1.0 : enemy.type === "tank" ? 1.2 : 1.5,
+            0,
+          ]}
           renderOrder={1}>
           <meshBasicMaterial color="red" transparent depthTest={false} />
         </Box>
@@ -235,7 +278,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           args={[healthPercent, 0.1, 0.1]}
           position={[
             -(0.5 - healthPercent / 2),
-            enemy.type === "tank" ? 1.2 : 1.5,
+            enemy.type === "bomber" ? 1.0 : enemy.type === "tank" ? 1.2 : 1.5,
             0.001,
           ]}
           renderOrder={2}>

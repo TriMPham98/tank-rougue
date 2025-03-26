@@ -97,28 +97,41 @@ export const generateEnemies = (
     const position = generateRandomPosition(config.gridSize, existingPositions);
     existingPositions.push(position);
 
-    // Determine enemy type - more turrets in later levels
-    // Gradually increase turret probability with level
+    // Determine enemy type based on level and probabilities
+    let type: "tank" | "turret" | "bomber";
+    let health: number;
+    let speed: number = 1;
+
+    // Calculate probabilities based on level
     const turretProbability = Math.min(0.2 + level * 0.03, 0.5);
-    const type = Math.random() < turretProbability ? "turret" : "tank";
+    const bomberProbability =
+      level >= 5 ? Math.min(0.1 + (level - 5) * 0.02, 0.3) : 0;
+    const random = Math.random();
 
-    // More balanced health scaling with level
-    // Tanks: Base health + linear scaling + small exponential component
-    // Turrets: Less health but more scaling for higher levels (more dangerous)
-    const tankBaseHealth = 75;
-    const turretBaseHealth = 50;
-    const linearScale = level * 10;
-    const exponentialScale = Math.floor(Math.sqrt(level) * 5);
-
-    const health =
-      type === "turret"
-        ? turretBaseHealth + linearScale + exponentialScale
-        : tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+    if (level >= 5 && random < bomberProbability) {
+      type = "bomber";
+      health = 40 + level * 3; // Lower health for bombers
+      speed = 2.5; // Faster movement speed
+    } else if (random < turretProbability + bomberProbability) {
+      type = "turret";
+      const turretBaseHealth = 50;
+      const linearScale = level * 10;
+      const exponentialScale = Math.floor(Math.sqrt(level) * 5);
+      health = turretBaseHealth + linearScale + exponentialScale;
+    } else {
+      type = "tank";
+      const tankBaseHealth = 75;
+      const linearScale = level * 10;
+      const exponentialScale = Math.floor(Math.sqrt(level) * 5);
+      health =
+        tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+    }
 
     enemies.push({
       position,
       health,
       type,
+      speed,
     });
   }
 

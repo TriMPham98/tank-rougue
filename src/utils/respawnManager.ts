@@ -57,20 +57,35 @@ export const useRespawnManager = () => {
         // Generate a random position for the new enemy
         const position = generateRandomPosition(gridSize, existingPositions);
 
-        // Calculate turret probability using the balanced formula
+        // Calculate probabilities based on level
         const turretProbability = Math.min(0.2 + state.level * 0.03, 0.5);
-        const type = Math.random() < turretProbability ? "turret" : "tank";
+        const bomberProbability =
+          state.level >= 5 ? Math.min(0.1 + (state.level - 5) * 0.02, 0.3) : 0;
+        const random = Math.random();
 
-        // Calculate enemy health using the balanced formula
-        const tankBaseHealth = 75;
-        const turretBaseHealth = 50;
-        const linearScale = state.level * 10;
-        const exponentialScale = Math.floor(Math.sqrt(state.level) * 5);
+        // Determine enemy type and stats
+        let type: "tank" | "turret" | "bomber";
+        let health: number;
+        let speed: number = 1;
 
-        const health =
-          type === "turret"
-            ? turretBaseHealth + linearScale + exponentialScale
-            : tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+        if (state.level >= 5 && random < bomberProbability) {
+          type = "bomber";
+          health = 40 + state.level * 3; // Lower health for bombers
+          speed = 2.5; // Faster movement speed
+        } else if (random < turretProbability + bomberProbability) {
+          type = "turret";
+          const turretBaseHealth = 50;
+          const linearScale = state.level * 10;
+          const exponentialScale = Math.floor(Math.sqrt(state.level) * 5);
+          health = turretBaseHealth + linearScale + exponentialScale;
+        } else {
+          type = "tank";
+          const tankBaseHealth = 75;
+          const linearScale = state.level * 10;
+          const exponentialScale = Math.floor(Math.sqrt(state.level) * 5);
+          health =
+            tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+        }
 
         debug.log(
           `🟢 Preparing to spawn new ${type} at position [${position[0].toFixed(
@@ -90,6 +105,7 @@ export const useRespawnManager = () => {
                 position,
                 health,
                 type,
+                speed,
               });
 
               debug.log(`✅ Spawned new ${type} with health ${health}`);

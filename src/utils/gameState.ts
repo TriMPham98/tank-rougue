@@ -5,7 +5,8 @@ export interface Enemy {
   id: string;
   position: [number, number, number];
   health: number;
-  type: "tank" | "turret";
+  type: "tank" | "turret" | "bomber";
+  speed?: number; // Speed multiplier for movement
 }
 
 // Define the type for a power-up
