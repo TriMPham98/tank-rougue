@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { availableWeapons } from "./weapons";
 
 // Define the type for an enemy
 export interface Enemy {
@@ -25,6 +26,17 @@ export type UpgradeableStat =
   | "healthRegen"
   | "turretDamage"
   | "bulletVelocity";
+
+// Define the type for a secondary weapon
+export interface SecondaryWeapon {
+  id: string;
+  name: string;
+  description: string;
+  damage: number;
+  cooldown: number;
+  range: number;
+  projectileSpeed: number;
+}
 
 // Define the game state
 interface GameState {
@@ -66,6 +78,11 @@ interface GameState {
     size: number;
   }>;
 
+  // Weapon selection system
+  showWeaponSelection: boolean;
+  availableWeapons: SecondaryWeapon[];
+  selectedWeapons: SecondaryWeapon[];
+
   // Actions
   takeDamage: (amount: number) => void;
   healPlayer: (amount: number) => void;
@@ -88,6 +105,8 @@ interface GameState {
     size: number;
   }) => void;
   removeTerrainObstacle: (id: string) => void;
+  selectWeapon: (weapon: SecondaryWeapon) => void;
+  closeWeaponSelection: () => void;
 }
 
 // Create the game state store
@@ -124,6 +143,11 @@ export const useGameState = create<GameState>((set, get) => ({
 
   // Terrain obstacles
   terrainObstacles: [],
+
+  // Weapon selection system
+  showWeaponSelection: false,
+  availableWeapons,
+  selectedWeapons: [],
 
   // Actions
   takeDamage: (amount) =>
@@ -209,6 +233,9 @@ export const useGameState = create<GameState>((set, get) => ({
       showUpgradeUI: false,
       availableUpgrades: [],
       terrainObstacles: [],
+      showWeaponSelection: false,
+      availableWeapons,
+      selectedWeapons: [],
     }),
 
   togglePause: () =>
@@ -367,4 +394,15 @@ export const useGameState = create<GameState>((set, get) => ({
         (obstacle) => obstacle.id !== id
       ),
     })),
+
+  selectWeapon: (weapon) =>
+    set((state) => ({
+      selectedWeapons: [...state.selectedWeapons, weapon],
+      showWeaponSelection: false,
+    })),
+
+  closeWeaponSelection: () =>
+    set({
+      showWeaponSelection: false,
+    }),
 }));

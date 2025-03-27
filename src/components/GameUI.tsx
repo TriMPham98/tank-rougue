@@ -1,7 +1,9 @@
 import { useGameState } from "../utils/gameState";
 import "../assets/GameUI.css";
 import { UpgradeableStat } from "../utils/gameState";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import WeaponSelection from "./WeaponSelection";
+import "./WeaponSelection.css";
 
 const GameUI = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
@@ -26,7 +28,20 @@ const GameUI = () => {
     playerHealthRegen,
     playerTurretDamage,
     playerBulletVelocity,
+    showWeaponSelection,
+    availableWeapons,
+    selectedWeapons,
+    selectWeapon,
+    closeWeaponSelection,
   } = useGameState();
+
+  // Check for weapon selection opportunity when level changes
+  useEffect(() => {
+    if ([5, 10, 15].includes(level) && selectedWeapons.length < 3) {
+      // Show weapon selection UI
+      useGameState.setState({ showWeaponSelection: true });
+    }
+  }, [level, selectedWeapons.length]);
 
   const handleUpgrade = useCallback(
     (stat: UpgradeableStat) => {
@@ -447,6 +462,20 @@ const GameUI = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Weapon Selection UI */}
+      {showWeaponSelection && (
+        <WeaponSelection
+          onWeaponSelect={selectWeapon}
+          onClose={closeWeaponSelection}
+          state={{
+            availableWeapons,
+            selectedWeapons,
+            level,
+            canSelect: selectedWeapons.length < 3,
+          }}
+        />
       )}
 
       {/* Controls Info */}

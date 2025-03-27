@@ -24,16 +24,27 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
               className="weapon-card"
               onClick={() => onWeaponSelect(weapon)}>
               <h3>{weapon.name}</h3>
-              <p>{weapon.description}</p>
+              <p className="weapon-description">{weapon.description}</p>
               <div className="weapon-stats">
-                <span>Damage: {weapon.damage}</span>
-                <span>Cooldown: {weapon.cooldown}s</span>
-                <span>Range: {weapon.range}</span>
+                <div className="stat">
+                  <span className="stat-label">Damage:</span>
+                  <span className="stat-value">{weapon.damage}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Cooldown:</span>
+                  <span className="stat-value">{weapon.cooldown}s</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Range:</span>
+                  <span className="stat-value">{weapon.range}</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
-        <button onClick={onClose}>Close</button>
+        <button className="close-button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
