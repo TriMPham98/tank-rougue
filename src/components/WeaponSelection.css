@@ -1,0 +1,89 @@
+.weapon-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.weapon-selection-modal {
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.weapon-selection-modal h2 {
+  color: #fff;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.weapon-selection-modal p {
+  color: #ccc;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.weapon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.weapon-card {
+  background-color: #3a3a3a;
+  padding: 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.weapon-card:hover {
+  transform: translateY(-2px);
+  background-color: #4a4a4a;
+}
+
+.weapon-card h3 {
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.weapon-card p {
+  color: #ccc;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.weapon-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.weapon-selection-modal button {
+  display: block;
+  margin: 0 auto;
+  padding: 0.8rem 2rem;
+  background-color: #4a4a4a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.weapon-selection-modal button:hover {
+  background-color: #5a5a5a;
+}
