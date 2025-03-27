@@ -3,10 +3,9 @@ import { WeaponSelectionProps } from "../types";
 
 const WeaponSelection: React.FC<WeaponSelectionProps> = ({
   onWeaponSelect,
-  onClose,
   state,
 }) => {
-  const { availableWeapons, selectedWeapons, level, canSelect } = state;
+  const { availableWeapons, level, canSelect } = state;
 
   if (!canSelect) {
     return null;
@@ -42,9 +41,6 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
             </div>
           ))}
         </div>
-        <button className="close-button" onClick={onClose}>
-          Close
-        </button>
       </div>
     </div>
   );
