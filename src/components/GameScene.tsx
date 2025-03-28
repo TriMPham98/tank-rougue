@@ -1,12 +1,5 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import {
-  Sky,
-  OrbitControls,
-  Environment,
-  // useHelper,
-  Stats,
-  // SpotLight,
-} from "@react-three/drei";
+import { Sky, OrbitControls, Environment, Stats } from "@react-three/drei";
 import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
 import PowerUpItem from "../models/PowerUpItem";
@@ -16,7 +9,6 @@ import {
   Suspense,
   useRef,
   useEffect,
-  useMemo,
   memo,
   Component,
   ErrorInfo,
