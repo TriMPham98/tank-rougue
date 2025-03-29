@@ -16,15 +16,17 @@ const isPositionClear = (
     type: "rock" | "tree";
     size: number;
   }>,
-  minClearance: number = 5 // Increased clearance to prevent spawning inside rocks
+  minClearance: number = 8 // Increased from 5 to 8 for better clearance
 ): boolean => {
   for (const obstacle of terrainObstacles) {
     const dx = obstacle.position[0] - x;
     const dz = obstacle.position[2] - z;
     const distance = Math.sqrt(dx * dx + dz * dz);
 
-    // Since we only have rocks now, always use this clearance calculation
-    const requiredClearance = obstacle.size * 1.5 + minClearance; // Increased multiplier for rock obstacles
+    // Increased rock clearance calculation
+    // For rocks, we need a larger buffer to prevent visual overlapping
+    const rockMultiplier = 2.5; // Increased from 1.5 for better safety margin
+    const requiredClearance = obstacle.size * rockMultiplier + minClearance;
 
     if (distance < requiredClearance) {
       return false;
@@ -38,7 +40,7 @@ export const generateRandomPosition = (
   gridSize: number,
   existingPositions: [number, number, number][],
   minDistanceFromExisting = 5,
-  attempts = 200 // Increased from 100 to try harder to find valid positions
+  attempts = 300 // Increased from 200 to 300 for more attempts to find valid position
 ): [number, number, number] => {
   const terrainObstacles = useGameState.getState().terrainObstacles;
 
@@ -83,15 +85,15 @@ export const generateRandomPosition = (
   );
 
   // More systematically search for a position
-  const searchGrid = 8; // Search in a grid pattern
+  const searchGrid = 10; // Increased from 8 to 10 for finer grid search
   for (let gridX = -searchGrid; gridX <= searchGrid; gridX += 2) {
     for (let gridZ = -searchGrid; gridZ <= searchGrid; gridZ += 2) {
       const x = (gridX / searchGrid) * (gridSize * 0.8); // Use 80% of the grid size
       const z = (gridZ / searchGrid) * (gridSize * 0.8);
       const y = 0.5;
 
-      // Check if this grid position is clear
-      if (isPositionClear(x, z, terrainObstacles, 3)) {
+      // Check if this grid position is clear with increased clearance (4 instead of 3)
+      if (isPositionClear(x, z, terrainObstacles, 4)) {
         // Reduced clearance but still safe
         debug.log("Found spawn position using grid search:", { x, y, z });
         return [x, y, z];
@@ -99,7 +101,7 @@ export const generateRandomPosition = (
     }
   }
 
-  // Last resort - find any position not directly inside a rock
+  // Last resort - find any position not directly inside a rock with strict minimum clearance
   debug.warn("Using last resort position finding technique");
 
   // Start from the edges and work inward
@@ -109,7 +111,8 @@ export const generateRandomPosition = (
       const z = Math.sin(angle) * radius;
       const y = 0.5;
 
-      if (isPositionClear(x, z, terrainObstacles, 2)) {
+      // Emergency clearance of 3 (increased from 2)
+      if (isPositionClear(x, z, terrainObstacles, 3)) {
         debug.log("Found emergency spawn position at radius:", {
           radius,
           x,
@@ -121,11 +124,28 @@ export const generateRandomPosition = (
     }
   }
 
-  // Absolute fallback - spawn at a safe known location well away from origin
+  // Absolute fallback - multiple safe positions to try instead of just one
   debug.error(
     "All position finding techniques failed - using emergency position"
   );
-  return [20, 0.5, 20]; // Far corner position, less likely to have obstacles
+
+  // Try a few known safe positions in different corners
+  const safePositions: [number, number, number][] = [
+    [20, 0.5, 20], // NE corner
+    [-20, 0.5, 20], // NW corner
+    [-20, 0.5, -20], // SW corner
+    [20, 0.5, -20], // SE corner
+  ];
+
+  // Find the first safe position without obstacles
+  for (const pos of safePositions) {
+    if (isPositionClear(pos[0], pos[2], terrainObstacles, 3)) {
+      return pos;
+    }
+  }
+
+  // Final fallback if none of the safe positions are clear
+  return [30, 0.5, 30]; // Far corner position, less likely to have obstacles
 };
 
 // Generate enemies for the current level

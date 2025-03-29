@@ -244,12 +244,23 @@ const TerrainObstacleGenerator = () => {
     debug.log("TerrainObstacleGenerator: Starting obstacle generation");
     try {
       // Generate some random terrain obstacles
-      const obstacleCount = 20; // Increased count for better coverage
-      const spawnClearanceRadius = 10; // Keep spawn area clear
+      const obstacleCount = 20; // Keep at 20 for good coverage
+      const spawnClearanceRadius = 15; // Increased from 10 to 15 for bigger clear area around spawn
 
-      for (let i = 0; i < obstacleCount; i++) {
-        let x = (Math.random() - 0.5) * 80;
-        let z = (Math.random() - 0.5) * 80;
+      // Track attempts to prevent infinite loops
+      let totalAttempts = 0;
+      const maxAttempts = 500;
+      let successfulPlacements = 0;
+
+      while (
+        successfulPlacements < obstacleCount &&
+        totalAttempts < maxAttempts
+      ) {
+        totalAttempts++;
+
+        // Generate random positions with wider spread
+        let x = (Math.random() - 0.5) * 75;
+        let z = (Math.random() - 0.5) * 75;
 
         // Ensure obstacles are not too close to spawn point (0, 0)
         const distanceFromSpawn = Math.sqrt(x * x + z * z);
@@ -264,22 +275,27 @@ const TerrainObstacleGenerator = () => {
           });
         }
 
-        // Always generate rocks, not trees
+        // Always generate rocks
         const obstacleType: "rock" = "rock";
 
-        // Size range for rocks
-        const size = 1 + Math.random() * 1.5; // Rocks are varied in size
+        // Size range for rocks - more controlled size range
+        const size = 1 + Math.random() * 1.2; // Slightly smaller max size
 
         // Check if this position is too close to existing obstacles
         const existingObstacles = useGameState.getState().terrainObstacles;
         let isTooClose = false;
-        const minObstacleSpacing = 3; // Minimum spacing between obstacles
+        const minObstacleSpacing = 8; // Increased from 3 to 8 for better spacing
 
         for (const existing of existingObstacles) {
           const dx = existing.position[0] - x;
           const dz = existing.position[2] - z;
           const distance = Math.sqrt(dx * dx + dz * dz);
-          if (distance < (existing.size + size) * 0.5 + minObstacleSpacing) {
+
+          // Use a larger multiplier for better spacing
+          const requiredSpace =
+            (existing.size + size) * 1.2 + minObstacleSpacing;
+
+          if (distance < requiredSpace) {
             isTooClose = true;
             break;
           }
@@ -293,17 +309,20 @@ const TerrainObstacleGenerator = () => {
           };
           debug.log(
             `TerrainObstacleGenerator: Adding obstacle ${
-              i + 1
+              successfulPlacements + 1
             }/${obstacleCount}`,
             obstacle
           );
           addTerrainObstacle(obstacle);
-        } else {
-          // Try again for this obstacle
-          i--;
-          continue;
+          successfulPlacements++;
         }
       }
+
+      // Log how many obstacles were actually placed
+      debug.log(
+        `TerrainObstacleGenerator: Placed ${successfulPlacements} obstacles after ${totalAttempts} attempts`
+      );
+
       setIsTerrainReady(true);
       debug.log(
         "TerrainObstacleGenerator: All obstacles generated successfully"

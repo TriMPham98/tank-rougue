@@ -44,7 +44,77 @@ export const useRespawnManager = () => {
         const gridSize = Math.min(40 + freshState.level * 2, 70);
 
         // Generate a random position for the new enemy
-        const position = generateRandomPosition(gridSize, existingPositions);
+        // Increased minDistanceFromExisting from default 5 to 7 for better spacing
+        // Also increased attempts to 400 to try harder to find a valid position
+        const position = generateRandomPosition(
+          gridSize,
+          existingPositions,
+          7,
+          400
+        );
+
+        // Verify position is valid by double-checking distance from terrain obstacles
+        const terrainObstacles = freshState.terrainObstacles;
+        let isValid = true;
+
+        // Extra validation for the generated position
+        for (const obstacle of terrainObstacles) {
+          const dx = obstacle.position[0] - position[0];
+          const dz = obstacle.position[2] - position[2];
+          const distance = Math.sqrt(dx * dx + dz * dz);
+
+          // Ensure we're not too close to any rock
+          const minClearance = obstacle.size * 2.5 + 7;
+          if (distance < minClearance) {
+            isValid = false;
+            debug.warn(
+              "Rejected spawn position too close to obstacle:",
+              position
+            );
+            break;
+          }
+        }
+
+        // If position is invalid, try again with emergency position
+        if (!isValid) {
+          debug.warn("Using emergency respawn position");
+          // Try positions in each quadrant of the map, far from the center
+          const emergencyPositions = [
+            [25, 0.5, 25],
+            [-25, 0.5, 25],
+            [-25, 0.5, -25],
+            [25, 0.5, -25],
+            [35, 0.5, 0],
+            [0, 0.5, 35],
+            [-35, 0.5, 0],
+            [0, 0.5, -35],
+          ];
+
+          // Find the first valid emergency position
+          for (const pos of emergencyPositions) {
+            let isEmergencyValid = true;
+
+            // Check distance from obstacles
+            for (const obstacle of terrainObstacles) {
+              const dx = obstacle.position[0] - pos[0];
+              const dz = obstacle.position[2] - pos[2];
+              const distance = Math.sqrt(dx * dx + dz * dz);
+
+              if (distance < obstacle.size + 5) {
+                isEmergencyValid = false;
+                break;
+              }
+            }
+
+            if (isEmergencyValid) {
+              position[0] = pos[0];
+              position[1] = pos[1];
+              position[2] = pos[2];
+              debug.log("Using emergency position for enemy spawn:", pos);
+              break;
+            }
+          }
+        }
 
         // Calculate probabilities based on level (updated to match levelGenerator)
         const turretProbability = Math.min(0.1 + freshState.level * 0.02, 0.3); // Reduced from 0.2
