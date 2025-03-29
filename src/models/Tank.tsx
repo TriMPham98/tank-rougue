@@ -6,6 +6,7 @@ import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import Projectile from "./Projectile";
+import SniperRifle from "./SniperRifle";
 
 interface TankProps {
   position: [number, number, number];
@@ -45,6 +46,14 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     (state) => state.updatePlayerPosition
   );
   const healPlayer = useGameState((state) => state.healPlayer);
+
+  // Get selected weapons from game state
+  const selectedWeapons = useGameState((state) => state.selectedWeapons);
+
+  // Check if sniper rifle is selected
+  const hasSniperRifle = selectedWeapons.some(
+    (weapon) => weapon.id === "sniper"
+  );
 
   // Get terrain obstacles from game state
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
@@ -185,11 +194,14 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
-    // Handle shooting - use playerFireRate from game state
-    if (
-      state.clock.getElapsedTime() - lastShootTimeRef.current >
-      playerFireRate
-    ) {
+    // Handle shooting with improved debugging
+    const currentTime = state.clock.getElapsedTime();
+    const cooldownElapsed = currentTime - lastShootTimeRef.current;
+
+    // Auto-shooting logic - no need for spacebar press
+    if (cooldownElapsed > playerFireRate) {
+      debug.log("AUTO-FIRING MAIN TURRET!");
+
       const shootPosition: [number, number, number] = [
         tankRef.current.position.x +
           Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
@@ -208,7 +220,16 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         },
       ]);
 
-      lastShootTimeRef.current = state.clock.getElapsedTime();
+      lastShootTimeRef.current = currentTime;
+    }
+
+    // Manual shoot button is still detected but not required for firing
+    if (shoot) {
+      debug.log(
+        `Shoot button pressed, cooldown: ${cooldownElapsed.toFixed(
+          2
+        )}/${playerFireRate}`
+      );
     }
 
     // Update position in game state if moved - throttle updates
@@ -236,6 +257,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const removeProjectile = (id: string) => {
     setProjectiles((prev) => prev.filter((p) => p.id !== id));
   };
+
+  useEffect(() => {
+    if (hasSniperRifle) {
+      debug.log("Sniper rifle equipped as secondary weapon!");
+    }
+  }, [hasSniperRifle]);
 
   return (
     <>
@@ -288,6 +315,14 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           onRemove={removeProjectile}
         />
       ))}
+
+      {/* Render sniper rifle if selected */}
+      {hasSniperRifle && (
+        <SniperRifle
+          tankPosition={positionRef.current}
+          tankRotation={tankRotationRef.current}
+        />
+      )}
     </>
   );
 };

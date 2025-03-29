@@ -24,6 +24,9 @@ export const useKeyboardControls = (): KeyboardControls => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Debug key presses
+      debug.log(`Key down: ${e.key}`);
+
       switch (e.key.toLowerCase()) {
         case "w":
           setKeys((keys) => ({ ...keys, forward: true }));
@@ -42,6 +45,10 @@ export const useKeyboardControls = (): KeyboardControls => {
           break;
         case "k":
           setKeys((keys) => ({ ...keys, turretRight: true }));
+          break;
+        case " ": // Spacebar
+          setKeys((keys) => ({ ...keys, shoot: true }));
+          debug.log("Shoot key pressed!");
           break;
       }
     };
@@ -65,6 +72,10 @@ export const useKeyboardControls = (): KeyboardControls => {
           break;
         case "k":
           setKeys((keys) => ({ ...keys, turretRight: false }));
+          break;
+        case " ": // Spacebar
+          setKeys((keys) => ({ ...keys, shoot: false }));
+          debug.log("Shoot key released!");
           break;
       }
     };
