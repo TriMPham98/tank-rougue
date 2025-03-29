@@ -174,12 +174,32 @@ export const useGameState = create<GameState>((set, get) => ({
     })),
 
   spawnEnemy: (enemy) =>
-    set((state) => ({
-      enemies: [
-        ...state.enemies,
-        { ...enemy, id: Math.random().toString(36).substr(2, 9) },
-      ],
-    })),
+    set((state) => {
+      // If this is a turret, check if we already have 3 turrets
+      if (enemy.type === "turret") {
+        const currentTurrets = state.enemies.filter(
+          (e) => e.type === "turret"
+        ).length;
+        if (currentTurrets >= 3) {
+          // Change this enemy to a tank instead
+          enemy.type = "tank";
+          // Adjust health and speed to match tank stats
+          const tankBaseHealth = 75;
+          const linearScale = state.level * 10;
+          const exponentialScale = Math.floor(Math.sqrt(state.level) * 5);
+          enemy.health =
+            tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+          enemy.speed = 1.3;
+        }
+      }
+
+      return {
+        enemies: [
+          ...state.enemies,
+          { ...enemy, id: Math.random().toString(36).substr(2, 9) },
+        ],
+      };
+    }),
 
   removeEnemy: (id) =>
     set((state) => ({

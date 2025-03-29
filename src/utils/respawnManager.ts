@@ -59,11 +59,20 @@ export const useRespawnManager = () => {
         let health: number;
         let speed: number = 1;
 
+        // Check if we're at the turret limit before generating a turret
+        const currentTurretCount = freshState.enemies.filter(
+          (e) => e.type === "turret"
+        ).length;
+        const maxTurrets = 3;
+
         if (freshState.level >= 5 && random < bomberProbability) {
           type = "bomber";
           health = 40 + freshState.level * 3;
           speed = 4.0;
-        } else if (random < turretProbability + bomberProbability) {
+        } else if (
+          random < turretProbability + bomberProbability &&
+          currentTurretCount < maxTurrets
+        ) {
           type = "turret";
           const turretBaseHealth = 50;
           const linearScale = freshState.level * 10;

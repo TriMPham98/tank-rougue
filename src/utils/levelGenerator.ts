@@ -156,6 +156,10 @@ export const generateEnemies = (
   const enemies: Omit<Enemy, "id">[] = [];
   const existingPositions: [number, number, number][] = [playerPosition];
 
+  // Counter for turrets to ensure we don't exceed the limit
+  let turretCount = 0;
+  const maxTurrets = 3;
+
   // Create enemies
   for (let i = 0; i < config.enemyCount; i++) {
     const position = generateRandomPosition(config.gridSize, existingPositions);
@@ -177,12 +181,16 @@ export const generateEnemies = (
       type = "bomber";
       health = 40 + level * 3; // Lower health for bombers
       speed = 4.0; // Much faster movement speed
-    } else if (random < turretProbability + bomberProbability) {
+    } else if (
+      random < turretProbability + bomberProbability &&
+      turretCount < maxTurrets
+    ) {
       type = "turret";
       const turretBaseHealth = 50;
       const linearScale = level * 10;
       const exponentialScale = Math.floor(Math.sqrt(level) * 5);
       health = turretBaseHealth + linearScale + exponentialScale;
+      turretCount++;
     } else {
       type = "tank";
       const tankBaseHealth = 75;

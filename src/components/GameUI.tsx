@@ -61,6 +61,28 @@ const GameUI = () => {
     }
   }, [showWeaponSelection, selectedWeapons]);
 
+  // Handle keyboard shortcuts for upgrades
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!showUpgradeUI || isUpgrading) return;
+
+      const keyIndex = parseInt(event.key) - 1; // Convert key 1, 2, 3 to index 0, 1, 2
+
+      if (
+        keyIndex >= 0 &&
+        keyIndex < 3 &&
+        keyIndex < availableUpgrades.length
+      ) {
+        handleUpgrade(availableUpgrades[keyIndex]);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [showUpgradeUI, availableUpgrades, isUpgrading]);
+
   const handleUpgrade = useCallback(
     (stat: UpgradeableStat) => {
       if (isUpgrading) return;
@@ -366,7 +388,7 @@ const GameUI = () => {
                 gap: "15px",
                 width: "100%",
               }}>
-              {availableUpgrades.map((stat) => (
+              {availableUpgrades.map((stat, index) => (
                 <div
                   key={stat}
                   onClick={() => handleUpgrade(stat)}
@@ -384,6 +406,7 @@ const GameUI = () => {
                     boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
                     display: "flex",
                     flexDirection: "column",
+                    position: "relative",
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.backgroundColor =
@@ -399,6 +422,25 @@ const GameUI = () => {
                     e.currentTarget.style.boxShadow =
                       "0 4px 8px rgba(0,0,0,0.2)";
                   }}>
+                  {/* Key number indicator */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      backgroundColor: "#2196f3",
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "0.9em",
+                    }}>
+                    {index + 1}
+                  </div>
                   <div
                     style={{
                       fontSize: "1.2em",
@@ -423,6 +465,15 @@ const GameUI = () => {
                   </div>
                 </div>
               ))}
+            </div>
+            <div
+              style={{
+                marginTop: "15px",
+                fontSize: "0.9em",
+                color: "#ccc",
+                textAlign: "center",
+              }}>
+              Press 1, 2, or 3 to quickly select an upgrade
             </div>
           </div>
         </div>
@@ -538,7 +589,10 @@ const GameUI = () => {
           textAlign: "center",
           padding: "10px",
         }}>
-        <p>WASD: Move | J/K: Rotate Turret | SPACE: Shoot | ESC: Pause</p>
+        <p>
+          WASD: Move | J/K: Rotate Turret | SPACE: Shoot | ESC: Pause | 1/2/3:
+          Select Upgrades
+        </p>
       </div>
     </div>
   );
