@@ -78,9 +78,9 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
   useFrame((state, delta) => {
     if (!rifleRef.current || isPaused || isGameOver) return;
 
-    // Position the rifle relative to tank
+    // Position the rifle relative to tank - adjusted for smaller model
     rifleRef.current.position.x = tankPosition[0];
-    rifleRef.current.position.y = tankPosition[1] + 0.7; // Above the tank
+    rifleRef.current.position.y = tankPosition[1] + 0.5; // Lower position on tank
     rifleRef.current.position.z = tankPosition[2];
     rifleRef.current.rotation.y = tankRotation;
 
@@ -106,11 +106,11 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
       // Fire if cooldown has passed
       const currentTime = state.clock.getElapsedTime();
       if (currentTime - lastShootTimeRef.current > cooldown) {
-        // Calculate firing position (tip of the rifle)
+        // Calculate firing position (tip of the rifle barrel)
         const firePosition: [number, number, number] = [
-          rifleRef.current.position.x + Math.sin(angleToEnemy) * 2.5,
+          rifleRef.current.position.x + Math.sin(angleToEnemy) * 1.8, // Adjusted for smaller rifle
           rifleRef.current.position.y,
-          rifleRef.current.position.z + Math.cos(angleToEnemy) * 2.5,
+          rifleRef.current.position.z + Math.cos(angleToEnemy) * 1.8, // Adjusted for smaller rifle
         ];
 
         // Add new projectile
@@ -135,28 +135,121 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
 
   return (
     <>
-      {/* Sniper rifle model */}
+      {/* Sniper rifle model - now half the size with more details */}
       <group ref={rifleRef}>
-        {/* Rifle body */}
+        {/* Rifle main body - slimmer overall */}
         <Box
-          args={[0.15, 0.15, 3.5]}
-          position={[0, 0, 1.5]}
+          args={[0.07, 0.08, 1.75]} // Half the size
+          position={[0, 0, 0.75]}
           rotation={[0, 0, 0]}
           castShadow>
-          <meshStandardMaterial color="#303030" />
+          <meshStandardMaterial color="#252525" />
         </Box>
 
-        {/* Scope */}
-        <Box args={[0.1, 0.3, 0.4]} position={[0, 0.2, 1.5]} castShadow>
+        {/* Rifle stock */}
+        <Box
+          args={[0.06, 0.12, 0.4]}
+          position={[0, 0.02, 0]}
+          rotation={[0.1, 0, 0]}
+          castShadow>
+          <meshStandardMaterial color="#1A1A1A" />
+        </Box>
+
+        {/* Rifle barrel - longer, thinner */}
+        <Box args={[0.05, 0.05, 1.2]} position={[0, 0, 1.4]} castShadow>
+          <meshStandardMaterial
+            color="#202020"
+            metalness={0.8}
+            roughness={0.2}
+          />
+        </Box>
+
+        {/* Scope mount */}
+        <Box args={[0.08, 0.04, 0.25]} position={[0, 0.1, 1]} castShadow>
+          <meshStandardMaterial color="#181818" />
+        </Box>
+
+        {/* Main scope body */}
+        <Box args={[0.06, 0.15, 0.35]} position={[0, 0.19, 1]} castShadow>
+          <meshStandardMaterial
+            color="#111111"
+            metalness={0.7}
+            roughness={0.3}
+          />
+        </Box>
+
+        {/* Scope front lens */}
+        <Box args={[0.04, 0.04, 0.01]} position={[0, 0.19, 1.18]} castShadow>
+          <meshStandardMaterial
+            color="#88CCFF"
+            emissive="#446688"
+            emissiveIntensity={0.5}
+          />
+        </Box>
+
+        {/* Scope rear lens */}
+        <Box args={[0.04, 0.04, 0.01]} position={[0, 0.19, 0.83]} castShadow>
+          <meshStandardMaterial color="#000000" />
+        </Box>
+
+        {/* Bolt handle */}
+        <Box
+          args={[0.02, 0.02, 0.15]}
+          position={[0.08, 0.02, 0.7]}
+          rotation={[0, 0, Math.PI / 2]}
+          castShadow>
+          <meshStandardMaterial color="#333333" metalness={0.6} />
+        </Box>
+
+        {/* Trigger guard */}
+        <Box args={[0.03, 0.07, 0.12]} position={[0, -0.05, 0.4]} castShadow>
           <meshStandardMaterial color="#222222" />
         </Box>
 
-        {/* Laser sight (visual effect) */}
-        <Box args={[0.05, 0.05, 0.2]} position={[0, 0.1, 3]} castShadow>
+        {/* Magazine */}
+        <Box args={[0.05, 0.12, 0.2]} position={[0, -0.1, 0.6]} castShadow>
+          <meshStandardMaterial color="#333333" />
+        </Box>
+
+        {/* Bipod left leg */}
+        <Box
+          args={[0.02, 0.08, 0.02]}
+          position={[-0.05, -0.05, 2]}
+          rotation={[0.3, 0, -0.3]}
+          castShadow>
+          <meshStandardMaterial color="#282828" />
+        </Box>
+
+        {/* Bipod right leg */}
+        <Box
+          args={[0.02, 0.08, 0.02]}
+          position={[0.05, -0.05, 2]}
+          rotation={[0.3, 0, 0.3]}
+          castShadow>
+          <meshStandardMaterial color="#282828" />
+        </Box>
+
+        {/* Laser sight */}
+        <Box args={[0.03, 0.03, 0.1]} position={[0, 0.02, 2.05]} castShadow>
           <meshStandardMaterial
             color="red"
             emissive="red"
             emissiveIntensity={2}
+          />
+        </Box>
+
+        {/* Laser beam effect */}
+        <Box
+          args={[0.005, 0.005, 5]}
+          position={[0, 0.02, 4.5]}
+          transparent={true}
+          opacity={0.4}>
+          <meshBasicMaterial
+            color="red"
+            emissive="red"
+            emissiveIntensity={3}
+            transparent={true}
+            opacity={0.4}
           />
         </Box>
       </group>
