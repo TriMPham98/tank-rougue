@@ -267,12 +267,8 @@ const SniperRifle = ({
         </Box>
 
         {/* Laser beam effect */}
-        <Box
-          args={[0.005, 0.005, 5]}
-          position={[0, 0.02, 4.5]}
-          transparent={true}
-          opacity={0.4}>
-          <meshBasicMaterial
+        <Box args={[0.005, 0.005, 5]} position={[0, 0.02, 4.5]}>
+          <meshStandardMaterial
             color="red"
             emissive="red"
             emissiveIntensity={3}
