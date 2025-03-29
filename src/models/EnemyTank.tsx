@@ -45,6 +45,12 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   // Helper function to check collision with terrain obstacles, specifically rocks
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
+    // Map boundary check - Ground is 100x100 centered at origin
+    const mapSize = 50; // Half of the total ground size (100/2)
+    if (Math.abs(newX) > mapSize - 1 || Math.abs(newZ) > mapSize - 1) {
+      return true; // Collision with map boundary
+    }
+
     const tankPosition = new Vector3(newX, 0, newZ);
     const tankRadius = enemy.type === "bomber" ? 0.8 : 1.25; // Adjust radius based on tank type
     const terrainObstacles = getState().terrainObstacles;

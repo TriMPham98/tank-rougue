@@ -51,6 +51,17 @@ const Projectile = ({
     projectileRef.current.position.z +=
       Math.cos(rotation) * delta * playerBulletVelocity;
 
+    // Check map boundaries - Ground is 100x100 centered at origin
+    const mapSize = 50; // Half of the total ground size (100/2)
+    if (
+      Math.abs(projectileRef.current.position.x) > mapSize ||
+      Math.abs(projectileRef.current.position.z) > mapSize
+    ) {
+      debug.log(`Projectile ${id} reached map boundary`);
+      onRemove(id);
+      return;
+    }
+
     // Remove projectile if it's too far away
     const distance = new Vector3(
       projectileRef.current.position.x - position[0],

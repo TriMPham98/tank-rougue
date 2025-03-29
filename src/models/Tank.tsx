@@ -60,6 +60,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   // Helper function to check collision with terrain obstacles
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
+    // Map boundary check - Ground is 100x100 centered at origin
+    const mapSize = 50; // Half of the total ground size (100/2)
+    if (Math.abs(newX) > mapSize - 1 || Math.abs(newZ) > mapSize - 1) {
+      return true; // Collision with map boundary
+    }
+
     const tankPosition = new Vector3(newX, 0, newZ);
     const tankRadius = 1.25; // Slightly larger than tank's width/2
 

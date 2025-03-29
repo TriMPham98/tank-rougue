@@ -49,6 +49,24 @@ const SniperProjectile = ({
     )
       return;
 
+    // Move projectile with higher velocity (sniper bullets are faster)
+    const sniperBulletVelocity = playerBulletVelocity * 1.8;
+    projectileRef.current.position.x +=
+      Math.sin(rotation) * delta * sniperBulletVelocity;
+    projectileRef.current.position.z +=
+      Math.cos(rotation) * delta * sniperBulletVelocity;
+
+    // Check map boundaries - Ground is 100x100 centered at origin
+    const mapSize = 50; // Half of the total ground size (100/2)
+    if (
+      Math.abs(projectileRef.current.position.x) > mapSize ||
+      Math.abs(projectileRef.current.position.z) > mapSize
+    ) {
+      debug.log(`Sniper projectile ${id} reached map boundary`);
+      onRemove(id);
+      return;
+    }
+
     // Enhanced velocity for sniper shots
     const velocity = playerBulletVelocity * 1.5;
     let newDirection = new Vector3(Math.sin(rotation), 0, Math.cos(rotation));
