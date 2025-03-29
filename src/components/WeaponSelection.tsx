@@ -134,6 +134,15 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
         }}>
         <h2>Select Secondary Weapon (Level {level})</h2>
         <p>Choose a secondary weapon to add to your arsenal</p>
+        <p
+          style={{
+            fontSize: "0.9em",
+            fontStyle: "italic",
+            marginBottom: "10px",
+          }}>
+          Tip: You can select the same weapon multiple times for additional
+          firepower!
+        </p>
         <div className="weapon-grid">
           {availableWeapons.map((weapon) => (
             <div

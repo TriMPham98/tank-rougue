@@ -316,13 +316,18 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         />
       ))}
 
-      {/* Render sniper rifle if selected */}
-      {hasSniperRifle && (
-        <SniperRifle
-          tankPosition={positionRef.current}
-          tankRotation={tankRotationRef.current}
-        />
-      )}
+      {/* Render all sniper rifles individually */}
+      {selectedWeapons
+        .filter((weapon) => weapon.id === "sniper")
+        .map((weapon, index) => (
+          <SniperRifle
+            key={weapon.instanceId || `sniper-${index}`}
+            tankPosition={positionRef.current}
+            tankRotation={tankRotationRef.current}
+            weaponInstance={weapon}
+            positionOffset={index * 0.3} // Offset each weapon instance slightly
+          />
+        ))}
     </>
   );
 };

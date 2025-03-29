@@ -17,7 +17,13 @@ export const useWeaponSelection = (currentLevel: number) => {
   const selectWeapon = useCallback(
     (weapon: SecondaryWeapon) => {
       if (canSelectWeapon()) {
-        setSelectedWeapons((prev) => [...prev, weapon]);
+        // Create a new weapon instance with a unique instanceId
+        const weaponInstance = {
+          ...weapon,
+          instanceId: Math.random().toString(36).substr(2, 9),
+        };
+
+        setSelectedWeapons((prev) => [...prev, weaponInstance]);
       }
     },
     [canSelectWeapon]

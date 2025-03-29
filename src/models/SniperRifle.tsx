@@ -2,16 +2,23 @@ import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box } from "@react-three/drei";
 import { Group, Vector3 } from "three";
-import { useGameState } from "../utils/gameState";
+import { useGameState, SecondaryWeapon } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import SniperProjectile from "./SniperProjectile";
 
 interface SniperRifleProps {
   tankPosition: [number, number, number];
   tankRotation: number;
+  weaponInstance: SecondaryWeapon;
+  positionOffset?: number;
 }
 
-const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
+const SniperRifle = ({
+  tankPosition,
+  tankRotation,
+  weaponInstance,
+  positionOffset = 0,
+}: SniperRifleProps) => {
   const rifleRef = useRef<Group>(null);
   const lastShootTimeRef = useRef(0);
   const targetEnemyRef = useRef<string | null>(null);
@@ -30,8 +37,10 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
   const isGameOver = useGameState((state) => state.isGameOver);
   const enemies = useGameState((state) => state.enemies);
 
-  // Get cooldown from weapon properties (4 seconds for sniper)
-  const cooldown = 4;
+  // Get cooldown from weapon properties
+  const cooldown = weaponInstance.cooldown;
+  const weaponRange = weaponInstance.range;
+  const instanceId = weaponInstance.instanceId || "default";
 
   // Find nearest enemy for auto-aim
   const findNearestEnemy = (): string | null => {
@@ -53,8 +62,8 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
       );
       const distance = tankPos.distanceTo(enemyPos);
 
-      // Only consider enemies within the sniper's range (50 units)
-      if (distance < 50 && distance < minDistance) {
+      // Only consider enemies within the sniper's range
+      if (distance < weaponRange && distance < minDistance) {
         minDistance = distance;
         nearestEnemy = enemy.id;
       }
@@ -78,10 +87,15 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
   useFrame((state, delta) => {
     if (!rifleRef.current || isPaused || isGameOver) return;
 
-    // Position the rifle relative to tank - adjusted for smaller model
-    rifleRef.current.position.x = tankPosition[0];
-    rifleRef.current.position.y = tankPosition[1] + 0.5; // Lower position on tank
-    rifleRef.current.position.z = tankPosition[2];
+    // Position the rifle relative to tank with offset
+    // Apply horizontal offset based on positionOffset
+    const horizontalOffset =
+      Math.sin(tankRotation + Math.PI / 2) * positionOffset;
+    const depthOffset = Math.cos(tankRotation + Math.PI / 2) * positionOffset;
+
+    rifleRef.current.position.x = tankPosition[0] + horizontalOffset;
+    rifleRef.current.position.y = tankPosition[1] + 0.5;
+    rifleRef.current.position.z = tankPosition[2] + depthOffset;
     rifleRef.current.rotation.y = tankRotation;
 
     // Find a target if we don't have one or if current target no longer exists
@@ -91,7 +105,9 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
     ) {
       targetEnemyRef.current = findNearestEnemy();
       if (targetEnemyRef.current) {
-        debug.log(`Sniper locked on target: ${targetEnemyRef.current}`);
+        debug.log(
+          `Sniper ${instanceId} locked on target: ${targetEnemyRef.current}`
+        );
       }
     }
 
@@ -122,7 +138,9 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
           targetId: targetEnemyRef.current,
         });
 
-        debug.log(`Sniper fired at enemy ${targetEnemyRef.current}`);
+        debug.log(
+          `Sniper ${instanceId} fired at enemy ${targetEnemyRef.current}`
+        );
         lastShootTimeRef.current = currentTime;
       }
     }
@@ -132,6 +150,16 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
   const removeProjectile = (id: string) => {
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
+
+  // Add an effect to log when the component is mounted for debugging
+  useEffect(() => {
+    debug.log(
+      `Sniper rifle instance ${instanceId} mounted, offset: ${positionOffset}`
+    );
+    return () => {
+      debug.log(`Sniper rifle instance ${instanceId} unmounted`);
+    };
+  }, [instanceId, positionOffset]);
 
   return (
     <>
@@ -249,19 +277,19 @@ const SniperRifle = ({ tankPosition, tankRotation }: SniperRifleProps) => {
             emissive="red"
             emissiveIntensity={3}
             transparent={true}
-            opacity={0.4}
+            opacity={0.5}
           />
         </Box>
       </group>
 
-      {/* Render all active projectiles */}
+      {/* Render projectiles */}
       {projectilesRef.current.map((projectile) => (
         <SniperProjectile
           key={projectile.id}
           id={projectile.id}
           position={projectile.position}
           rotation={projectile.rotation}
-          damage={playerTurretDamage * 2} // Sniper does double damage
+          damage={playerTurretDamage}
           targetId={projectile.targetId}
           onRemove={removeProjectile}
         />

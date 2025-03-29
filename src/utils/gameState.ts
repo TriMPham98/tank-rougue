@@ -29,7 +29,8 @@ export type UpgradeableStat =
 
 // Define the type for a secondary weapon
 export interface SecondaryWeapon {
-  id: string;
+  id: string; // Weapon type ID (e.g., "rocket", "laser", etc.)
+  instanceId?: string; // New field to track individual weapon instances
   name: string;
   description: string;
   damage: number;
@@ -404,8 +405,14 @@ export const useGameState = create<GameState>((set, get) => ({
       console.log("Current selectedWeapons:", state.selectedWeapons);
       console.log("Current showWeaponSelection:", state.showWeaponSelection);
 
+      // Create a new instance of the weapon with a unique instanceId
+      const weaponInstance = {
+        ...weapon,
+        instanceId: Math.random().toString(36).substr(2, 9), // Generate a unique ID for this instance
+      };
+
       const updatedState = {
-        selectedWeapons: [...state.selectedWeapons, weapon],
+        selectedWeapons: [...state.selectedWeapons, weaponInstance],
         showWeaponSelection: false,
       };
 
