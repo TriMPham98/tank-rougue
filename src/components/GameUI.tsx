@@ -38,10 +38,28 @@ const GameUI = () => {
   // Check for weapon selection opportunity when level changes
   useEffect(() => {
     if ([5, 10, 15].includes(level) && selectedWeapons.length < 3) {
-      // Show weapon selection UI
+      console.log(
+        `Level ${level} reached, showing weapon selection. Current weapons: ${selectedWeapons.length}`
+      );
       useGameState.setState({ showWeaponSelection: true });
     }
-  }, [level, selectedWeapons.length]);
+  }, [level]); // Changed: Removed selectedWeapons.length from dependencies
+
+  // Add log to monitor weapon selection state
+  useEffect(() => {
+    console.log(
+      "GameUI - showWeaponSelection state changed:",
+      showWeaponSelection
+    );
+    console.log("GameUI - selectedWeapons:", selectedWeapons);
+
+    // Force check for weapon selection state - debug hack
+    if (showWeaponSelection === true) {
+      console.log("Weapon selection should be showing now");
+    } else {
+      console.log("Weapon selection should be hidden now");
+    }
+  }, [showWeaponSelection, selectedWeapons]);
 
   const handleUpgrade = useCallback(
     (stat: UpgradeableStat) => {
@@ -113,7 +131,7 @@ const GameUI = () => {
       case "tankSpeed":
         return `${(playerSpeed + 0.5).toFixed(1)}`;
       case "fireRate":
-        const newFireRate = 1 / (playerFireRate - 0.05); // Inverse of fire rate interval
+        const newFireRate = 1 / (playerFireRate - 0.05);
         return `${newFireRate.toFixed(1)} shots/sec`;
       case "cameraRange":
         return `${(playerCameraRange + 2).toFixed(0)} units`;
@@ -145,6 +163,50 @@ const GameUI = () => {
       case "bulletVelocity":
         return "Increases the speed at which bullets travel.";
     }
+  };
+
+  // Add a failsafe for weapon selection UI rendering
+  const renderWeaponSelection = () => {
+    console.log(
+      "renderWeaponSelection called, showWeaponSelection=",
+      showWeaponSelection
+    );
+    if (!showWeaponSelection) {
+      console.log(
+        "Not rendering weapon selection because showWeaponSelection is false"
+      );
+      return null;
+    }
+
+    console.log("Rendering WeaponSelection component");
+    return (
+      <WeaponSelection
+        onWeaponSelect={(weapon) => {
+          console.log("Weapon selected in GameUI:", weapon.name);
+          selectWeapon(weapon);
+          console.log("selectWeapon called, checking state:");
+          console.log(
+            "showWeaponSelection after selection:",
+            useGameState.getState().showWeaponSelection
+          );
+        }}
+        onClose={() => {
+          console.log("onClose called in GameUI");
+          closeWeaponSelection();
+          console.log("closeWeaponSelection called, checking state:");
+          console.log(
+            "showWeaponSelection after close:",
+            useGameState.getState().showWeaponSelection
+          );
+        }}
+        state={{
+          availableWeapons,
+          selectedWeapons,
+          level,
+          canSelect: selectedWeapons.length < 3,
+        }}
+      />
+    );
   };
 
   return (
@@ -465,18 +527,7 @@ const GameUI = () => {
       )}
 
       {/* Weapon Selection UI */}
-      {showWeaponSelection && (
-        <WeaponSelection
-          onWeaponSelect={selectWeapon}
-          onClose={closeWeaponSelection}
-          state={{
-            availableWeapons,
-            selectedWeapons,
-            level,
-            canSelect: selectedWeapons.length < 3,
-          }}
-        />
-      )}
+      {renderWeaponSelection()}
 
       {/* Controls Info */}
       <div

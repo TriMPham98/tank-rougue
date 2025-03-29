@@ -199,7 +199,7 @@ export const useGameState = create<GameState>((set, get) => ({
       if (!powerUp) return state;
 
       const newPowerUps = state.powerUps.filter((p) => p.id !== id);
-      let updates = { powerUps: newPowerUps };
+      let updates: Partial<GameState> = { powerUps: newPowerUps };
 
       // Only handle health power-up
       updates = {
@@ -395,14 +395,59 @@ export const useGameState = create<GameState>((set, get) => ({
       ),
     })),
 
-  selectWeapon: (weapon) =>
-    set((state) => ({
-      selectedWeapons: [...state.selectedWeapons, weapon],
-      showWeaponSelection: false,
-    })),
+  selectWeapon: (weapon) => {
+    console.log("*** BEFORE selectWeapon execution ***");
+    console.log("Current state snapshot:", useGameState.getState());
 
-  closeWeaponSelection: () =>
-    set({
-      showWeaponSelection: false,
-    }),
+    set((state) => {
+      console.log("gameState.selectWeapon called with weapon:", weapon.name);
+      console.log("Current selectedWeapons:", state.selectedWeapons);
+      console.log("Current showWeaponSelection:", state.showWeaponSelection);
+
+      const updatedState = {
+        selectedWeapons: [...state.selectedWeapons, weapon],
+        showWeaponSelection: false,
+      };
+
+      console.log("New state to be applied:", updatedState);
+
+      // Return the updated state
+      return updatedState;
+    });
+
+    // Log the state after update
+    setTimeout(() => {
+      console.log("*** AFTER selectWeapon execution ***");
+      console.log("Updated state snapshot:", useGameState.getState());
+      console.log(
+        "showWeaponSelection is now:",
+        useGameState.getState().showWeaponSelection
+      );
+    }, 0);
+  },
+
+  closeWeaponSelection: () => {
+    console.log("*** BEFORE closeWeaponSelection execution ***");
+    console.log("Current state snapshot:", useGameState.getState());
+
+    set((state) => {
+      console.log("gameState.closeWeaponSelection called");
+      console.log("Current showWeaponSelection:", state.showWeaponSelection);
+
+      console.log("Setting showWeaponSelection to false");
+      return {
+        showWeaponSelection: false,
+      };
+    });
+
+    // Log the state after update
+    setTimeout(() => {
+      console.log("*** AFTER closeWeaponSelection execution ***");
+      console.log("Updated state snapshot:", useGameState.getState());
+      console.log(
+        "showWeaponSelection is now:",
+        useGameState.getState().showWeaponSelection
+      );
+    }, 0);
+  },
 }));
