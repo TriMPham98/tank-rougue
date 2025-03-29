@@ -46,11 +46,11 @@ export const useRespawnManager = () => {
         // Generate a random position for the new enemy
         const position = generateRandomPosition(gridSize, existingPositions);
 
-        // Calculate probabilities based on level
-        const turretProbability = Math.min(0.2 + freshState.level * 0.03, 0.5);
+        // Calculate probabilities based on level (updated to match levelGenerator)
+        const turretProbability = Math.min(0.1 + freshState.level * 0.02, 0.3); // Reduced from 0.2
         const bomberProbability =
           freshState.level >= 5
-            ? Math.min(0.2 + (freshState.level - 5) * 0.04, 0.4)
+            ? Math.min(0.15 + (freshState.level - 5) * 0.03, 0.3)
             : 0;
         const random = Math.random();
 
@@ -76,6 +76,8 @@ export const useRespawnManager = () => {
           const exponentialScale = Math.floor(Math.sqrt(freshState.level) * 5);
           health =
             tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+          // Slightly reduce speed for better gameplay balance with increased tank frequency
+          speed = 1.3;
         }
 
         // Double check state one more time before spawning

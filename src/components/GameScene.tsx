@@ -264,14 +264,11 @@ const TerrainObstacleGenerator = () => {
           });
         }
 
-        const obstacleType: "tree" | "rock" =
-          Math.random() < 0.6 ? "tree" : "rock";
+        // Always generate rocks, not trees
+        const obstacleType: "rock" = "rock";
 
-        // Different size ranges for trees and rocks
-        const size =
-          obstacleType === "tree"
-            ? 1.5 + Math.random() * 1.5 // Trees are generally taller
-            : 1 + Math.random() * 1.5; // Rocks are more varied in size
+        // Size range for rocks
+        const size = 1 + Math.random() * 1.5; // Rocks are varied in size
 
         // Check if this position is too close to existing obstacles
         const existingObstacles = useGameState.getState().terrainObstacles;

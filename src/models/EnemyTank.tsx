@@ -43,6 +43,33 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     }
   }, []);
 
+  // Helper function to check collision with terrain obstacles, specifically rocks
+  const checkTerrainCollision = (newX: number, newZ: number): boolean => {
+    const tankPosition = new Vector3(newX, 0, newZ);
+    const tankRadius = enemy.type === "bomber" ? 0.8 : 1.25; // Adjust radius based on tank type
+    const terrainObstacles = getState().terrainObstacles;
+
+    for (const obstacle of terrainObstacles) {
+      // Only check collisions with rocks
+      if (obstacle.type === "rock") {
+        const obstaclePos = new Vector3(
+          obstacle.position[0],
+          0,
+          obstacle.position[2]
+        );
+        const distance = obstaclePos.distanceTo(tankPosition);
+
+        // Use obstacle size to determine collision radius
+        const obstacleRadius = obstacle.size * 0.75; // Rock collision radius
+
+        if (distance < tankRadius + obstacleRadius) {
+          return true; // Collision detected
+        }
+      }
+    }
+    return false; // No collision
+  };
+
   useFrame((state, delta) => {
     if (enemy.type === "bomber") {
       if (!tankRef.current || isPaused || isGameOver) return;
@@ -153,18 +180,35 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       const moveSpeed = enemy.speed || (enemy.type === "bomber" ? 2.5 : 1.5);
 
       if (enemy.type === "bomber" || distanceToPlayer > 5) {
-        tankRef.current.position.x +=
+        // Calculate new position
+        const newX =
+          tankRef.current.position.x +
           Math.sin(tankRotationRef.current) * delta * moveSpeed;
-        tankRef.current.position.z +=
+        const newZ =
+          tankRef.current.position.z +
           Math.cos(tankRotationRef.current) * delta * moveSpeed;
 
-        const newPosition: [number, number, number] = [
-          tankRef.current.position.x,
-          tankRef.current.position.y,
-          tankRef.current.position.z,
-        ];
-        if (Math.random() < 0.1) {
-          updateEnemyPosition(enemy.id, newPosition);
+        // Check for collision with terrain before moving
+        if (!checkTerrainCollision(newX, newZ)) {
+          // No collision, proceed with movement
+          tankRef.current.position.x = newX;
+          tankRef.current.position.z = newZ;
+
+          const newPosition: [number, number, number] = [
+            tankRef.current.position.x,
+            tankRef.current.position.y,
+            tankRef.current.position.z,
+          ];
+          if (Math.random() < 0.1) {
+            updateEnemyPosition(enemy.id, newPosition);
+          }
+        } else {
+          // Collision detected, try to navigate around obstacle
+          // Simple approach: rotate the tank slightly and try again next frame
+          tankRotationRef.current += (Math.random() - 0.5) * Math.PI * 0.25;
+          if (Math.random() < 0.5) {
+            debug.log(`Enemy ${enemy.id} avoiding rock obstacle`);
+          }
         }
 
         if (enemy.type === "bomber" && distanceToPlayer < 2) {

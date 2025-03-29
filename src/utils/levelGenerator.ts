@@ -16,18 +16,15 @@ const isPositionClear = (
     type: "rock" | "tree";
     size: number;
   }>,
-  minClearance: number = 3 // Increased clearance to prevent getting stuck
+  minClearance: number = 5 // Increased clearance to prevent spawning inside rocks
 ): boolean => {
   for (const obstacle of terrainObstacles) {
     const dx = obstacle.position[0] - x;
     const dz = obstacle.position[2] - z;
     const distance = Math.sqrt(dx * dx + dz * dz);
 
-    // Calculate required clearance based on obstacle type and size
-    const requiredClearance =
-      obstacle.type === "tree"
-        ? obstacle.size * 0.5 + minClearance // Trees need less clearance
-        : obstacle.size * 1.2 + minClearance; // Rocks need more clearance
+    // Since we only have rocks now, always use this clearance calculation
+    const requiredClearance = obstacle.size * 1.5 + minClearance; // Increased multiplier for rock obstacles
 
     if (distance < requiredClearance) {
       return false;
@@ -41,7 +38,7 @@ export const generateRandomPosition = (
   gridSize: number,
   existingPositions: [number, number, number][],
   minDistanceFromExisting = 5,
-  attempts = 100
+  attempts = 200 // Increased from 100 to try harder to find valid positions
 ): [number, number, number] => {
   const terrainObstacles = useGameState.getState().terrainObstacles;
 
@@ -85,20 +82,50 @@ export const generateRandomPosition = (
     "Could not find ideal spawn position, trying with reduced constraints"
   );
 
-  // Try one more time with reduced clearance
-  const x = (Math.random() - 0.5) * gridSize;
-  const z = (Math.random() - 0.5) * gridSize;
-  const y = 0.5;
+  // More systematically search for a position
+  const searchGrid = 8; // Search in a grid pattern
+  for (let gridX = -searchGrid; gridX <= searchGrid; gridX += 2) {
+    for (let gridZ = -searchGrid; gridZ <= searchGrid; gridZ += 2) {
+      const x = (gridX / searchGrid) * (gridSize * 0.8); // Use 80% of the grid size
+      const z = (gridZ / searchGrid) * (gridSize * 0.8);
+      const y = 0.5;
 
-  if (isPositionClear(x, z, terrainObstacles, 1.5)) {
-    // Minimum safe clearance
-    debug.log("Found spawn position with minimum clearance:", { x, y, z });
-    return [x, y, z];
+      // Check if this grid position is clear
+      if (isPositionClear(x, z, terrainObstacles, 3)) {
+        // Reduced clearance but still safe
+        debug.log("Found spawn position using grid search:", { x, y, z });
+        return [x, y, z];
+      }
+    }
   }
 
-  // Absolute fallback - spawn at origin with slight offset
-  debug.warn("Using fallback spawn position");
-  return [5, 0.5, 5];
+  // Last resort - find any position not directly inside a rock
+  debug.warn("Using last resort position finding technique");
+
+  // Start from the edges and work inward
+  for (let radius = gridSize / 2; radius >= 5; radius -= 5) {
+    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const y = 0.5;
+
+      if (isPositionClear(x, z, terrainObstacles, 2)) {
+        debug.log("Found emergency spawn position at radius:", {
+          radius,
+          x,
+          y,
+          z,
+        });
+        return [x, y, z];
+      }
+    }
+  }
+
+  // Absolute fallback - spawn at a safe known location well away from origin
+  debug.error(
+    "All position finding techniques failed - using emergency position"
+  );
+  return [20, 0.5, 20]; // Far corner position, less likely to have obstacles
 };
 
 // Generate enemies for the current level
@@ -140,9 +167,10 @@ export const generateEnemies = (
     let speed: number = 1;
 
     // Calculate probabilities based on level
-    const turretProbability = Math.min(0.2 + level * 0.03, 0.5);
+    // Reduced turret probability to make them less frequent
+    const turretProbability = Math.min(0.1 + level * 0.02, 0.3); // Reduced from 0.2 + level * 0.03, max 0.5
     const bomberProbability =
-      level >= 5 ? Math.min(0.2 + (level - 5) * 0.04, 0.4) : 0;
+      level >= 5 ? Math.min(0.15 + (level - 5) * 0.03, 0.3) : 0; // Slightly reduced from previous values
     const random = Math.random();
 
     if (level >= 5 && random < bomberProbability) {
@@ -162,6 +190,8 @@ export const generateEnemies = (
       const exponentialScale = Math.floor(Math.sqrt(level) * 5);
       health =
         tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+      // Slightly reduce speed for better gameplay balance with increased tank frequency
+      speed = 1.3;
     }
 
     enemies.push({
