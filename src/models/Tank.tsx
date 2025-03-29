@@ -7,6 +7,7 @@ import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import Projectile from "./Projectile";
 import SniperRifle from "./SniperRifle"; // Make sure the import path is correct
+import Shotgun from "./Shotgun"; // Import the Shotgun component
 
 interface TankProps {
   position: [number, number, number];
@@ -48,17 +49,23 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const selectedWeapons = useGameState((state) => state.selectedWeapons);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
-  // Filter out only the sniper rifles
+  // Filter out weapons by type
   const sniperRifles = selectedWeapons.filter(
     (weapon) => weapon.id === "sniper"
   );
+  const shotguns = selectedWeapons.filter((weapon) => weapon.id === "shotgun");
+
   const numSniperRifles = sniperRifles.length;
+  const numShotguns = shotguns.length;
 
   // --- Centering Logic ---
-  // Calculate the total width occupied by the sniper rifles
+  // Calculate the total width occupied by the weapons
   const totalSniperWidth = (numSniperRifles - 1) * SECONDARY_WEAPON_SPACING;
-  // Calculate the starting offset (most left position) to center the group
+  const totalShotgunWidth = (numShotguns - 1) * SECONDARY_WEAPON_SPACING;
+
+  // Calculate the starting offset (most left position) to center each group
   const sniperStartOffset = -totalSniperWidth / 2;
+  const shotgunStartOffset = -totalShotgunWidth / 2;
   // --- End Centering Logic ---
 
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
@@ -201,6 +208,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     }
   }, [sniperRifles.length]); // Log only when the count changes
 
+  useEffect(() => {
+    if (shotguns.length > 0) {
+      debug.log(`Shotguns equipped: ${shotguns.length}`);
+    }
+  }, [shotguns.length]); // Log only when the count changes
+
   return (
     <>
       <group ref={tankRef}>
@@ -266,6 +279,23 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             tankRotation={tankRotationRef.current} // Pass the ref's current value
             weaponInstance={weapon}
             positionOffset={currentOffset} // Pass the calculated centered offset
+          />
+        );
+      })}
+
+      {/* Render shotguns with calculated centered offsets */}
+      {shotguns.map((weapon, index) => {
+        // Calculate the specific offset for this weapon instance
+        const currentOffset =
+          shotgunStartOffset + index * SECONDARY_WEAPON_SPACING;
+
+        return (
+          <Shotgun
+            key={weapon.instanceId || `shotgun-${index}`}
+            tankPosition={positionRef.current}
+            tankRotation={tankRotationRef.current}
+            weaponInstance={weapon}
+            positionOffset={currentOffset}
           />
         );
       })}
