@@ -153,16 +153,45 @@ export const generateEnemies = (
   level: number,
   playerPosition: [number, number, number]
 ): Omit<Enemy, "id">[] => {
-  // More balanced difficulty progression formula
-  // Base count + logarithmic growth function for better scaling
-  const baseEnemyCount = 3;
-  const maxEnemies = 25;
-  const growthFactor = 2.5;
+  // Handle level 1 specially - always create exactly 1 enemy
+  if (level === 1) {
+    console.log("LEVELGEN: Level 1 - Forcing exactly 1 enemy");
+    const enemyCount = 1;
+    const gridSize = Math.min(40 + level * 2, 70);
+
+    const config: LevelConfig = {
+      gridSize,
+      enemyCount,
+      powerUpCount: Math.min(1 + Math.floor(level / 2), 5),
+    };
+
+    const enemies: Omit<Enemy, "id">[] = [];
+    const existingPositions: [number, number, number][] = [playerPosition];
+
+    // Create a single tank enemy for level 1
+    const position = generateRandomPosition(config.gridSize, existingPositions);
+
+    enemies.push({
+      position,
+      health: 75 + 10, // Base health + small level boost
+      type: "tank",
+      speed: 1.3,
+    });
+
+    return enemies;
+  }
+
+  // For other levels, use the normal scaling logic
+  const baseEnemyCount = 1;
+  const maxEnemies = 15;
 
   const enemyCount = Math.min(
-    Math.floor(baseEnemyCount + growthFactor * Math.log10(level + 1)),
+    Math.floor(baseEnemyCount + Math.sqrt(level) * 2),
     maxEnemies
   );
+
+  // Debug logging for enemy count
+  console.log(`LEVELGEN: Level ${level} - Generating ${enemyCount} enemies`);
 
   // Adjust grid size based on level to make early levels more manageable
   const gridSize = Math.min(40 + level * 2, 70);

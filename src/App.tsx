@@ -21,13 +21,16 @@ function App() {
   useEffect(() => {
     // Only run initialization once
     if (!initialized.current) {
+      console.log("APP: Initializing game state");
       // Set game to initial state
       restartGame();
 
       // Generate initial enemies and power-ups based on level 1
       try {
+        console.log("APP: Generating initial level");
         const playerPosition: [number, number, number] = [0, 0.5, 0];
         generateLevel(1, playerPosition);
+        console.log("APP: Initial level generation complete");
 
         initialized.current = true;
       } catch (error) {

@@ -6,11 +6,13 @@ import { debug } from "./debug";
 // Debug flag specifically for spawn statistics
 const SPAWN_STATS_DEBUG = false;
 
-// Base number of enemies at level 1
-const BASE_ENEMIES = 3;
-// Maximum enemies increases with level (capped at 8)
+// Start with just 1 enemy at level 1
+const BASE_ENEMIES = 1;
+// Scaled to reach max enemies (~15) around level 50, with special case for level 1
 const getMaxEnemies = (level: number) =>
-  Math.min(BASE_ENEMIES + Math.floor(level / 2), 8);
+  level === 1
+    ? 1
+    : Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 2), 15);
 
 // Function to monitor enemy destruction and spawn new enemies
 export const useRespawnManager = () => {
@@ -235,6 +237,16 @@ export const useRespawnManager = () => {
   useEffect(() => {
     // Initialize the previous enemy count and IDs
     const initialState = useGameState.getState();
+    console.log(
+      `RESPAWN: Initial enemies count: ${initialState.enemies.length}`
+    );
+    console.log(`RESPAWN: Current level: ${initialState.level}`);
+    console.log(
+      `RESPAWN: Max enemies for level ${initialState.level}: ${getMaxEnemies(
+        initialState.level
+      )}`
+    );
+
     prevEnemyCountRef.current = initialState.enemies.length;
     prevEnemiesRef.current = initialState.enemies.map((e) => e.id);
     enemiesSpawnedThisRoundRef.current = initialState.enemies.length;

@@ -294,7 +294,10 @@ const GameUI = () => {
           <div
             className="level-info"
             style={{ fontSize: "0.8em", opacity: 0.8 }}>
-            Enemies: {Math.floor(3 + 2.5 * Math.log10(level + 1))}
+            Enemies:{" "}
+            {level === 1
+              ? 1
+              : Math.min(1 + Math.floor(Math.sqrt(level) * 2), 15)}
           </div>
           <div
             className="level-progress-container"
