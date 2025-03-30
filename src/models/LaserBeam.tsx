@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Cylinder } from "@react-three/drei";
-import { Vector3, Mesh, Object3D } from "three";
+import { Vector3, Mesh, Object3D, MathUtils } from "three";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 
@@ -91,25 +91,37 @@ const LaserBeam = ({
 
     // Position and scale the beam
     if (beamRef.current) {
-      // Calculate midpoint between start and end
-      const midPoint = new Vector3(
-        (start.x + targetPos.x) / 2,
-        (start.y + targetPos.y) / 2,
-        (start.z + targetPos.z) / 2
-      );
+      // Calculate direction vector from start to target
+      const direction = targetPos.clone().sub(start).normalize();
 
-      // If beam is blocked, adjust midpoint and end
+      // Calculate effective beam length based on whether it's blocked
       const beamLength = isBlocked
         ? Math.min(distanceToTarget, 5)
         : distanceToTarget;
 
-      // Set beam position to midpoint
+      // Calculate the end point of the beam
+      const endPoint = start
+        .clone()
+        .add(direction.clone().multiplyScalar(beamLength));
+
+      // Calculate the midpoint for positioning
+      const midPoint = new Vector3(
+        (start.x + endPoint.x) / 2,
+        (start.y + endPoint.y) / 2,
+        (start.z + endPoint.z) / 2
+      );
+
+      // Position at midpoint
       beamRef.current.position.copy(midPoint);
 
-      // Orient beam towards target
-      beamRef.current.lookAt(targetPos);
+      // Properly orient the beam (Cylinder's default orientation is along Y-axis)
+      // We need to rotate it to align with our direction vector
+      beamRef.current.lookAt(endPoint);
 
-      // Adjust scale for length and thin beam
+      // Apply additional 90-degree rotation to make the cylinder lie along its length
+      beamRef.current.rotateX(MathUtils.degToRad(90));
+
+      // Scale for thickness and length (note the order of x,y,z is different now)
       beamRef.current.scale.set(0.05, beamLength / 2, 0.05);
     }
 
