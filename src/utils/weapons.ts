@@ -3,9 +3,9 @@ import { SecondaryWeapon } from "./gameState";
 export const availableWeapons: SecondaryWeapon[] = [
   {
     id: "rocket",
-    name: "Rocket Launcher",
+    name: "RPG-7",
     description:
-      "Fires powerful rockets that deal high damage and have a large explosion radius.",
+      "Fires rockets that deal high damage and have a large explosion radius.",
     damage: 50,
     cooldown: 3,
     range: 30,
