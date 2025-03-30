@@ -429,12 +429,12 @@ const GameUI = () => {
                     e.currentTarget.style.boxShadow =
                       "0 4px 8px rgba(0,0,0,0.2)";
                   }}>
-                  {/* Key number indicator */}
+                  {/* Key number indicator - Now positioned in the top LEFT */}
                   <div
                     style={{
                       position: "absolute",
                       top: "10px",
-                      right: "10px",
+                      left: "10px", // Changed from right to left
                       width: "24px",
                       height: "24px",
                       borderRadius: "50%",
@@ -479,9 +479,7 @@ const GameUI = () => {
                 fontSize: "0.9em",
                 color: "#ccc",
                 textAlign: "center",
-              }}>
-              Press 1, 2, or 3 to quickly select an upgrade
-            </div>
+              }}></div>
           </div>
         </div>
       )}
