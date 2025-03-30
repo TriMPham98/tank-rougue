@@ -8,6 +8,7 @@ import { debug } from "../utils/debug";
 import Projectile from "./Projectile";
 import SniperRifle from "./SniperRifle"; // Make sure the import path is correct
 import Shotgun from "./Shotgun"; // Import the Shotgun component
+import LaserWeapon from "./LaserWeapon"; // Import the LaserWeapon component
 
 interface TankProps {
   position: [number, number, number];
@@ -54,18 +55,22 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     (weapon) => weapon.id === "sniper"
   );
   const shotguns = selectedWeapons.filter((weapon) => weapon.id === "shotgun");
+  const lasers = selectedWeapons.filter((weapon) => weapon.id === "laser");
 
   const numSniperRifles = sniperRifles.length;
   const numShotguns = shotguns.length;
+  const numLasers = lasers.length;
 
   // --- Centering Logic ---
   // Calculate the total width occupied by the weapons
   const totalSniperWidth = (numSniperRifles - 1) * SECONDARY_WEAPON_SPACING;
   const totalShotgunWidth = (numShotguns - 1) * SECONDARY_WEAPON_SPACING;
+  const totalLaserWidth = (numLasers - 1) * SECONDARY_WEAPON_SPACING;
 
   // Calculate the starting offset (most left position) to center each group
   const sniperStartOffset = -totalSniperWidth / 2;
   const shotgunStartOffset = -totalShotgunWidth / 2;
+  const laserStartOffset = -totalLaserWidth / 2;
   // --- End Centering Logic ---
 
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
@@ -214,6 +219,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     }
   }, [shotguns.length]); // Log only when the count changes
 
+  useEffect(() => {
+    if (lasers.length > 0) {
+      debug.log(`Lasers equipped: ${lasers.length}`);
+    }
+  }, [lasers.length]); // Log when laser count changes
+
   return (
     <>
       <group ref={tankRef}>
@@ -292,6 +303,23 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         return (
           <Shotgun
             key={weapon.instanceId || `shotgun-${index}`}
+            tankPosition={positionRef.current}
+            tankRotation={tankRotationRef.current}
+            weaponInstance={weapon}
+            positionOffset={currentOffset}
+          />
+        );
+      })}
+
+      {/* Render laser weapons with calculated centered offsets */}
+      {lasers.map((weapon, index) => {
+        // Calculate the specific offset for this weapon instance
+        const currentOffset =
+          laserStartOffset + index * SECONDARY_WEAPON_SPACING;
+
+        return (
+          <LaserWeapon
+            key={weapon.instanceId || `laser-${index}`}
             tankPosition={positionRef.current}
             tankRotation={tankRotationRef.current}
             weaponInstance={weapon}
