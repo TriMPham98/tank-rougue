@@ -96,6 +96,19 @@ export const useRespawnManager = () => {
           for (const pos of emergencyPositions) {
             let isEmergencyValid = true;
 
+            // Check if position is within map boundaries (ground is 100x100)
+            const halfMapSize = 50;
+            const buffer = 2;
+            if (
+              pos[0] < -halfMapSize + buffer ||
+              pos[0] > halfMapSize - buffer ||
+              pos[2] < -halfMapSize + buffer ||
+              pos[2] > halfMapSize - buffer
+            ) {
+              isEmergencyValid = false;
+              continue;
+            }
+
             // Check distance from obstacles
             for (const obstacle of terrainObstacles) {
               const dx = obstacle.position[0] - pos[0];
@@ -115,6 +128,16 @@ export const useRespawnManager = () => {
               debug.log("Using emergency position for enemy spawn:", pos);
               break;
             }
+          }
+
+          // Final fallback - use center of map if no emergency position works
+          if (!isValid) {
+            position[0] = 0;
+            position[1] = 0.5;
+            position[2] = 0;
+            debug.log(
+              "Using center position as final fallback for enemy spawn"
+            );
           }
         }
 

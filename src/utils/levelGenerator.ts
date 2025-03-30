@@ -35,6 +35,24 @@ const isPositionClear = (
   return true;
 };
 
+// Helper function to check if a position is within map boundaries
+const isWithinMapBoundaries = (
+  x: number,
+  z: number,
+  mapSize: number = 100
+): boolean => {
+  // The ground plane is 100x100 based on Ground.tsx
+  const halfMapSize = mapSize / 2;
+  const buffer = 2; // Buffer zone from the edge
+
+  return (
+    x >= -halfMapSize + buffer &&
+    x <= halfMapSize - buffer &&
+    z >= -halfMapSize + buffer &&
+    z <= halfMapSize - buffer
+  );
+};
+
 // Generate a random position on the grid, ensuring it's not too close to other entities or obstacles
 export const generateRandomPosition = (
   gridSize: number,
@@ -51,6 +69,12 @@ export const generateRandomPosition = (
     const x = (Math.random() - 0.5) * gridSize;
     const z = (Math.random() - 0.5) * gridSize;
     const y = 0.5; // Keep y-position consistent for now
+
+    // Check if position is within map boundaries
+    if (!isWithinMapBoundaries(x, z)) {
+      attempts_count++;
+      continue;
+    }
 
     // Check if position is clear of obstacles
     if (!isPositionClear(x, z, terrainObstacles)) {
@@ -92,6 +116,11 @@ export const generateRandomPosition = (
       const z = (gridZ / searchGrid) * (gridSize * 0.8);
       const y = 0.5;
 
+      // Check if this position is within map boundaries
+      if (!isWithinMapBoundaries(x, z)) {
+        continue;
+      }
+
       // Check if this grid position is clear with increased clearance (4 instead of 3)
       if (isPositionClear(x, z, terrainObstacles, 4)) {
         // Reduced clearance but still safe
@@ -111,6 +140,11 @@ export const generateRandomPosition = (
       const z = Math.sin(angle) * radius;
       const y = 0.5;
 
+      // Check if this position is within map boundaries
+      if (!isWithinMapBoundaries(x, z)) {
+        continue;
+      }
+
       // Emergency clearance of 3 (increased from 2)
       if (isPositionClear(x, z, terrainObstacles, 3)) {
         debug.log("Found emergency spawn position at radius:", {
@@ -129,12 +163,13 @@ export const generateRandomPosition = (
     "All position finding techniques failed - using emergency position"
   );
 
-  // Try a few known safe positions in different corners
+  // Try a few known safe positions in different corners - all within map boundaries
   const safePositions: [number, number, number][] = [
     [20, 0.5, 20], // NE corner
     [-20, 0.5, 20], // NW corner
     [-20, 0.5, -20], // SW corner
     [20, 0.5, -20], // SE corner
+    [0, 0.5, 0], // Center (last resort)
   ];
 
   // Find the first safe position without obstacles
@@ -144,8 +179,8 @@ export const generateRandomPosition = (
     }
   }
 
-  // Final fallback if none of the safe positions are clear
-  return [30, 0.5, 30]; // Far corner position, less likely to have obstacles
+  // Final fallback if none of the safe positions are clear - center of map
+  return [0, 0.5, 0]; // Center position as absolute fallback
 };
 
 // Generate enemies for the current level

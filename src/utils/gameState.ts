@@ -116,6 +116,9 @@ interface GameState {
   removeTerrainObstacle: (id: string) => void;
   selectWeapon: (weapon: SecondaryWeapon) => void;
   closeWeaponSelection: () => void;
+  updateEnemyPositions: (
+    enemyMoves: { id: string; newPosition: [number, number, number] }[]
+  ) => void;
 }
 
 // Create the game state store
@@ -208,6 +211,9 @@ export const useGameState = create<GameState>((set, get) => ({
           enemy.speed = 1.3;
         }
       }
+
+      // Apply map boundary constraints to ensure enemies stay in the map
+      const constrainedPosition = enforceMapBoundaries(enemy.position);
 
       return {
         enemies: [
@@ -372,23 +378,27 @@ export const useGameState = create<GameState>((set, get) => ({
       };
     }),
 
-  updatePlayerPosition: (position) =>
-    set((state) => {
-      if (
-        state.playerTankPosition[0] === position[0] &&
-        state.playerTankPosition[1] === position[1] &&
-        state.playerTankPosition[2] === position[2]
-      ) {
-        return state;
-      }
-      return { playerTankPosition: position };
-    }),
+  updatePlayerPosition: (position) => {
+    // Enforce map boundaries to ensure player stays within playable area
+    const constrainedPosition = enforceMapBoundaries(position);
+    set(() => ({ playerTankPosition: constrainedPosition }));
+  },
 
   // Add function to update enemy position in state
-  updateEnemyPosition: (id, position) =>
-    set((state) => ({
-      enemies: state.enemies.map((e) => (e.id === id ? { ...e, position } : e)),
-    })),
+  updateEnemyPosition: (id, position) => {
+    // Enforce map boundaries to ensure enemy stays within playable area
+    const constrainedPosition = enforceMapBoundaries(position);
+
+    set((state) => {
+      const updatedEnemies = state.enemies.map((enemy) => {
+        if (enemy.id === id) {
+          return { ...enemy, position: constrainedPosition };
+        }
+        return enemy;
+      });
+      return { enemies: updatedEnemies };
+    });
+  },
 
   damageEnemy: (id, amount) => {
     const state = get();
@@ -528,4 +538,50 @@ export const useGameState = create<GameState>((set, get) => ({
       );
     }, 0);
   },
+
+  updateEnemyPositions: (enemyMoves) => {
+    set((state) => {
+      const updatedEnemies = state.enemies.map((enemy) => {
+        const move = enemyMoves.find((m) => m.id === enemy.id);
+        if (move) {
+          // Apply map boundary constraints
+          const constrainedPosition = enforceMapBoundaries(move.newPosition);
+          return {
+            ...enemy,
+            position: constrainedPosition,
+          };
+        }
+        return enemy;
+      });
+
+      return { enemies: updatedEnemies };
+    });
+  },
 }));
+
+// Helper function to keep entities within map boundaries
+const enforceMapBoundaries = (
+  position: [number, number, number]
+): [number, number, number] => {
+  const mapSize = 100; // Ground plane size
+  const halfMapSize = mapSize / 2;
+  const buffer = 2; // Buffer from edge
+
+  const constrainedPosition: [number, number, number] = [...position];
+
+  // Constrain X position
+  if (constrainedPosition[0] < -halfMapSize + buffer) {
+    constrainedPosition[0] = -halfMapSize + buffer;
+  } else if (constrainedPosition[0] > halfMapSize - buffer) {
+    constrainedPosition[0] = halfMapSize - buffer;
+  }
+
+  // Constrain Z position
+  if (constrainedPosition[2] < -halfMapSize + buffer) {
+    constrainedPosition[2] = -halfMapSize + buffer;
+  } else if (constrainedPosition[2] > halfMapSize - buffer) {
+    constrainedPosition[2] = halfMapSize - buffer;
+  }
+
+  return constrainedPosition;
+};
