@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
@@ -22,6 +22,7 @@ const EnemyProjectile = ({
 }: EnemyProjectileProps) => {
   const projectileRef = useRef<Mesh>(null);
   const hasCollidedRef = useRef(false);
+  const initialPosRef = useRef(new Vector3(...position));
 
   // Access only the takeDamage function
   const takeDamage = useGameState((state) => state.takeDamage);
@@ -31,6 +32,24 @@ const EnemyProjectile = ({
 
   // Get direct store access
   const getState = useRef(useGameState.getState).current;
+
+  // Cache obstacle data for collision detection to avoid recreating in each frame
+  const obstacleCollisionData = useMemo(() => 
+    terrainObstacles.map(obstacle => ({
+      position: new Vector3(...obstacle.position),
+      radius: obstacle.type === "rock" ? obstacle.size : obstacle.size * 1.5
+    })), [terrainObstacles]);
+
+  // Store movement direction to avoid recomputing each frame
+  const movementDirection = useMemo(() => {
+    return new Vector3(Math.sin(rotation), 0, Math.cos(rotation));
+  }, [rotation]);
+
+  // Constants
+  const SPEED = 12;
+  const MAP_SIZE = 50;
+  const MAX_DISTANCE = 50;
+  const PLAYER_COLLISION_RADIUS = 1.8;
 
   // Projectile movement and collision detection
   useFrame((state, delta) => {
@@ -42,92 +61,55 @@ const EnemyProjectile = ({
     )
       return;
 
-    const speed = 12; // Slightly slower than player projectiles
-
+    // Get current position as a Vector3 for easier calculations
+    const currentPos = projectileRef.current.position;
+    
     // Move projectile in the direction of rotation
-    projectileRef.current.position.x += Math.sin(rotation) * delta * speed;
-    projectileRef.current.position.z += Math.cos(rotation) * delta * speed;
+    currentPos.addScaledVector(movementDirection, delta * SPEED);
 
     // Check map boundaries - Ground is 100x100 centered at origin
-    const mapSize = 50; // Half of the total ground size (100/2)
     if (
-      Math.abs(projectileRef.current.position.x) > mapSize ||
-      Math.abs(projectileRef.current.position.z) > mapSize
+      Math.abs(currentPos.x) > MAP_SIZE ||
+      Math.abs(currentPos.z) > MAP_SIZE
     ) {
-      debug.log(`Enemy projectile ${id} reached map boundary`);
       onRemove(id);
       return;
     }
 
     // Remove projectile if it's too far away
-    const distance = new Vector3(
-      projectileRef.current.position.x - position[0],
-      0,
-      projectileRef.current.position.z - position[2]
-    ).length();
-
-    if (distance > 50) {
+    const distance = currentPos.distanceTo(initialPosRef.current);
+    if (distance > MAX_DISTANCE) {
       onRemove(id);
       return;
     }
 
-    // Check for collisions with terrain obstacles
-    const projectilePos = new Vector3(
-      projectileRef.current.position.x,
-      projectileRef.current.position.y,
-      projectileRef.current.position.z
-    );
+    // Check for collisions with terrain obstacles using the cached data
+    for (const obstacle of obstacleCollisionData) {
+      const distanceToObstacle = obstacle.position.distanceTo(currentPos);
 
-    for (const obstacle of terrainObstacles) {
-      const obstaclePos = new Vector3(...obstacle.position);
-      const distanceToObstacle = obstaclePos.distanceTo(projectilePos);
-      const collisionRadius =
-        obstacle.type === "rock" ? obstacle.size : obstacle.size * 1.5;
-
-      if (distanceToObstacle < collisionRadius) {
+      if (distanceToObstacle < obstacle.radius) {
         if (!hasCollidedRef.current) {
           hasCollidedRef.current = true;
-          debug.log(
-            `Enemy projectile hit terrain obstacle at distance ${distanceToObstacle.toFixed(
-              2
-            )}`
-          );
           onRemove(id);
-          break;
+          return;
         }
       }
     }
 
-    if (hasCollidedRef.current) return;
-
     // Get fresh player position data
     const playerTankPosition = getState().playerTankPosition;
-
     if (!playerTankPosition) return;
 
     // Check for collision with player
     const playerPos = new Vector3(...playerTankPosition);
-    const distanceToPlayer = playerPos.distanceTo(projectilePos);
+    const distanceToPlayer = playerPos.distanceTo(currentPos);
 
-    // Player has a larger collision radius
-    const collisionRadius = 1.8;
-
-    if (distanceToPlayer < collisionRadius) {
+    if (distanceToPlayer < PLAYER_COLLISION_RADIUS) {
       if (!hasCollidedRef.current) {
         hasCollidedRef.current = true;
-        debug.log(
-          `Enemy projectile ${id} hit player at distance ${distanceToPlayer.toFixed(
-            2
-          )}`
-        );
-
-        // Apply damage to the player
+        debug.log(`Enemy projectile hit player at distance ${distanceToPlayer.toFixed(2)}`);
         takeDamage(damage);
-
-        // Remove the projectile
         onRemove(id);
-
-        debug.log(`Applied ${damage} damage to player`);
       }
     }
   });
