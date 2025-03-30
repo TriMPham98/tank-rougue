@@ -9,6 +9,7 @@ import Projectile from "./Projectile";
 import SniperRifle from "./SniperRifle"; // Make sure the import path is correct
 import Shotgun from "./Shotgun"; // Import the Shotgun component
 import LaserWeapon from "./LaserWeapon"; // Import the LaserWeapon component
+import RocketLauncher from "./RocketLauncher"; // Import the RocketLauncher component
 
 interface TankProps {
   position: [number, number, number];
@@ -56,21 +57,27 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   );
   const shotguns = selectedWeapons.filter((weapon) => weapon.id === "shotgun");
   const lasers = selectedWeapons.filter((weapon) => weapon.id === "laser");
+  const rocketLaunchers = selectedWeapons.filter(
+    (weapon) => weapon.id === "rocket"
+  ); // Add rocket launchers
 
   const numSniperRifles = sniperRifles.length;
   const numShotguns = shotguns.length;
   const numLasers = lasers.length;
+  const numRocketLaunchers = rocketLaunchers.length; // Count rocket launchers
 
   // --- Centering Logic ---
   // Calculate the total width occupied by the weapons
   const totalSniperWidth = (numSniperRifles - 1) * SECONDARY_WEAPON_SPACING;
   const totalShotgunWidth = (numShotguns - 1) * SECONDARY_WEAPON_SPACING;
   const totalLaserWidth = (numLasers - 1) * SECONDARY_WEAPON_SPACING;
+  const totalRocketWidth = (numRocketLaunchers - 1) * SECONDARY_WEAPON_SPACING; // Add width for rocket launchers
 
   // Calculate the starting offset (most left position) to center each group
   const sniperStartOffset = -totalSniperWidth / 2;
   const shotgunStartOffset = -totalShotgunWidth / 2;
   const laserStartOffset = -totalLaserWidth / 2;
+  const rocketStartOffset = -totalRocketWidth / 2; // Starting offset for rocket launchers
   // --- End Centering Logic ---
 
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
@@ -225,6 +232,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     }
   }, [lasers.length]); // Log when laser count changes
 
+  useEffect(() => {
+    if (rocketLaunchers.length > 0) {
+      debug.log(`Rocket launchers equipped: ${rocketLaunchers.length}`);
+    }
+  }, [rocketLaunchers.length]); // Log when rocket launcher count changes
+
   return (
     <>
       <group ref={tankRef}>
@@ -320,6 +333,23 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         return (
           <LaserWeapon
             key={weapon.instanceId || `laser-${index}`}
+            tankPosition={positionRef.current}
+            tankRotation={tankRotationRef.current}
+            weaponInstance={weapon}
+            positionOffset={currentOffset}
+          />
+        );
+      })}
+
+      {/* Render rocket launchers with calculated centered offsets */}
+      {rocketLaunchers.map((weapon, index) => {
+        // Calculate the specific offset for this weapon instance
+        const currentOffset =
+          rocketStartOffset + index * SECONDARY_WEAPON_SPACING;
+
+        return (
+          <RocketLauncher
+            key={weapon.instanceId || `rocket-${index}`}
             tankPosition={positionRef.current}
             tankRotation={tankRotationRef.current}
             weaponInstance={weapon}
