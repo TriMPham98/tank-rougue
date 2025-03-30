@@ -56,6 +56,14 @@ interface GameState {
   enemiesDefeated: number;
   enemiesRequiredForNextLevel: number;
 
+  // Safe zone (PUBG-like circle)
+  safeZoneRadius: number;
+  safeZoneCenter: [number, number];
+  safeZoneTargetRadius: number;
+  safeZoneShrinkRate: number;
+  safeZoneDamage: number;
+  safeZoneActive: boolean;
+
   // Upgrade system
   showUpgradeUI: boolean;
   availableUpgrades: UpgradeableStat[];
@@ -126,6 +134,14 @@ export const useGameState = create<GameState>((set, get) => ({
   level: 1,
   enemiesDefeated: 0,
   enemiesRequiredForNextLevel: 1, // Changed: Initial threshold - level 1 only needs 1 enemy
+
+  // Safe zone (PUBG-like circle)
+  safeZoneRadius: 50, // Initial radius covers the whole map
+  safeZoneCenter: [0, 0], // Center of the map
+  safeZoneTargetRadius: 50, // Target radius for shrinking
+  safeZoneShrinkRate: 0.05, // How fast the circle shrinks
+  safeZoneDamage: 1, // Damage per second outside the safe zone
+  safeZoneActive: false, // Safe zone not active initially
 
   // Upgrade system
   showUpgradeUI: false,
@@ -257,6 +273,14 @@ export const useGameState = create<GameState>((set, get) => ({
       showWeaponSelection: false,
       availableWeapons,
       selectedWeapons: [],
+
+      // Reset safe zone
+      safeZoneRadius: 50,
+      safeZoneCenter: [0, 0],
+      safeZoneTargetRadius: 50,
+      safeZoneShrinkRate: 0.05,
+      safeZoneDamage: 1,
+      safeZoneActive: false,
     }),
 
   togglePause: () =>
@@ -316,6 +340,23 @@ export const useGameState = create<GameState>((set, get) => ({
       const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
       const availableUpgrades = shuffled.slice(0, 3);
 
+      // Adjust safe zone for the new level
+      const maxRadius = 50;
+      const minRadius = 10;
+      const radiusDecrease = 5;
+
+      // Calculate new target radius for the circle
+      const newTargetRadius = Math.max(
+        minRadius,
+        maxRadius - (newLevel - 1) * radiusDecrease
+      );
+
+      // Increase damage outside safe zone as levels progress
+      const baseDamage = 1;
+      const damageIncreasePerLevel = 0.5;
+      const newSafeZoneDamage =
+        baseDamage + (newLevel - 1) * damageIncreasePerLevel;
+
       return {
         level: newLevel,
         playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
@@ -323,6 +364,11 @@ export const useGameState = create<GameState>((set, get) => ({
         enemiesRequiredForNextLevel: nextLevelRequirement,
         showUpgradeUI: true, // Show upgrade UI after level up
         availableUpgrades, // Set available upgrades
+
+        // Update safe zone parameters
+        safeZoneTargetRadius: newTargetRadius,
+        safeZoneActive: true,
+        safeZoneDamage: newSafeZoneDamage,
       };
     }),
 

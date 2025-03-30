@@ -5,6 +5,7 @@ import EnemyTank from "../models/EnemyTank";
 import PowerUpItem from "../models/PowerUpItem";
 import Ground from "../models/Ground";
 import TerrainObstacle from "../models/TerrainObstacle";
+import SafeZone from "../models/SafeZone";
 import {
   Suspense,
   useRef,
@@ -197,6 +198,9 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 
       {/* Player spotlight with its own updater component */}
       <SpotlightUpdater />
+
+      {/* Safe Zone (PUBG-like circle) */}
+      <SafeZone />
 
       {/* Player tank - use the memoized instance */}
       {playerTank}

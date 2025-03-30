@@ -1,12 +1,15 @@
 import { useGameState } from "../utils/gameState";
 import "../assets/GameUI.css";
 import { UpgradeableStat } from "../utils/gameState";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
 import "./WeaponSelection.css";
 
 const GameUI = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isOutsideSafeZone, setIsOutsideSafeZone] = useState(false);
+  const warningOpacityRef = useRef(0);
+  const warningAnimationRef = useRef(0);
 
   const {
     playerHealth,
@@ -33,6 +36,12 @@ const GameUI = () => {
     selectedWeapons,
     selectWeapon,
     closeWeaponSelection,
+    // Safe zone properties
+    safeZoneActive,
+    safeZoneRadius,
+    safeZoneCenter,
+    playerTankPosition,
+    enemies, // Get enemies from state for minimap
   } = useGameState();
 
   // Check for weapon selection opportunity when level changes
@@ -235,8 +244,167 @@ const GameUI = () => {
     );
   };
 
+  // Check if player is outside the safe zone
+  useEffect(() => {
+    if (!safeZoneActive || !playerTankPosition) {
+      setIsOutsideSafeZone(false);
+      return;
+    }
+
+    // Calculate 2D distance from player to safe zone center
+    const playerPosition2D = [playerTankPosition[0], playerTankPosition[2]];
+    const centerPosition = [safeZoneCenter[0], safeZoneCenter[1]];
+
+    const distance = Math.sqrt(
+      Math.pow(playerPosition2D[0] - centerPosition[0], 2) +
+        Math.pow(playerPosition2D[1] - centerPosition[1], 2)
+    );
+
+    // Only update state if the outside status has changed
+    const isOutside = distance > safeZoneRadius;
+    if (isOutside !== isOutsideSafeZone) {
+      setIsOutsideSafeZone(isOutside);
+    }
+  }, [
+    playerTankPosition,
+    safeZoneRadius,
+    safeZoneCenter,
+    safeZoneActive,
+    isOutsideSafeZone,
+  ]);
+
+  // Animate warning opacity
+  useEffect(() => {
+    if (!isOutsideSafeZone) {
+      warningOpacityRef.current = 0;
+      cancelAnimationFrame(warningAnimationRef.current);
+      return;
+    }
+
+    let startTime: number;
+    const duration = 1000; // 1 second for full animation cycle
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+
+      // Oscillate between 0.3 and 0.7 opacity
+      warningOpacityRef.current =
+        0.3 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 5;
+
+      // Continue animation
+      warningAnimationRef.current = requestAnimationFrame(animate);
+    };
+
+    warningAnimationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(warningAnimationRef.current);
+    };
+  }, [isOutsideSafeZone]);
+
+  // Create a minimap to show player position and safe zone
+  const renderMinimap = useCallback(() => {
+    const mapSize = 100; // Size in pixels
+    const gameWorldSize = 100; // Map represents -50 to +50 in the game world
+
+    // Calculate player position on minimap (centered)
+    const playerX = playerTankPosition
+      ? ((playerTankPosition[0] + gameWorldSize / 2) / gameWorldSize) * mapSize
+      : mapSize / 2;
+    const playerY = playerTankPosition
+      ? ((playerTankPosition[2] + gameWorldSize / 2) / gameWorldSize) * mapSize
+      : mapSize / 2;
+
+    // Calculate safe zone on minimap
+    const safeZoneCenterX =
+      ((safeZoneCenter[0] + gameWorldSize / 2) / gameWorldSize) * mapSize;
+    const safeZoneCenterY =
+      ((safeZoneCenter[1] + gameWorldSize / 2) / gameWorldSize) * mapSize;
+    const safeZoneRadiusPixels = (safeZoneRadius / gameWorldSize) * mapSize;
+
+    return (
+      <div
+        className="minimap"
+        style={{
+          position: "absolute",
+          bottom: "10px",
+          right: "10px",
+          width: `${mapSize}px`,
+          height: `${mapSize}px`,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          border: "2px solid #666",
+          borderRadius: "5px",
+          zIndex: 100,
+        }}>
+        {/* Safe zone circle */}
+        {safeZoneActive && (
+          <div
+            style={{
+              position: "absolute",
+              top: `${safeZoneCenterY - safeZoneRadiusPixels}px`,
+              left: `${safeZoneCenterX - safeZoneRadiusPixels}px`,
+              width: `${safeZoneRadiusPixels * 2}px`,
+              height: `${safeZoneRadiusPixels * 2}px`,
+              borderRadius: "50%",
+              border: "2px solid #33ccff",
+              backgroundColor: "rgba(51, 153, 255, 0.3)",
+            }}
+          />
+        )}
+
+        {/* Enemy indicators */}
+        {enemies.map((enemy) => {
+          const enemyX =
+            ((enemy.position[0] + gameWorldSize / 2) / gameWorldSize) * mapSize;
+          const enemyY =
+            ((enemy.position[2] + gameWorldSize / 2) / gameWorldSize) * mapSize;
+
+          return (
+            <div
+              key={`minimap-enemy-${enemy.id}`}
+              style={{
+                position: "absolute",
+                top: `${enemyY - 2}px`,
+                left: `${enemyX - 2}px`,
+                width: "4px",
+                height: "4px",
+                backgroundColor: "red",
+                borderRadius: "50%",
+                zIndex: 102,
+              }}
+            />
+          );
+        })}
+
+        {/* Player indicator */}
+        <div
+          style={{
+            position: "absolute",
+            top: `${playerY - 3}px`,
+            left: `${playerX - 3}px`,
+            width: "6px",
+            height: "6px",
+            backgroundColor: "green",
+            borderRadius: "50%",
+            zIndex: 101,
+          }}
+        />
+      </div>
+    );
+  }, [
+    playerTankPosition,
+    safeZoneRadius,
+    safeZoneCenter,
+    safeZoneActive,
+    enemies,
+  ]);
+
   return (
     <div className="game-ui">
+      {/* Minimap */}
+      {!isGameOver && !isPaused && renderMinimap()}
+
       {/* Top HUD */}
       <div
         className="top-hud"
@@ -481,6 +649,28 @@ const GameUI = () => {
                 textAlign: "center",
               }}></div>
           </div>
+        </div>
+      )}
+
+      {/* Safe zone warning */}
+      {isOutsideSafeZone && (
+        <div
+          className="safe-zone-warning"
+          style={{
+            position: "absolute",
+            top: "20%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor:
+              "rgba(255, 0, 0, " + warningOpacityRef.current + ")",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            fontWeight: "bold",
+            textShadow: "0 0 5px black",
+            zIndex: 100,
+          }}>
+          WARNING: Outside Safe Zone
         </div>
       )}
 
