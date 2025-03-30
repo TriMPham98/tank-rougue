@@ -146,6 +146,9 @@ const SafeZone = () => {
           opacity={0.15}
           side={THREE.DoubleSide}
           depthWrite={false}
+          depthTest={false}
+          renderOrder={-10}
+          blending={THREE.AdditiveBlending}
         />
       </mesh>
 
@@ -158,8 +161,12 @@ const SafeZone = () => {
         <meshBasicMaterial
           color="#33ccff"
           transparent
-          opacity={0.8}
+          opacity={0.6}
           side={THREE.DoubleSide}
+          depthWrite={false}
+          depthTest={false}
+          renderOrder={-9}
+          blending={THREE.AdditiveBlending}
         />
       </mesh>
 
@@ -172,8 +179,12 @@ const SafeZone = () => {
         <meshBasicMaterial
           color="#33ccff"
           transparent
-          opacity={0.8}
+          opacity={0.6}
           side={THREE.DoubleSide}
+          depthWrite={false}
+          depthTest={false}
+          renderOrder={-9}
+          blending={THREE.AdditiveBlending}
         />
       </mesh>
 
@@ -185,7 +196,15 @@ const SafeZone = () => {
         return (
           <mesh key={`line-${index}`} position={[x, 0, z]} rotation={[0, 0, 0]}>
             <boxGeometry args={[0.2, 40, 0.2]} />
-            <meshBasicMaterial color="#33ccff" transparent opacity={0.4} />
+            <meshBasicMaterial
+              color="#33ccff"
+              transparent
+              opacity={0.3}
+              depthWrite={false}
+              depthTest={false}
+              renderOrder={-9}
+              blending={THREE.AdditiveBlending}
+            />
           </mesh>
         );
       })}

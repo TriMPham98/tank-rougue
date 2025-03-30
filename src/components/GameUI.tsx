@@ -360,16 +360,28 @@ const GameUI = () => {
           const enemyY =
             ((enemy.position[2] + gameWorldSize / 2) / gameWorldSize) * mapSize;
 
+          // Set color based on enemy type
+          let enemyColor = "red"; // Default color for tanks
+          let enemySize = 5; // Default size for tanks
+
+          if (enemy.type === "turret") {
+            enemyColor = "royalblue"; // Blue for turrets
+            enemySize = 4; // Slightly smaller for turrets
+          } else if (enemy.type === "bomber") {
+            enemyColor = "gold"; // Yellow/gold for suicide bombers
+            enemySize = 6; // Slightly larger for bombers
+          }
+
           return (
             <div
               key={`minimap-enemy-${enemy.id}`}
               style={{
                 position: "absolute",
-                top: `${enemyY - 2}px`,
-                left: `${enemyX - 2}px`,
-                width: "4px",
-                height: "4px",
-                backgroundColor: "red",
+                top: `${enemyY - enemySize / 2}px`,
+                left: `${enemyX - enemySize / 2}px`,
+                width: `${enemySize}px`,
+                height: `${enemySize}px`,
+                backgroundColor: enemyColor,
                 borderRadius: "50%",
                 zIndex: 102,
               }}
@@ -390,6 +402,20 @@ const GameUI = () => {
             zIndex: 101,
           }}
         />
+
+        {/* Minimap legend */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-25px",
+            left: "0",
+            width: "100%",
+            fontSize: "8px",
+            color: "white",
+            textAlign: "center",
+          }}>
+          Red:Tanks | Blue:Turrets | Yellow:Bombers
+        </div>
       </div>
     );
   }, [
