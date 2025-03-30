@@ -13,7 +13,7 @@ const isPositionClear = (
   z: number,
   terrainObstacles: Array<{
     position: [number, number, number];
-    type: "rock" | "tree";
+    type: "rock";
     size: number;
   }>,
   minClearance: number = 8 // Increased from 5 to 8 for better clearance

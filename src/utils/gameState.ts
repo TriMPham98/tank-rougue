@@ -83,7 +83,7 @@ interface GameState {
   terrainObstacles: Array<{
     id: string;
     position: [number, number, number];
-    type: "rock" | "tree";
+    type: "rock";
     size: number;
   }>;
 
@@ -110,7 +110,7 @@ interface GameState {
   upgradeStat: (stat: UpgradeableStat) => void; // New function to upgrade a stat
   addTerrainObstacle: (obstacle: {
     position: [number, number, number];
-    type: "rock" | "tree";
+    type: "rock";
     size: number;
   }) => void;
   removeTerrainObstacle: (id: string) => void;
@@ -128,8 +128,8 @@ export const useGameState = create<GameState>((set, get) => ({
   playerMaxHealth: 100,
   playerSpeed: 3,
   playerDamage: 25,
-  playerTurretDamage: 25, // Initialize turret damage at the same value as playerDamage
-  playerFireRate: 0.5, // 0.5 seconds between shots
+  playerTurretDamage: 100, // 4x the original value
+  playerFireRate: 2, // 1 second between shots
   playerCameraRange: 12, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
   playerBulletVelocity: 15, // Initial bullet velocity
@@ -259,8 +259,8 @@ export const useGameState = create<GameState>((set, get) => ({
       playerMaxHealth: 100,
       playerSpeed: 3,
       playerDamage: 25,
-      playerTurretDamage: 25,
-      playerFireRate: 0.5,
+      playerTurretDamage: 50, // Reset to our doubled value
+      playerFireRate: 0.665, // Reset to our 33% increased value
       playerCameraRange: 12,
       playerHealthRegen: 0,
       playerBulletVelocity: 15,

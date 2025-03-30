@@ -93,8 +93,7 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
     for (const obstacle of terrainObstacles) {
       // Type 'obstacle' inferred from terrainObstacles
       const obstaclePos = new Vector3(...obstacle.position);
-      const obstacleRadius: number =
-        obstacle.type === "tree" ? obstacle.size * 0.3 : obstacle.size * 0.75;
+      const obstacleRadius: number = obstacle.size * 0.75;
       const distanceToObstacle: number =
         currentPosition.distanceTo(obstaclePos);
 

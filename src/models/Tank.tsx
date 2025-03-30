@@ -94,8 +94,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         obstacle.position[2]
       );
       const distance = obstaclePos.distanceTo(tankPosition);
-      const obstacleRadius =
-        obstacle.type === "tree" ? obstacle.size * 0.3 : obstacle.size * 0.75;
+      const obstacleRadius = obstacle.size * 0.75;
       if (distance < tankRadius + obstacleRadius) {
         return true;
       }
