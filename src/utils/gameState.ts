@@ -369,25 +369,8 @@ export const useGameState = create<GameState>((set, get) => ({
       const newShrinkRate =
         baseShrinkRate + (newLevel - 1) * shrinkRateIncreasePerLevel;
 
-      // Randomly move the safe zone center (but not too far from the previous center)
+      // Keep the safe zone center position fixed instead of randomly moving it
       const currentCenter = state.safeZoneCenter;
-      const maxOffset = 10; // Maximum distance the center can move
-      const offsetX = (Math.random() * 2 - 1) * maxOffset;
-      const offsetY = (Math.random() * 2 - 1) * maxOffset;
-
-      // Ensure the new center stays within map boundaries
-      const mapSize = 100;
-      const halfMapSize = mapSize / 2;
-      const maxDistance = halfMapSize - newTargetRadius - 5; // 5 unit buffer from edge
-
-      const newCenterX = Math.max(
-        -maxDistance,
-        Math.min(maxDistance, currentCenter[0] + offsetX)
-      );
-      const newCenterY = Math.max(
-        -maxDistance,
-        Math.min(maxDistance, currentCenter[1] + offsetY)
-      );
 
       // If this is the first level or the safe zone wasn't active, set the current radius to max
       const newCurrentRadius = !state.safeZoneActive
@@ -404,7 +387,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
         // Update safe zone parameters
         safeZoneRadius: newCurrentRadius,
-        safeZoneCenter: [newCenterX, newCenterY],
+        safeZoneCenter: currentCenter, // Keep current center position
         safeZoneTargetRadius: newTargetRadius,
         safeZoneShrinkRate: newShrinkRate,
         safeZoneActive: true,
