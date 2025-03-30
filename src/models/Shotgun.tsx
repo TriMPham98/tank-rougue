@@ -158,7 +158,6 @@ const Shotgun: FC<ShotgunProps> = ({
           projectilesRef.current.push(newPelletData);
         }
 
-        // debug.log(...); // Optional logging
         lastShootTimeRef.current = currentTime;
       }
     }

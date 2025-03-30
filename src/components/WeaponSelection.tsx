@@ -14,8 +14,6 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
     const setupDirectEventListeners = () => {
       if (!containerRef.current) return;
 
-      console.log("Setting up direct DOM event listeners");
-
       // Find all weapon card elements
       const weaponCards = containerRef.current.querySelectorAll(".weapon-card");
 
@@ -28,13 +26,10 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
 
           // Add new direct listener
           card.addEventListener("click", (e) => {
-            console.log("Direct DOM click detected on weapon:", weapon.name);
             e.stopPropagation();
             onWeaponSelect(weapon);
             onClose();
           });
-
-          console.log(`Added direct event listener to ${weapon.name} card`);
         }
       });
 
@@ -43,7 +38,6 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
       if (cancelButton) {
         cancelButton.removeEventListener("click", () => {});
         cancelButton.addEventListener("click", (e) => {
-          console.log("Direct DOM click detected on cancel button");
           e.stopPropagation();
           onClose();
         });
@@ -55,27 +49,10 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
 
     return () => {
       clearTimeout(timeoutId);
-      console.log("Cleaned up direct DOM event listeners");
     };
   }, [availableWeapons, onWeaponSelect, onClose]);
 
-  // Add log on component mount
-  useEffect(() => {
-    console.log("WeaponSelection component mounted");
-    console.log("Current state:", state);
-    console.log("canSelect:", canSelect);
-
-    // Log the props
-    console.log("onWeaponSelect is defined:", !!onWeaponSelect);
-    console.log("onClose is defined:", !!onClose);
-
-    return () => {
-      console.log("WeaponSelection component unmounted");
-    };
-  }, []);
-
   if (!canSelect) {
-    console.log("Cannot select weapons, returning null");
     return null;
   }
 
@@ -88,15 +65,8 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("Weapon card clicked!");
-    console.log("Weapon selected:", weapon.name);
-    console.log("Calling onWeaponSelect...");
     onWeaponSelect(weapon);
-    console.log("onWeaponSelect called");
-
-    console.log("Calling onClose...");
     onClose();
-    console.log("onClose called");
 
     return false; // Prevent default
   };
@@ -105,31 +75,20 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
   const handleClose = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
-    console.log("Cancel button clicked");
-    console.log("Calling onClose from cancel button...");
     onClose();
-    console.log("onClose called from cancel button");
-
     return false; // Prevent default
   };
-
-  console.log(
-    "Rendering weapon selection with options:",
-    availableWeapons.length
-  );
 
   return (
     <div
       ref={containerRef}
       className="weapon-selection-overlay"
       onClick={(e) => {
-        console.log("Overlay clicked");
         e.stopPropagation();
       }}>
       <div
         className="weapon-selection-modal"
         onClick={(e) => {
-          console.log("Modal clicked");
           e.stopPropagation();
         }}>
         <h2>Select Secondary Weapon (Level {level})</h2>
@@ -149,10 +108,7 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
               key={weapon.id}
               className="weapon-card"
               data-weapon-id={weapon.id}
-              onClick={(e) => {
-                console.log("Click detected on weapon:", weapon.name);
-                handleWeaponSelect(weapon, e);
-              }}>
+              onClick={(e) => handleWeaponSelect(weapon, e)}>
               <h3>{weapon.name}</h3>
               <p className="weapon-description">{weapon.description}</p>
               <div className="weapon-stats">

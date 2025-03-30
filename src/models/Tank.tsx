@@ -204,7 +204,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ) {
         positionRef.current = newPosition;
         updatePlayerPosition(newPosition);
-        // debug.log("Updated position:", newPosition); // Optional: Reduce logging frequency
       }
     }
   });

@@ -54,7 +54,6 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
     const elapsedTime: number =
       (performance.now() - startTimeRef.current) / 1000;
     if (elapsedTime > ttl) {
-      // debug.log(`Pellet ${id} exceeded TTL (${ttl}s)`);
       hasCollidedRef.current = true;
       onRemove(id);
       return;
@@ -71,7 +70,6 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
       initialPositionRef.current
     );
     if (distanceTraveled > range) {
-      // debug.log(`Pellet ${id} exceeded range (${range})`);
       hasCollidedRef.current = true;
       onRemove(id);
       return;
@@ -80,26 +78,27 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
     // 4. Check Map Boundaries
     const mapSize: number = 50;
     if (
-      Math.abs(currentPosition.x) > mapSize ||
-      Math.abs(currentPosition.z) > mapSize
+      Math.abs(currentPosition.x) > mapSize / 2 ||
+      Math.abs(currentPosition.z) > mapSize / 2
     ) {
-      // debug.log(`Pellet ${id} reached map boundary`);
       hasCollidedRef.current = true;
       onRemove(id);
       return;
     }
 
-    // 5. Check Terrain Collisions
+    // 5. Check Collisions with Terrain
     for (const obstacle of terrainObstacles) {
-      // Type 'obstacle' inferred from terrainObstacles
-      const obstaclePos = new Vector3(...obstacle.position);
+      const obstaclePos = new Vector3(
+        obstacle.position[0],
+        obstacle.position[1],
+        obstacle.position[2]
+      );
       const obstacleRadius: number = obstacle.size * 0.75;
       const distanceToObstacle: number =
         currentPosition.distanceTo(obstaclePos);
 
       if (distanceToObstacle < obstacleRadius + 0.08) {
-        // Added pellet approx radius
-        // debug.log(`Pellet ${id} hit terrain obstacle ${obstacle.id}`);
+        // Collision with terrain
         hasCollidedRef.current = true;
         onRemove(id);
         return;
@@ -108,16 +107,18 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
 
     // 6. Check Enemy Collisions
     for (const enemy of enemies) {
-      // Type 'enemy' inferred from enemies
-      const enemyPos = new Vector3(...enemy.position);
+      const enemyPos = new Vector3(
+        enemy.position[0],
+        enemy.position[1],
+        enemy.position[2]
+      );
       const enemyRadius: number = enemy.type === "tank" ? 1.5 : 1.0; // Example radii
       const distanceToEnemy: number = currentPosition.distanceTo(enemyPos);
 
       if (distanceToEnemy < enemyRadius + 0.08) {
-        // Added pellet approx radius
-        // debug.log(`Pellet ${id} hit enemy ${enemy.id}`);
+        // Hit enemy, apply damage
+        damageEnemy(enemy.id, damage);
         hasCollidedRef.current = true;
-        damageEnemy(enemy.id, damage); // Call typed function
         onRemove(id);
         return;
       }
