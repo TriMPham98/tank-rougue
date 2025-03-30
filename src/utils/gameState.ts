@@ -363,6 +363,37 @@ export const useGameState = create<GameState>((set, get) => ({
       const newSafeZoneDamage =
         baseDamage + (newLevel - 1) * damageIncreasePerLevel;
 
+      // Increase shrink rate as levels progress
+      const baseShrinkRate = 0.05;
+      const shrinkRateIncreasePerLevel = 0.02;
+      const newShrinkRate =
+        baseShrinkRate + (newLevel - 1) * shrinkRateIncreasePerLevel;
+
+      // Randomly move the safe zone center (but not too far from the previous center)
+      const currentCenter = state.safeZoneCenter;
+      const maxOffset = 10; // Maximum distance the center can move
+      const offsetX = (Math.random() * 2 - 1) * maxOffset;
+      const offsetY = (Math.random() * 2 - 1) * maxOffset;
+
+      // Ensure the new center stays within map boundaries
+      const mapSize = 100;
+      const halfMapSize = mapSize / 2;
+      const maxDistance = halfMapSize - newTargetRadius - 5; // 5 unit buffer from edge
+
+      const newCenterX = Math.max(
+        -maxDistance,
+        Math.min(maxDistance, currentCenter[0] + offsetX)
+      );
+      const newCenterY = Math.max(
+        -maxDistance,
+        Math.min(maxDistance, currentCenter[1] + offsetY)
+      );
+
+      // If this is the first level or the safe zone wasn't active, set the current radius to max
+      const newCurrentRadius = !state.safeZoneActive
+        ? maxRadius
+        : state.safeZoneRadius;
+
       return {
         level: newLevel,
         playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
@@ -372,7 +403,10 @@ export const useGameState = create<GameState>((set, get) => ({
         availableUpgrades, // Set available upgrades
 
         // Update safe zone parameters
+        safeZoneRadius: newCurrentRadius,
+        safeZoneCenter: [newCenterX, newCenterY],
         safeZoneTargetRadius: newTargetRadius,
+        safeZoneShrinkRate: newShrinkRate,
         safeZoneActive: true,
         safeZoneDamage: newSafeZoneDamage,
       };

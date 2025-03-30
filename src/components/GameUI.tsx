@@ -10,6 +10,9 @@ const GameUI = () => {
   const [isOutsideSafeZone, setIsOutsideSafeZone] = useState(false);
   const warningOpacityRef = useRef(0);
   const warningAnimationRef = useRef(0);
+  const [isSafezoneWarningVisible, setIsSafezoneWarningVisible] =
+    useState(false);
+  const safeZoneShrinkWarningRef = useRef(0);
 
   const {
     playerHealth,
@@ -42,6 +45,9 @@ const GameUI = () => {
     safeZoneCenter,
     playerTankPosition,
     enemies, // Get enemies from state for minimap
+    safeZoneTargetRadius,
+    safeZoneShrinkRate,
+    safeZoneDamage,
   } = useGameState();
 
   // Check for weapon selection opportunity when level changes
@@ -273,10 +279,67 @@ const GameUI = () => {
     isOutsideSafeZone,
   ]);
 
-  // Animate warning opacity
+  // Check if the safe zone is shrinking to show warning
+  useEffect(() => {
+    if (!safeZoneActive || isGameOver || isPaused) {
+      setIsSafezoneWarningVisible(false);
+      return;
+    }
+
+    // If there's a notable difference between current radius and target radius
+    if (safeZoneRadius - safeZoneTargetRadius > 0.5) {
+      setIsSafezoneWarningVisible(true);
+
+      // Hide warning after 5 seconds
+      const timerId = setTimeout(() => {
+        setIsSafezoneWarningVisible(false);
+      }, 5000);
+
+      return () => clearTimeout(timerId);
+    } else {
+      setIsSafezoneWarningVisible(false);
+    }
+  }, [
+    safeZoneRadius,
+    safeZoneTargetRadius,
+    safeZoneActive,
+    isGameOver,
+    isPaused,
+  ]);
+
+  // Animate warning opacity for outside safe zone warning
   useEffect(() => {
     if (!isOutsideSafeZone) {
       warningOpacityRef.current = 0;
+      return;
+    }
+
+    let startTime: number;
+    const duration = 1000; // 1 second for full animation cycle
+
+    const animateOutsideWarning = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+
+      // Oscillate between 0.3 and 0.7 opacity
+      warningOpacityRef.current =
+        0.3 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 5;
+
+      // Continue animation
+      requestAnimationFrame(animateOutsideWarning);
+    };
+
+    const animationId = requestAnimationFrame(animateOutsideWarning);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [isOutsideSafeZone]);
+
+  // Animate warning opacity
+  useEffect(() => {
+    if (!isSafezoneWarningVisible) {
+      safeZoneShrinkWarningRef.current = 0;
       cancelAnimationFrame(warningAnimationRef.current);
       return;
     }
@@ -288,9 +351,9 @@ const GameUI = () => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
 
-      // Oscillate between 0.3 and 0.7 opacity
-      warningOpacityRef.current =
-        0.3 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 5;
+      // Oscillate between 0.5 and 1.0 opacity
+      safeZoneShrinkWarningRef.current =
+        0.5 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 4;
 
       // Continue animation
       warningAnimationRef.current = requestAnimationFrame(animate);
@@ -301,7 +364,7 @@ const GameUI = () => {
     return () => {
       cancelAnimationFrame(warningAnimationRef.current);
     };
-  }, [isOutsideSafeZone]);
+  }, [isSafezoneWarningVisible]);
 
   // Create a minimap to show player position and safe zone
   const renderMinimap = useCallback(() => {
@@ -339,18 +402,47 @@ const GameUI = () => {
         }}>
         {/* Safe zone circle */}
         {safeZoneActive && (
-          <div
-            style={{
-              position: "absolute",
-              top: `${safeZoneCenterY - safeZoneRadiusPixels}px`,
-              left: `${safeZoneCenterX - safeZoneRadiusPixels}px`,
-              width: `${safeZoneRadiusPixels * 2}px`,
-              height: `${safeZoneRadiusPixels * 2}px`,
-              borderRadius: "50%",
-              border: "2px solid #33ccff",
-              backgroundColor: "rgba(51, 153, 255, 0.3)",
-            }}
-          />
+          <>
+            {/* Current safe zone circle */}
+            <div
+              style={{
+                position: "absolute",
+                top: `${safeZoneCenterY - safeZoneRadiusPixels}px`,
+                left: `${safeZoneCenterX - safeZoneRadiusPixels}px`,
+                width: `${safeZoneRadiusPixels * 2}px`,
+                height: `${safeZoneRadiusPixels * 2}px`,
+                borderRadius: "50%",
+                border: "2px solid #33ccff",
+                backgroundColor: "rgba(51, 153, 255, 0.3)",
+              }}
+            />
+
+            {/* Target safe zone circle (where the safe zone will shrink to) */}
+            {safeZoneTargetRadius < safeZoneRadius && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: `${
+                    safeZoneCenterY -
+                    (safeZoneTargetRadius / gameWorldSize) * mapSize
+                  }px`,
+                  left: `${
+                    safeZoneCenterX -
+                    (safeZoneTargetRadius / gameWorldSize) * mapSize
+                  }px`,
+                  width: `${
+                    (safeZoneTargetRadius / gameWorldSize) * mapSize * 2
+                  }px`,
+                  height: `${
+                    (safeZoneTargetRadius / gameWorldSize) * mapSize * 2
+                  }px`,
+                  borderRadius: "50%",
+                  border: "1px dashed #ff5555",
+                  backgroundColor: "rgba(255, 85, 85, 0.2)",
+                }}
+              />
+            )}
+          </>
         )}
 
         {/* Enemy indicators */}
@@ -413,7 +505,44 @@ const GameUI = () => {
             fontSize: "8px",
             color: "white",
             textAlign: "center",
-          }}></div>
+          }}>
+          Map |<span style={{ color: "green" }}> ● </span>You |
+          <span style={{ color: "red" }}> ● </span>Tanks |
+          <span style={{ color: "royalblue" }}> ● </span>Turrets |
+          <span style={{ color: "gold" }}> ● </span>Bombers
+        </div>
+
+        {/* Safe zone info */}
+        {safeZoneActive && (
+          <div
+            style={{
+              position: "absolute",
+              top: "-25px",
+              left: "0",
+              width: "100%",
+              fontSize: "8px",
+              color: "white",
+              textAlign: "center",
+            }}>
+            Safe zone: {safeZoneRadius.toFixed(1)} →{" "}
+            {safeZoneTargetRadius.toFixed(1)} units
+            {safeZoneTargetRadius < safeZoneRadius && (
+              <span style={{ color: "#ff5555" }}>
+                {" "}
+                | -
+                {(
+                  (safeZoneRadius - safeZoneTargetRadius) /
+                  safeZoneShrinkRate
+                ).toFixed(0)}
+                s{" "}
+              </span>
+            )}
+            |{" "}
+            <span style={{ color: "#ff3333" }}>
+              {safeZoneDamage.toFixed(1)} dmg/s outside
+            </span>
+          </div>
+        )}
       </div>
     );
   }, [
@@ -422,6 +551,9 @@ const GameUI = () => {
     safeZoneCenter,
     safeZoneActive,
     enemies,
+    safeZoneTargetRadius,
+    safeZoneShrinkRate,
+    safeZoneDamage,
   ]);
 
   return (
@@ -695,6 +827,33 @@ const GameUI = () => {
             zIndex: 100,
           }}>
           WARNING: Outside Safe Zone
+        </div>
+      )}
+
+      {/* Safe zone shrinking warning */}
+      {isSafezoneWarningVisible && (
+        <div
+          className="safe-zone-shrinking-warning"
+          style={{
+            position: "absolute",
+            top: isOutsideSafeZone ? "30%" : "20%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor:
+              "rgba(255, 100, 0, " + safeZoneShrinkWarningRef.current + ")",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            fontWeight: "bold",
+            textShadow: "0 0 5px black",
+            zIndex: 99,
+          }}>
+          WARNING: Safe Zone Shrinking -{" "}
+          {(
+            (safeZoneRadius - safeZoneTargetRadius) /
+            safeZoneShrinkRate
+          ).toFixed(0)}
+          s Remaining
         </div>
       )}
 
