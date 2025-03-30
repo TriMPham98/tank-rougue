@@ -34,11 +34,14 @@ const EnemyProjectile = ({
   const getState = useRef(useGameState.getState).current;
 
   // Cache obstacle data for collision detection to avoid recreating in each frame
-  const obstacleCollisionData = useMemo(() => 
-    terrainObstacles.map(obstacle => ({
-      position: new Vector3(...obstacle.position),
-      radius: obstacle.type === "rock" ? obstacle.size : obstacle.size * 1.5
-    })), [terrainObstacles]);
+  const obstacleCollisionData = useMemo(
+    () =>
+      terrainObstacles.map((obstacle) => ({
+        position: new Vector3(...obstacle.position),
+        radius: obstacle.type === "rock" ? obstacle.size : obstacle.size * 1.5,
+      })),
+    [terrainObstacles]
+  );
 
   // Store movement direction to avoid recomputing each frame
   const movementDirection = useMemo(() => {
@@ -63,7 +66,7 @@ const EnemyProjectile = ({
 
     // Get current position as a Vector3 for easier calculations
     const currentPos = projectileRef.current.position;
-    
+
     // Move projectile in the direction of rotation
     currentPos.addScaledVector(movementDirection, delta * SPEED);
 
@@ -107,7 +110,11 @@ const EnemyProjectile = ({
     if (distanceToPlayer < PLAYER_COLLISION_RADIUS) {
       if (!hasCollidedRef.current) {
         hasCollidedRef.current = true;
-        debug.log(`Enemy projectile hit player at distance ${distanceToPlayer.toFixed(2)}`);
+        debug.log(
+          `Enemy projectile hit player at distance ${distanceToPlayer.toFixed(
+            2
+          )}`
+        );
         takeDamage(damage);
         onRemove(id);
       }

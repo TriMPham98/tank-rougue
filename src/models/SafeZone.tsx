@@ -191,7 +191,6 @@ const SafeZone = () => {
           side={THREE.DoubleSide}
           depthWrite={false}
           depthTest={false}
-          renderOrder={-10}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
@@ -209,7 +208,6 @@ const SafeZone = () => {
           side={THREE.DoubleSide}
           depthWrite={false}
           depthTest={false}
-          renderOrder={-9}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
@@ -227,7 +225,6 @@ const SafeZone = () => {
           side={THREE.DoubleSide}
           depthWrite={false}
           depthTest={false}
-          renderOrder={-9}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
@@ -254,7 +251,6 @@ const SafeZone = () => {
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
-              renderOrder={-8}
               blending={THREE.AdditiveBlending}
             />
           </mesh>
@@ -274,7 +270,6 @@ const SafeZone = () => {
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
-              renderOrder={-7}
               blending={THREE.AdditiveBlending}
             />
           </mesh>
@@ -294,7 +289,6 @@ const SafeZone = () => {
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
-              renderOrder={-7}
               blending={THREE.AdditiveBlending}
             />
           </mesh>
@@ -315,7 +309,6 @@ const SafeZone = () => {
               opacity={0.3}
               depthWrite={false}
               depthTest={false}
-              renderOrder={-9}
               blending={THREE.AdditiveBlending}
             />
           </mesh>
@@ -340,7 +333,6 @@ const SafeZone = () => {
                 opacity={0.25}
                 depthWrite={false}
                 depthTest={false}
-                renderOrder={-7}
                 blending={THREE.AdditiveBlending}
               />
             </mesh>
