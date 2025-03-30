@@ -260,15 +260,6 @@ export const useRespawnManager = () => {
   useEffect(() => {
     // Initialize the previous enemy count and IDs
     const initialState = useGameState.getState();
-    console.log(
-      `RESPAWN: Initial enemies count: ${initialState.enemies.length}`
-    );
-    console.log(`RESPAWN: Current level: ${initialState.level}`);
-    console.log(
-      `RESPAWN: Max enemies for level ${initialState.level}: ${getMaxEnemies(
-        initialState.level
-      )}`
-    );
 
     prevEnemyCountRef.current = initialState.enemies.length;
     prevEnemiesRef.current = initialState.enemies.map((e) => e.id);

@@ -57,27 +57,13 @@ const GameUI = () => {
       selectedWeapons.length < 3 &&
       !isGameOver
     ) {
-      console.log(
-        `Level ${level} reached, showing weapon selection. Current weapons: ${selectedWeapons.length}`
-      );
       useGameState.setState({ showWeaponSelection: true });
     }
   }, [level, isGameOver]); // Added isGameOver to dependencies
 
-  // Add log to monitor weapon selection state
+  // Monitor weapon selection state
   useEffect(() => {
-    console.log(
-      "GameUI - showWeaponSelection state changed:",
-      showWeaponSelection
-    );
-    console.log("GameUI - selectedWeapons:", selectedWeapons);
-
-    // Force check for weapon selection state - debug hack
-    if (showWeaponSelection === true) {
-      console.log("Weapon selection should be showing now");
-    } else {
-      console.log("Weapon selection should be hidden now");
-    }
+    // Empty effect for monitoring weapon selection state changes
   }, [showWeaponSelection, selectedWeapons]);
 
   // Handle keyboard shortcuts for upgrades
