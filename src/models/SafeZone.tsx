@@ -18,8 +18,11 @@ const SafeZone = () => {
     isGameOver,
   } = useGameState();
 
-  // Reference to the circle mesh
-  const circleRef = useRef<THREE.Mesh>(null);
+  // Reference to the cylinder mesh
+  const cylinderRef = useRef<THREE.Mesh>(null);
+  // References to the ring borders
+  const topRingRef = useRef<THREE.Mesh>(null);
+  const bottomRingRef = useRef<THREE.Mesh>(null);
 
   // Reference for damage tick
   const lastDamageTime = useRef(0);
@@ -85,40 +88,107 @@ const SafeZone = () => {
       }
     }
 
-    // Update the circle's scale based on the current radius ref, not state
-    if (circleRef.current) {
-      circleRef.current.scale.set(
+    // Update meshes with current radius
+    if (cylinderRef.current) {
+      // Create a new geometry with the current radius
+      if (Math.abs(cylinderRef.current.scale.x - 1) > 0.01) {
+        cylinderRef.current.scale.set(1, 1, 1);
+
+        // Replace the geometry with a new one using the current radius
+        cylinderRef.current.geometry.dispose();
+        cylinderRef.current.geometry = new THREE.CylinderGeometry(
+          currentRadiusRef.current,
+          currentRadiusRef.current,
+          40, // Height of the cylinder
+          64, // Segments around the cylinder
+          1, // Height segments
+          true // Open-ended
+        );
+      }
+    }
+
+    // Update the ring borders
+    if (topRingRef.current && bottomRingRef.current) {
+      topRingRef.current.geometry.dispose();
+      bottomRingRef.current.geometry.dispose();
+
+      // Create new ring geometries with current radius
+      const ringThickness = 0.5;
+      const newTopRingGeometry = new THREE.RingGeometry(
+        currentRadiusRef.current - ringThickness,
         currentRadiusRef.current,
-        1,
-        currentRadiusRef.current
+        64
       );
+      const newBottomRingGeometry = new THREE.RingGeometry(
+        currentRadiusRef.current - ringThickness,
+        currentRadiusRef.current,
+        64
+      );
+
+      topRingRef.current.geometry = newTopRingGeometry;
+      bottomRingRef.current.geometry = newBottomRingGeometry;
     }
   });
 
   // Missing ref declaration
   const lastRadiusUpdateTime = useRef(0);
 
-  // Create a circle geometry for visualization
-  const circleGeometry = new THREE.CircleGeometry(1, 64);
-
   return safeZoneActive ? (
-    <group position={[safeZoneCenter[0], 0.1, safeZoneCenter[1]]}>
-      {/* Safe zone visualization */}
-      <mesh
-        ref={circleRef}
-        rotation={[-Math.PI / 2, 0, 0]} // Rotate to lay flat on the ground
-        scale={[safeZoneRadius, 1, safeZoneRadius]}>
-        <primitive object={circleGeometry} attach="geometry" />
-        <meshBasicMaterial color="#3399ff" transparent opacity={0.2} />
+    <group position={[safeZoneCenter[0], 20, safeZoneCenter[1]]}>
+      {/* Safe zone visualization - cylindrical zone */}
+      <mesh ref={cylinderRef} position={[0, 0, 0]}>
+        <cylinderGeometry
+          args={[safeZoneRadius, safeZoneRadius, 40, 64, 1, true]}
+        />
+        <meshBasicMaterial
+          color="#3399ff"
+          transparent
+          opacity={0.15}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
       </mesh>
 
-      {/* Safe zone border */}
+      {/* Top circle border */}
       <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        scale={[safeZoneRadius, 1, safeZoneRadius]}>
-        <ringGeometry args={[0.98, 1, 64]} />
-        <meshBasicMaterial color="#33ccff" transparent opacity={0.8} />
+        ref={topRingRef}
+        position={[0, 20, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
+        <meshBasicMaterial
+          color="#33ccff"
+          transparent
+          opacity={0.8}
+          side={THREE.DoubleSide}
+        />
       </mesh>
+
+      {/* Bottom circle border */}
+      <mesh
+        ref={bottomRingRef}
+        position={[0, -20, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
+        <meshBasicMaterial
+          color="#33ccff"
+          transparent
+          opacity={0.8}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Add vertical lines connecting the circles */}
+      {Array.from({ length: 16 }).map((_, index) => {
+        const angle = (index / 16) * Math.PI * 2;
+        const x = Math.sin(angle) * safeZoneRadius;
+        const z = Math.cos(angle) * safeZoneRadius;
+        return (
+          <mesh key={`line-${index}`} position={[x, 0, z]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.2, 40, 0.2]} />
+            <meshBasicMaterial color="#33ccff" transparent opacity={0.4} />
+          </mesh>
+        );
+      })}
     </group>
   ) : null;
 };
