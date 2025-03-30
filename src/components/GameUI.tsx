@@ -413,9 +413,7 @@ const GameUI = () => {
             fontSize: "8px",
             color: "white",
             textAlign: "center",
-          }}>
-          Red:Tanks | Blue:Turrets | Yellow:Bombers
-        </div>
+          }}></div>
       </div>
     );
   }, [
