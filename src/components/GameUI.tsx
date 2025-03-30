@@ -208,37 +208,17 @@ const GameUI = () => {
 
   // Add a failsafe for weapon selection UI rendering
   const renderWeaponSelection = () => {
-    console.log(
-      "renderWeaponSelection called, showWeaponSelection=",
-      showWeaponSelection
-    );
     if (!showWeaponSelection || isGameOver) {
-      console.log(
-        "Not rendering weapon selection because showWeaponSelection is false or game is over"
-      );
       return null;
     }
 
-    console.log("Rendering WeaponSelection component");
     return (
       <WeaponSelection
         onWeaponSelect={(weapon) => {
-          console.log("Weapon selected in GameUI:", weapon.name);
           selectWeapon(weapon);
-          console.log("selectWeapon called, checking state:");
-          console.log(
-            "showWeaponSelection after selection:",
-            useGameState.getState().showWeaponSelection
-          );
         }}
         onClose={() => {
-          console.log("onClose called in GameUI");
           closeWeaponSelection();
-          console.log("closeWeaponSelection called, checking state:");
-          console.log(
-            "showWeaponSelection after close:",
-            useGameState.getState().showWeaponSelection
-          );
         }}
         state={{
           availableWeapons,
