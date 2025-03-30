@@ -190,7 +190,6 @@ export const generateEnemies = (
 ): Omit<Enemy, "id">[] => {
   // Handle level 1 specially - always create exactly 1 enemy
   if (level === 1) {
-    console.log("LEVELGEN: Level 1 - Forcing exactly 1 enemy");
     const enemyCount = 1;
     const gridSize = Math.min(40 + level * 2, 70);
 
@@ -224,9 +223,6 @@ export const generateEnemies = (
     Math.floor(baseEnemyCount + Math.sqrt(level) * 2),
     maxEnemies
   );
-
-  // Debug logging for enemy count
-  console.log(`LEVELGEN: Level ${level} - Generating ${enemyCount} enemies`);
 
   // Adjust grid size based on level to make early levels more manageable
   const gridSize = Math.min(40 + level * 2, 70);
