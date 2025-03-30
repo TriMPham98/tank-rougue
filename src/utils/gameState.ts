@@ -266,8 +266,8 @@ export const useGameState = create<GameState>((set, get) => ({
 
   incrementEnemyDefeatCount: () => {
     set((state) => {
-      // If upgrade UI is already showing, don't trigger another level up
-      if (state.showUpgradeUI) {
+      // If upgrade UI is already showing or game is over, don't trigger another level up
+      if (state.showUpgradeUI || state.isGameOver) {
         return state;
       }
 
@@ -280,7 +280,7 @@ export const useGameState = create<GameState>((set, get) => ({
         setTimeout(() => {
           // Check again to make sure UI isn't already showing before advancing
           const currentState = get();
-          if (!currentState.showUpgradeUI) {
+          if (!currentState.showUpgradeUI && !currentState.isGameOver) {
             get().advanceLevel();
           }
         }, 500); // Give a small delay before advancing level
@@ -292,6 +292,11 @@ export const useGameState = create<GameState>((set, get) => ({
 
   advanceLevel: () =>
     set((state) => {
+      // Don't advance level if game is over
+      if (state.isGameOver) {
+        return state;
+      }
+
       const newLevel = state.level + 1;
 
       // Modified: Always require only 1 enemy per level for faster debugging

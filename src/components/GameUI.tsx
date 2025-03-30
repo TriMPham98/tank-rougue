@@ -37,13 +37,17 @@ const GameUI = () => {
 
   // Check for weapon selection opportunity when level changes
   useEffect(() => {
-    if ([5, 10, 15].includes(level) && selectedWeapons.length < 3) {
+    if (
+      [5, 10, 15].includes(level) &&
+      selectedWeapons.length < 3 &&
+      !isGameOver
+    ) {
       console.log(
         `Level ${level} reached, showing weapon selection. Current weapons: ${selectedWeapons.length}`
       );
       useGameState.setState({ showWeaponSelection: true });
     }
-  }, [level]); // Changed: Removed selectedWeapons.length from dependencies
+  }, [level, isGameOver]); // Added isGameOver to dependencies
 
   // Add log to monitor weapon selection state
   useEffect(() => {
@@ -193,9 +197,9 @@ const GameUI = () => {
       "renderWeaponSelection called, showWeaponSelection=",
       showWeaponSelection
     );
-    if (!showWeaponSelection) {
+    if (!showWeaponSelection || isGameOver) {
       console.log(
-        "Not rendering weapon selection because showWeaponSelection is false"
+        "Not rendering weapon selection because showWeaponSelection is false or game is over"
       );
       return null;
     }
@@ -357,7 +361,7 @@ const GameUI = () => {
       </div>
 
       {/* Upgrade UI Overlay */}
-      {showUpgradeUI && (
+      {showUpgradeUI && !isGameOver && (
         <div className="overlay">
           <div
             className="upgrade-content"

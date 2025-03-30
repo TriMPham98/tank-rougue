@@ -94,12 +94,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   useEffect(() => {
     if (playerHealthRegen <= 0) return;
     const interval = setInterval(() => {
-      if (!isPaused) {
+      if (!isPaused && !isGameOver) {
         healPlayer(playerHealthRegen);
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [playerHealthRegen, healPlayer, isPaused]);
+  }, [playerHealthRegen, healPlayer, isPaused, isGameOver]);
 
   useEffect(() => {
     if (tankRef.current && !isInitializedRef.current) {
