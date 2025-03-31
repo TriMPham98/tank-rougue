@@ -1,18 +1,100 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react"; // Added useEffect
 import { useFrame } from "@react-three/fiber";
-import { Sphere, Box } from "@react-three/drei";
-import { Mesh, Vector3 } from "three";
+import { Sphere, Box, Cylinder } from "@react-three/drei"; // Added Cylinder
+import { Mesh, Vector3, MeshStandardMaterial, Color, Group } from "three"; // Added Group, MeshStandardMaterial, Color
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
+
+// --- Explosion Effect Component (Defined within the same file) ---
+
+interface ExplosionEffectProps {
+  position: Vector3;
+  size?: number;
+  duration?: number;
+  color?: string;
+  onComplete: () => void;
+}
+
+const ExplosionEffect = ({
+  position,
+  size = 5, // Corresponds roughly to splash radius / 2
+  duration = 0.4, // Short duration
+  color = "#FFA500", // Orange
+  onComplete,
+}: ExplosionEffectProps) => {
+  const meshRef = useRef<Mesh>(null);
+  const materialRef = useRef<MeshStandardMaterial>(null);
+  const startTimeRef = useRef<number | null>(null);
+
+  useFrame(({ clock }) => {
+    if (!meshRef.current || !materialRef.current) return;
+
+    if (startTimeRef.current === null) {
+      startTimeRef.current = clock.elapsedTime;
+    }
+
+    const elapsedTime = clock.elapsedTime - startTimeRef.current;
+    const progress = Math.min(elapsedTime / duration, 1); // 0 to 1
+
+    // Expand
+    const currentScale = progress * size;
+    meshRef.current.scale.set(currentScale, currentScale, currentScale);
+
+    // Fade out
+    materialRef.current.opacity = 1.0 - progress;
+
+    // Make emissive fade as well
+    materialRef.current.emissiveIntensity = (1.0 - progress) * 3;
+
+    // Clean up when done
+    if (progress >= 1) {
+      onComplete();
+    }
+  });
+
+  // Ensure cleanup if component unmounts prematurely
+  useEffect(() => {
+    // console.log("ExplosionEffect mounted"); // Debug Mount
+    return () => {
+      // console.log("ExplosionEffect unmounting"); // Debug Unmount
+      // Optional: If immediate cleanup is needed without waiting for animation
+      // onComplete();
+    };
+  }, [onComplete]); // Dependency array includes onComplete
+
+  return (
+    <group position={position}>
+      <Sphere ref={meshRef} args={[1, 16, 16]} scale={[0.01, 0.01, 0.01]}>
+        {/* Start small */}
+        <meshStandardMaterial
+          ref={materialRef}
+          color={color}
+          emissive={new Color(color)} // Make it glow
+          emissiveIntensity={3}
+          transparent={true}
+          opacity={1.0}
+          depthWrite={false} // Often looks better for transparent effects
+        />
+      </Sphere>
+      {/* Optional: Add a point light for effect */}
+      <pointLight color={color} intensity={2} distance={size * 1.5} decay={2} />
+    </group>
+  );
+};
+
+// --- Rocket Projectile Component ---
 
 interface RocketProjectileProps {
   id: string;
   position: [number, number, number];
   rotation: number;
   damage: number;
-  targetId: string | null; // The ID of the enemy to track
+  targetId: string | null;
   onRemove: (id: string) => void;
 }
+
+// Ground level - adjust if your ground isn't at Y=0
+const GROUND_Y_LEVEL = 0.1;
 
 const RocketProjectile = ({
   id,
@@ -22,15 +104,21 @@ const RocketProjectile = ({
   targetId,
   onRemove,
 }: RocketProjectileProps) => {
-  const projectileRef = useRef<Mesh>(null);
-  const hasExplodedRef = useRef(false);
-  const initialPositionRef = useRef<[number, number, number]>([...position]);
+  const projectileGroupRef = useRef<Group>(null); // Ref the outer group for position/rotation
+  const visualGroupRef = useRef<Group>(null); // Ref the inner group for pitch rotation
+  const hasExplodedRef = useRef(false); // Tracks if explosion logic ran
+  const initialPositionRef = useRef<Vector3>(new Vector3(...position));
   const distanceTraveledRef = useRef(0);
   const ageRef = useRef(0);
 
+  // State for managing explosion visual
+  const [isExploding, setIsExploding] = useState(false);
+  const [explosionPosition, setExplosionPosition] = useState<Vector3 | null>(
+    null
+  );
+
   // Arc parameters
-  const maxHeight = 5; // Maximum height of the parabolic arc
-  const heightRef = useRef(position[1]); // Current height, starts at initial position
+  const maxHeight = 5;
 
   // Access state functions
   const damageEnemy = useGameState((state) => state.damageEnemy);
@@ -41,280 +129,312 @@ const RocketProjectile = ({
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
-  // Get direct access to the store for latest enemy positions
   const getState = useRef(useGameState.getState).current;
 
-  // Splash damage radius
   const splashRadius = 10;
 
-  // Explode function for applying splash damage
-  const explode = () => {
-    if (hasExplodedRef.current || !projectileRef.current) return;
-
-    hasExplodedRef.current = true;
-
-    // Get explosion position
-    const explosionPos = new Vector3(
-      projectileRef.current.position.x,
-      projectileRef.current.position.y,
-      projectileRef.current.position.z
-    );
+  const explode = (explosionPos: Vector3) => {
+    // Prevent multiple explosion triggers
+    if (hasExplodedRef.current) return;
+    hasExplodedRef.current = true; // Mark as exploded IMMEDIATELY
 
     debug.log(
-      `Rocket explosion at [${explosionPos.x.toFixed(
+      `Rocket ${id} starting explosion at [${explosionPos.x.toFixed(
         2
       )}, ${explosionPos.y.toFixed(2)}, ${explosionPos.z.toFixed(
         2
       )}], radius: ${splashRadius}`
     );
 
-    // Apply splash damage to all enemies within radius
+    // Set state to render the explosion effect
+    setExplosionPosition(explosionPos.clone()); // Store the exact position
+    setIsExploding(true);
+
+    // Apply splash damage (no visual delay needed for damage calculation)
     const enemies = getState().enemies;
     let hitCount = 0;
-
     for (const enemy of enemies) {
       const enemyPos = new Vector3(...enemy.position);
       const distanceToExplosion = enemyPos.distanceTo(explosionPos);
 
       if (distanceToExplosion <= splashRadius) {
-        // Calculate damage falloff based on distance from explosion center
-        const damageFactor = 1 - distanceToExplosion / splashRadius;
+        const damageFactor = Math.max(
+          0,
+          1 - distanceToExplosion / splashRadius
+        ); // Ensure factor is not negative
         const splashDamage = damage * damageFactor;
-
         debug.log(
           `Splash damage to enemy ${enemy.id}: ${splashDamage.toFixed(
             1
           )} at distance ${distanceToExplosion.toFixed(2)}`
         );
-
-        // Apply damage to the enemy
         damageEnemy(enemy.id, splashDamage);
         hitCount++;
       }
     }
+    debug.log(`Rocket ${id} explosion hit ${hitCount} enemies`);
 
-    debug.log(`Rocket explosion hit ${hitCount} enemies`);
-
-    // Remove the projectile
-    onRemove(id);
+    // Note: onRemove(id) is NOT called here anymore.
+    // It will be called by ExplosionEffect's onComplete.
   };
 
-  // Projectile movement with parabolic trajectory
   useFrame((state, delta) => {
-    if (
-      !projectileRef.current ||
-      hasExplodedRef.current ||
-      isPaused ||
-      isGameOver
-    )
+    // If exploding, the ExplosionEffect component handles its own logic/removal
+    if (isExploding || !projectileGroupRef.current || isPaused || isGameOver) {
       return;
+    }
 
-    // Track age of projectile for arc calculation
+    // Check if already exploded (safety check)
+    if (hasExplodedRef.current) {
+      console.warn(
+        `Rocket ${id} in useFrame despite hasExplodedRef being true.`
+      );
+      onRemove(id); // Force removal
+      return;
+    }
+
     ageRef.current += delta;
-
-    // Slower velocity for rocket
     const rocketVelocity = playerBulletVelocity * 0.8;
 
-    // Basic forward movement
-    projectileRef.current.position.x +=
-      Math.sin(rotation) * delta * rocketVelocity;
-    projectileRef.current.position.z +=
-      Math.cos(rotation) * delta * rocketVelocity;
+    // Store previous position for trajectory calculations
+    const prevPosition = projectileGroupRef.current.position.clone();
 
-    // Get fresh enemy data for tracking
+    // --- Basic Movement ---
+    const moveDirection = new Vector3(
+      Math.sin(rotation),
+      0,
+      Math.cos(rotation)
+    );
+    const moveDistance = delta * rocketVelocity;
+    projectileGroupRef.current.position.addScaledVector(
+      moveDirection,
+      moveDistance
+    );
+
+    // --- Arc Calculation & Height Adjustment ---
     const enemies = getState().enemies;
     const targetEnemy = targetId
       ? enemies.find((e) => e.id === targetId)
       : null;
 
-    // Calculate progress toward target for parabolic arc
     let progress = 0;
+    let targetPosXZ: Vector3 | null = null;
 
     if (targetEnemy) {
-      const currentPos = new Vector3(
-        projectileRef.current.position.x,
-        0, // Ignore y for distance calculation
-        projectileRef.current.position.z
-      );
-
-      const targetPos = new Vector3(
+      targetPosXZ = new Vector3(
         targetEnemy.position[0],
-        0, // Ignore y for distance calculation
+        0,
         targetEnemy.position[2]
       );
-
-      const initialPos = new Vector3(
-        initialPositionRef.current[0],
-        0, // Ignore y for distance calculation
-        initialPositionRef.current[2]
-      );
-
-      const totalDistance = initialPos.distanceTo(targetPos);
-      const distanceToTarget = currentPos.distanceTo(targetPos);
-
-      // Calculate progress (0 to 1) where 1 means reached target
-      progress = 1 - distanceToTarget / totalDistance;
-
-      // Parabolic height calculation (sin curve peaking at middle of journey)
-      const heightFactor = Math.sin(progress * Math.PI);
-      heightRef.current = position[1] + maxHeight * heightFactor;
-
-      // Apply the calculated height
-      projectileRef.current.position.y = heightRef.current;
-
-      // Rotate rocket to point along trajectory
-      if (progress > 0.5) {
-        // After peak, start tilting downward
-        const tiltFactor = (progress - 0.5) * 2; // 0 to 1
-        projectileRef.current.rotation.x = (tiltFactor * Math.PI) / 2; // Tilt up to 90 degrees
-      }
-    } else {
-      // If no target, use time-based parabola
-      const flightTime = 3; // seconds for full arc
-      progress = Math.min(ageRef.current / flightTime, 1);
-
-      // Parabolic height calculation
-      const heightFactor = Math.sin(progress * Math.PI);
-      heightRef.current = position[1] + maxHeight * heightFactor;
-
-      // Apply the calculated height
-      projectileRef.current.position.y = heightRef.current;
-
-      // Rotate rocket to point along trajectory
-      if (progress > 0.5) {
-        // After peak, start tilting downward
-        const tiltFactor = (progress - 0.5) * 2; // 0 to 1
-        projectileRef.current.rotation.x = (tiltFactor * Math.PI) / 2; // Tilt up to 90 degrees
-      }
     }
 
-    // Calculate distance traveled
-    const currentPosition = new Vector3(
-      projectileRef.current.position.x,
-      projectileRef.current.position.y,
-      projectileRef.current.position.z
+    const currentPosXZ = new Vector3(
+      projectileGroupRef.current.position.x,
+      0,
+      projectileGroupRef.current.position.z
     );
-    const initialPosition = new Vector3(
-      initialPositionRef.current[0],
-      initialPositionRef.current[1],
-      initialPositionRef.current[2]
+    const initialPosXZ = new Vector3(
+      initialPositionRef.current.x,
+      0,
+      initialPositionRef.current.z
     );
-    distanceTraveledRef.current = currentPosition.distanceTo(initialPosition);
 
-    // Check map boundaries - Ground is 100x100 centered at origin
-    const mapSize = 50; // Half of the total ground size (100/2)
+    if (targetPosXZ) {
+      const totalDistance = initialPosXZ.distanceTo(targetPosXZ);
+      const distanceTraveledXZ = currentPosXZ.distanceTo(initialPosXZ);
+      progress =
+        totalDistance > 0.01
+          ? Math.min(distanceTraveledXZ / totalDistance, 1.0)
+          : 1.0;
+    } else {
+      const flightTime = 3;
+      progress = Math.min(ageRef.current / flightTime, 1);
+    }
+
+    const heightFactor = Math.sin(progress * Math.PI);
+    const calculatedY = initialPositionRef.current.y + maxHeight * heightFactor;
+    // Apply height, but ensure it doesn't go below ground during flight
+    projectileGroupRef.current.position.y = Math.max(
+      GROUND_Y_LEVEL + 0.01,
+      calculatedY
+    );
+
+    // --- Rotation Adjustment (Look along trajectory - Pitch only) ---
+    if (visualGroupRef.current) {
+      // Check if the inner group ref is available
+      const velocity = projectileGroupRef.current.position
+        .clone()
+        .sub(prevPosition);
+      if (velocity.lengthSq() > 0.0001) {
+        const horizontalVelocity = new Vector3(
+          velocity.x,
+          0,
+          velocity.z
+        ).length();
+        const angle = Math.atan2(velocity.y, horizontalVelocity);
+        visualGroupRef.current.rotation.x = -angle; // Apply pitch to the inner visual group
+      }
+    }
+    // Keep Y rotation on the outer group aligned with initial firing direction
+    projectileGroupRef.current.rotation.y = rotation;
+
+    // --- Collision and Boundary Checks ---
+    const currentPositionVec = projectileGroupRef.current.position;
+
+    // 1. Ground Collision Check
+    if (currentPositionVec.y <= GROUND_Y_LEVEL) {
+      debug.log(
+        `Rocket ${id} hit ground at Y=${currentPositionVec.y.toFixed(2)}`
+      );
+      const explosionPos = currentPositionVec.clone();
+      explosionPos.y = GROUND_Y_LEVEL + 0.1;
+      explode(explosionPos);
+      return;
+    }
+
+    // 2. Map Boundaries
+    const mapSize = 50;
     if (
-      Math.abs(projectileRef.current.position.x) > mapSize ||
-      Math.abs(projectileRef.current.position.z) > mapSize
+      Math.abs(currentPositionVec.x) > mapSize ||
+      Math.abs(currentPositionVec.z) > mapSize
     ) {
       debug.log(`Rocket ${id} reached map boundary`);
-      explode();
+      explode(currentPositionVec);
       return;
     }
 
-    // Remove projectile if it's gone too far
+    // 3. Max Range
+    distanceTraveledRef.current = currentPositionVec.distanceTo(
+      initialPositionRef.current
+    );
     if (distanceTraveledRef.current > 60) {
       debug.log(`Rocket ${id} reached max range`);
-      explode();
+      explode(currentPositionVec);
       return;
     }
 
-    // Check for collisions with terrain obstacles
-    const projectilePos = new Vector3(
-      projectileRef.current.position.x,
-      projectileRef.current.position.y,
-      projectileRef.current.position.z
-    );
-
+    // 4. Terrain Obstacles
     for (const obstacle of terrainObstacles) {
       const obstaclePos = new Vector3(...obstacle.position);
-      const distanceToObstacle = obstaclePos.distanceTo(projectilePos);
+      const distanceToObstacle = obstaclePos.distanceTo(currentPositionVec);
       const collisionRadius =
-        obstacle.type === "rock" ? obstacle.size : obstacle.size * 0.3;
+        obstacle.type === "rock" ? obstacle.size * 0.8 : obstacle.size * 0.5;
 
-      if (distanceToObstacle < collisionRadius) {
-        debug.log(`Rocket hit terrain obstacle`);
-        explode();
+      if (distanceToObstacle < collisionRadius + 0.15) {
+        // Added projectile radius
+        debug.log(`Rocket ${id} hit terrain obstacle type ${obstacle.type}`);
+        explode(currentPositionVec);
         return;
       }
     }
 
-    // Check for direct hit with enemies
+    // 5. Enemy Direct Hit
     for (const enemy of enemies) {
       const enemyPos = new Vector3(...enemy.position);
-      const distanceToEnemy = enemyPos.distanceTo(projectilePos);
+      const distanceToEnemy = enemyPos.distanceTo(currentPositionVec);
       const collisionRadius = enemy.type === "tank" ? 1.8 : 1.0;
 
-      if (distanceToEnemy < collisionRadius) {
+      if (distanceToEnemy < collisionRadius + 0.15) {
+        // Added projectile radius
         debug.log(`Direct rocket hit on enemy ${enemy.id}`);
-        explode();
+        explode(currentPositionVec);
         return;
       }
     }
 
-    // Explode when rocket hits ground (at end of arc)
-    if (progress > 0.95) {
-      debug.log(`Rocket ${id} reached target destination`);
-      explode();
+    // 6. Reached Target Destination Area (End of Arc)
+    if (progress > 0.98) {
+      debug.log(
+        `Rocket ${id} reached target destination area (progress ${progress.toFixed(
+          2
+        )})`
+      );
+      explode(currentPositionVec);
       return;
     }
   });
 
-  return (
-    <group ref={projectileRef} position={position} rotation={[0, rotation, 0]}>
-      {/* Rocket body */}
-      <Sphere args={[0.15, 8, 8]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="#FF4400" />
-      </Sphere>
-
-      {/* Rocket body */}
-      <Box args={[0.15, 0.15, 0.4]} position={[0, 0, -0.2]}>
-        <meshStandardMaterial color="#AA3300" />
-      </Box>
-
-      {/* Fins */}
-      <Box
-        args={[0.05, 0.2, 0.1]}
-        position={[0, 0.15, -0.35]}
-        rotation={[0, 0, 0]}>
-        <meshStandardMaterial color="#AA3300" />
-      </Box>
-      <Box
-        args={[0.05, 0.2, 0.1]}
-        position={[0, -0.15, -0.35]}
-        rotation={[0, 0, 0]}>
-        <meshStandardMaterial color="#AA3300" />
-      </Box>
-      <Box
-        args={[0.2, 0.05, 0.1]}
-        position={[0.15, 0, -0.35]}
-        rotation={[0, 0, 0]}>
-        <meshStandardMaterial color="#AA3300" />
-      </Box>
-      <Box
-        args={[0.2, 0.05, 0.1]}
-        position={[-0.15, 0, -0.35]}
-        rotation={[0, 0, 0]}>
-        <meshStandardMaterial color="#AA3300" />
-      </Box>
-
-      {/* Rocket flame effect */}
-      <pointLight
-        color="#FF6600"
-        intensity={1}
-        distance={2}
-        decay={2}
-        position={[0, 0, -0.5]}
+  // --- Rendering ---
+  if (isExploding && explosionPosition) {
+    // Render the effect instead of the rocket
+    return (
+      <ExplosionEffect
+        position={explosionPosition}
+        size={splashRadius * 0.7}
+        onComplete={() => onRemove(id)} // Pass the removal callback
       />
-      <Sphere args={[0.1, 8, 8]} position={[0, 0, -0.5]}>
-        <meshStandardMaterial
-          color="#FFAA00"
-          emissive="#FF6600"
-          emissiveIntensity={2}
-          transparent={true}
-          opacity={0.7}
+    );
+  }
+
+  // Otherwise, render the rocket model
+  // Use an outer group for position/yaw and an inner group for pitch
+  return (
+    <group
+      ref={projectileGroupRef}
+      position={position}
+      rotation={[0, rotation, 0]}>
+      <group ref={visualGroupRef} rotation={[0, 0, 0]}>
+        {" "}
+        {/* Inner group handles pitch */}
+        {/* Rocket Nose Cone */}
+        <Sphere args={[0.15, 8, 8]} position={[0, 0, 0.2]}>
+          <meshStandardMaterial
+            color="#FF4400"
+            metalness={0.3}
+            roughness={0.6}
+          />
+        </Sphere>
+        {/* Rocket Body */}
+        <Cylinder args={[0.15, 0.15, 0.4, 8]} position={[0, 0, 0]}>
+          <meshStandardMaterial
+            color="#AA3300"
+            metalness={0.4}
+            roughness={0.5}
+          />
+        </Cylinder>
+        {/* Fins (Simplified) */}
+        <Box
+          args={[0.05, 0.3, 0.15]}
+          position={[0.2, 0, -0.15]}
+          rotation={[0, 0, Math.PI / 12]}>
+          <meshStandardMaterial color="#AA3300" />
+        </Box>
+        <Box
+          args={[0.05, 0.3, 0.15]}
+          position={[-0.2, 0, -0.15]}
+          rotation={[0, 0, -Math.PI / 12]}>
+          <meshStandardMaterial color="#AA3300" />
+        </Box>
+        <Box
+          args={[0.3, 0.05, 0.15]}
+          position={[0, 0.2, -0.15]}
+          rotation={[Math.PI / 12, 0, 0]}>
+          <meshStandardMaterial color="#AA3300" />
+        </Box>
+        <Box
+          args={[0.3, 0.05, 0.15]}
+          position={[0, -0.2, -0.15]}
+          rotation={[-Math.PI / 12, 0, 0]}>
+          <meshStandardMaterial color="#AA3300" />
+        </Box>
+        {/* Rocket flame effect */}
+        <pointLight
+          color="#FF6600"
+          intensity={1.5}
+          distance={2}
+          decay={2}
+          position={[0, 0, -0.3]} // Behind the body
         />
-      </Sphere>
+        <Sphere args={[0.1, 8, 8]} position={[0, 0, -0.3]}>
+          <meshStandardMaterial
+            color="#FFAA00"
+            emissive="#FF6600"
+            emissiveIntensity={3}
+            transparent={true}
+            opacity={0.8}
+          />
+        </Sphere>
+      </group>
     </group>
   );
 };
