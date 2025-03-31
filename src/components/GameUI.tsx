@@ -13,6 +13,11 @@ const GameUI = () => {
   const [isSafezoneWarningVisible, setIsSafezoneWarningVisible] =
     useState(false);
   const safeZoneShrinkWarningRef = useRef(0);
+  const [safeZoneTimeRemaining, setSafeZoneTimeRemaining] = useState<
+    number | null
+  >(null);
+  const lastZoneUpdateTimeRef = useRef(0);
+  const lastZoneRadiusRef = useRef(0);
 
   const {
     playerHealth,
@@ -256,6 +261,23 @@ const GameUI = () => {
     if (safeZoneRadius - safeZoneTargetRadius > 0.5) {
       setIsSafezoneWarningVisible(true);
 
+      // Calculate seconds until safe zone closes
+      const approxTimeToClose = Math.floor(
+        (safeZoneRadius - safeZoneTargetRadius) / safeZoneShrinkRate
+      );
+
+      // Only update the time if:
+      // 1. We don't have a time yet, or
+      // 2. The current radius has changed significantly since last calculation
+      if (
+        safeZoneTimeRemaining === null ||
+        Math.abs(lastZoneRadiusRef.current - safeZoneRadius) > 0.5
+      ) {
+        setSafeZoneTimeRemaining(approxTimeToClose);
+        lastZoneRadiusRef.current = safeZoneRadius;
+        lastZoneUpdateTimeRef.current = Date.now();
+      }
+
       // Hide warning after 5 seconds
       const timerId = setTimeout(() => {
         setIsSafezoneWarningVisible(false);
@@ -264,6 +286,7 @@ const GameUI = () => {
       return () => clearTimeout(timerId);
     } else {
       setIsSafezoneWarningVisible(false);
+      setSafeZoneTimeRemaining(null);
     }
   }, [
     safeZoneRadius,
@@ -271,7 +294,40 @@ const GameUI = () => {
     safeZoneActive,
     isGameOver,
     isPaused,
+    safeZoneShrinkRate,
+    safeZoneTimeRemaining,
   ]);
+
+  // Update the countdown timer continuously
+  useEffect(() => {
+    if (
+      safeZoneTimeRemaining === null ||
+      isPaused ||
+      isGameOver ||
+      !safeZoneActive
+    ) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const elapsedSeconds =
+        (Date.now() - lastZoneUpdateTimeRef.current) / 1000;
+      const newTimeRemaining = Math.max(
+        0,
+        safeZoneTimeRemaining - elapsedSeconds
+      );
+
+      if (newTimeRemaining === 0) {
+        setSafeZoneTimeRemaining(null);
+        clearInterval(timer);
+      } else {
+        setSafeZoneTimeRemaining(safeZoneTimeRemaining - 1);
+        lastZoneUpdateTimeRef.current = Date.now();
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [safeZoneTimeRemaining, isPaused, isGameOver, safeZoneActive]);
 
   // Animate warning opacity for outside safe zone warning
   useEffect(() => {
@@ -351,6 +407,27 @@ const GameUI = () => {
     const safeZoneCenterY =
       ((safeZoneCenter[1] + gameWorldSize / 2) / gameWorldSize) * mapSize;
     const safeZoneRadiusPixels = (safeZoneRadius / gameWorldSize) * mapSize;
+
+    // Format time remaining for display
+    const formatTimeRemaining = () => {
+      if (safeZoneTimeRemaining === null) return "STABLE";
+
+      const minutes = Math.floor(safeZoneTimeRemaining / 60);
+      const seconds = Math.floor(safeZoneTimeRemaining % 60);
+      return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    };
+
+    // Get color for the countdown timer
+    const getTimerColor = () => {
+      if (safeZoneTimeRemaining === null) return "#33ccff"; // Blue for stable
+      if (safeZoneTimeRemaining > 60) return "#33ccff"; // Blue for >1 min
+      if (safeZoneTimeRemaining > 30) return "#ff9900"; // Orange for <1 min
+      return "#ff3333"; // Red for <30 sec
+    };
+
+    // Calculate current zone level based on level number
+    const zoneLevel = Math.floor(level / 5);
+    const isZoneChangeLevel = level % 5 === 0 && level > 0;
 
     return (
       <div
@@ -483,30 +560,37 @@ const GameUI = () => {
           <div
             style={{
               position: "absolute",
-              top: "-25px",
+              top: "-45px", // Moved up to accommodate countdown
               left: "0",
               width: "100%",
               fontSize: "8px",
               color: "white",
               textAlign: "center",
             }}>
-            Safe zone: {safeZoneRadius.toFixed(1)} →{" "}
-            {safeZoneTargetRadius.toFixed(1)} units
+            <div>
+              Zone: {zoneLevel > 0 ? `Level ${zoneLevel}` : "Inactive"}
+              {isZoneChangeLevel && level > 0 ? " (New)" : ""}
+            </div>
+            <div>
+              Radius: {safeZoneRadius.toFixed(1)} →{" "}
+              {safeZoneTargetRadius.toFixed(1)} units
+            </div>
             {safeZoneTargetRadius < safeZoneRadius && (
-              <span style={{ color: "#ff5555" }}>
-                {" "}
-                | -
-                {(
-                  (safeZoneRadius - safeZoneTargetRadius) /
-                  safeZoneShrinkRate
-                ).toFixed(0)}
-                s{" "}
-              </span>
+              <div
+                style={{
+                  marginTop: "3px",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                  color: getTimerColor(),
+                }}>
+                Closing in: {formatTimeRemaining()}
+              </div>
             )}
-            |{" "}
-            <span style={{ color: "#ff3333" }}>
-              {safeZoneDamage.toFixed(1)} dmg/s outside
-            </span>
+            <div style={{ marginTop: "2px" }}>
+              <span style={{ color: "#ff3333" }}>
+                {safeZoneDamage.toFixed(1)} dmg/s outside
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -520,6 +604,8 @@ const GameUI = () => {
     safeZoneTargetRadius,
     safeZoneShrinkRate,
     safeZoneDamage,
+    safeZoneTimeRemaining,
+    level,
   ]);
 
   return (
@@ -815,11 +901,9 @@ const GameUI = () => {
             zIndex: 99,
           }}>
           WARNING: Safe Zone Shrinking -{" "}
-          {(
-            (safeZoneRadius - safeZoneTargetRadius) /
-            safeZoneShrinkRate
-          ).toFixed(0)}
-          s Remaining
+          {safeZoneTimeRemaining !== null
+            ? `${Math.floor(safeZoneTimeRemaining)}s`
+            : ""}
         </div>
       )}
 

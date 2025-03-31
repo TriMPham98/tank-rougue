@@ -369,22 +369,26 @@ export const useGameState = create<GameState>((set, get) => ({
       const radiusDecrease = 4; // Decreased from 5 for less aggressive shrinking
 
       // Calculate new target radius for the circle
+      // Only reduce the zone every 5 levels
+      const zoneReductionLevel = Math.floor(newLevel / 5);
       const newTargetRadius = Math.max(
         minRadius,
-        maxRadius - (newLevel - 1) * radiusDecrease
+        maxRadius - zoneReductionLevel * radiusDecrease
       );
 
       // Increase damage outside safe zone as levels progress
       const baseDamage = 1;
       const damageIncreasePerLevel = 0.5;
+      // Only increase damage every 5 levels
       const newSafeZoneDamage =
-        baseDamage + (newLevel - 1) * damageIncreasePerLevel;
+        baseDamage + zoneReductionLevel * damageIncreasePerLevel;
 
       // Increase shrink rate as levels progress, but at a slower rate
       const baseShrinkRate = 0.02; // Reduced from 0.05
       const shrinkRateIncreasePerLevel = 0.01; // Reduced from 0.02
+      // Only increase shrink rate every 5 levels
       const newShrinkRate =
-        baseShrinkRate + (newLevel - 1) * shrinkRateIncreasePerLevel;
+        baseShrinkRate + zoneReductionLevel * shrinkRateIncreasePerLevel;
 
       // Keep the safe zone center position fixed instead of randomly moving it
       const currentCenter = state.safeZoneCenter;
@@ -393,6 +397,9 @@ export const useGameState = create<GameState>((set, get) => ({
       const newCurrentRadius = !state.safeZoneActive
         ? maxRadius
         : state.safeZoneRadius;
+
+      // Only activate the safe zone if we're at level 5 or beyond
+      const shouldActivateSafeZone = newLevel >= 5;
 
       return {
         level: newLevel,
@@ -407,7 +414,7 @@ export const useGameState = create<GameState>((set, get) => ({
         safeZoneCenter: currentCenter, // Keep current center position
         safeZoneTargetRadius: newTargetRadius,
         safeZoneShrinkRate: newShrinkRate,
-        safeZoneActive: true,
+        safeZoneActive: shouldActivateSafeZone,
         safeZoneDamage: newSafeZoneDamage,
       };
     }),

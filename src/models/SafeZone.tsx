@@ -36,13 +36,30 @@ const SafeZone = () => {
   // Use refs to track current radius to avoid re-renders
   const currentRadiusRef = useRef(safeZoneRadius);
 
+  // Track if shrinking is in progress to prevent restarts
+  const isShrinkingRef = useRef(false);
+  const targetRadiusRef = useRef(safeZoneTargetRadius);
+
   // Set the initial value
   useEffect(() => {
-    currentRadiusRef.current = safeZoneRadius;
-  }, [safeZoneRadius]);
+    // Only update the current radius if:
+    // 1. It's not actively shrinking, or
+    // 2. The new radius is smaller than the current one (level transition)
+    if (!isShrinkingRef.current || safeZoneRadius < currentRadiusRef.current) {
+      currentRadiusRef.current = safeZoneRadius;
+    }
+
+    // Always update the target radius so we know where to shrink to
+    targetRadiusRef.current = safeZoneTargetRadius;
+  }, [safeZoneRadius, safeZoneTargetRadius]);
 
   // Missing ref declaration
   const lastRadiusUpdateTime = useRef(0);
+
+  // Check if we're on a level where the zone changes
+  const isZoneChangeLevel = level % 5 === 0;
+  // Calculate the current zone level (1 for levels 5-9, 2 for levels 10-14, etc.)
+  const currentZoneLevel = Math.floor(level / 5);
 
   // Update safe zone radius and apply damage outside the zone
   useFrame((state, delta) => {
@@ -50,8 +67,11 @@ const SafeZone = () => {
 
     const currentState = useGameState.getState();
 
-    // Only update the state if we need to shrink AND only update once per second
+    // Only update the state if we need to shrink
     if (currentRadiusRef.current > currentState.safeZoneTargetRadius) {
+      // Mark that shrinking is in progress
+      isShrinkingRef.current = true;
+
       // Calculate new radius with a smoother transition
       const newRadius = Math.max(
         currentState.safeZoneTargetRadius,
@@ -70,6 +90,17 @@ const SafeZone = () => {
           lastRadiusUpdateTime.current = state.clock.elapsedTime;
         }
       }
+
+      // Check if shrinking is complete
+      if (
+        Math.abs(currentRadiusRef.current - currentState.safeZoneTargetRadius) <
+        0.1
+      ) {
+        isShrinkingRef.current = false;
+      }
+    } else {
+      // Reset shrinking flag when target is reached
+      isShrinkingRef.current = false;
     }
 
     // Apply damage if player is outside the safe zone
@@ -177,6 +208,50 @@ const SafeZone = () => {
     }
   });
 
+  // Define color based on the zone level
+  // Higher zone levels will have more intense colors to indicate more danger
+  const getSafeZoneColor = () => {
+    if (currentZoneLevel <= 1) return "#3399ff"; // Light blue for early zones
+    if (currentZoneLevel <= 2) return "#33ccff"; // Medium blue
+    if (currentZoneLevel <= 4) return "#3366ff"; // Darker blue
+    if (currentZoneLevel <= 6) return "#6633ff"; // Purple
+    if (currentZoneLevel <= 8) return "#9933ff"; // More purple
+    return "#cc33ff"; // Pink/purple for very high levels
+  };
+
+  // Get ring border color (slightly brighter than the main zone color)
+  const getRingColor = () => {
+    if (currentZoneLevel <= 1) return "#33ccff"; // Lighter blue
+    if (currentZoneLevel <= 2) return "#33eeff"; // Brighter blue
+    if (currentZoneLevel <= 4) return "#3399ff"; // Bright medium blue
+    if (currentZoneLevel <= 6) return "#9966ff"; // Brighter purple
+    if (currentZoneLevel <= 8) return "#cc66ff"; // Bright purple
+    return "#ff66ff"; // Bright pink for very high levels
+  };
+
+  // Safe zone opacity increases with zone level to make danger more visible
+  const getSafeZoneOpacity = () => {
+    const baseOpacity = 0.15;
+    return baseOpacity + Math.min(0.35, currentZoneLevel * 0.05);
+  };
+
+  // Get target zone color (red with intensity based on level)
+  const getTargetZoneColor = () => {
+    if (currentZoneLevel <= 2) return "#ff3333"; // Standard red
+    if (currentZoneLevel <= 4) return "#ff1a1a"; // Brighter red
+    if (currentZoneLevel <= 6) return "#ff0000"; // Pure red
+    return "#cc0000"; // Dark red for high levels
+  };
+
+  // Calculate if this is a zone level with pulsing effect (every 5 levels)
+  const shouldPulse = isZoneChangeLevel && isShrinkingRef.current;
+
+  // Use a different opacity for pulse effect on new zone levels
+  const getPulseOpacity = () => {
+    // This will be higher for more noticeable pulses
+    return getSafeZoneOpacity() * 1.5;
+  };
+
   return safeZoneActive ? (
     <group position={[safeZoneCenter[0], 20, safeZoneCenter[1]]}>
       {/* Current safe zone visualization - cylindrical zone */}
@@ -185,9 +260,9 @@ const SafeZone = () => {
           args={[safeZoneRadius, safeZoneRadius, 40, 64, 1, true]}
         />
         <meshBasicMaterial
-          color="#3399ff"
+          color={getSafeZoneColor()}
           transparent
-          opacity={0.15}
+          opacity={shouldPulse ? getPulseOpacity() : getSafeZoneOpacity()}
           side={THREE.DoubleSide}
           depthWrite={false}
           depthTest={false}
@@ -202,7 +277,7 @@ const SafeZone = () => {
         rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
         <meshBasicMaterial
-          color="#33ccff"
+          color={getRingColor()}
           transparent
           opacity={0.6}
           side={THREE.DoubleSide}
@@ -219,7 +294,7 @@ const SafeZone = () => {
         rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
         <meshBasicMaterial
-          color="#33ccff"
+          color={getRingColor()}
           transparent
           opacity={0.6}
           side={THREE.DoubleSide}
@@ -245,7 +320,7 @@ const SafeZone = () => {
               ]}
             />
             <meshBasicMaterial
-              color="#ff3333"
+              color={getTargetZoneColor()}
               transparent
               opacity={0.05}
               side={THREE.DoubleSide}
@@ -264,7 +339,7 @@ const SafeZone = () => {
               args={[safeZoneTargetRadius - 0.3, safeZoneTargetRadius, 64]}
             />
             <meshBasicMaterial
-              color="#ff5555"
+              color={getTargetZoneColor()}
               transparent
               opacity={0.5}
               side={THREE.DoubleSide}
@@ -283,7 +358,7 @@ const SafeZone = () => {
               args={[safeZoneTargetRadius - 0.3, safeZoneTargetRadius, 64]}
             />
             <meshBasicMaterial
-              color="#ff5555"
+              color={getTargetZoneColor()}
               transparent
               opacity={0.5}
               side={THREE.DoubleSide}
@@ -304,7 +379,7 @@ const SafeZone = () => {
           <mesh key={`line-${index}`} position={[x, 0, z]} rotation={[0, 0, 0]}>
             <boxGeometry args={[0.2, 40, 0.2]} />
             <meshBasicMaterial
-              color="#33ccff"
+              color={getRingColor()}
               transparent
               opacity={0.3}
               depthWrite={false}
@@ -328,7 +403,7 @@ const SafeZone = () => {
               rotation={[0, 0, 0]}>
               <boxGeometry args={[0.15, 40, 0.15]} />
               <meshBasicMaterial
-                color="#ff5555"
+                color={getTargetZoneColor()}
                 transparent
                 opacity={0.25}
                 depthWrite={false}
