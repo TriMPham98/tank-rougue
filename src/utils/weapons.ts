@@ -7,7 +7,7 @@ export const availableWeapons: SecondaryWeapon[] = [
     description:
       "Fires grenades that deal high damage and have a large explosion radius.",
     damage: 75,
-    cooldown: 4,
+    cooldown: 7,
     range: 30,
     projectileSpeed: 20,
   },
