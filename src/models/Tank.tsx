@@ -163,26 +163,38 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
-    // Main turret auto-shooting
+    // Main turret auto-shooting - optimized for consistent firing
     const currentTime = state.clock.getElapsedTime();
-    if (currentTime - lastShootTimeRef.current > playerFireRate) {
-      debug.log("AUTO-FIRING MAIN TURRET!");
-      const shootPosition: [number, number, number] = [
-        tankRef.current.position.x +
-          Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
-        tankRef.current.position.y + 0.7,
-        tankRef.current.position.z +
-          Math.cos(tankRotationRef.current + turretRotationRef.current) * 1.5,
-      ];
-      setProjectiles((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          position: shootPosition,
-          rotation: tankRotationRef.current + turretRotationRef.current,
-        },
-      ]);
-      lastShootTimeRef.current = currentTime;
+    const timeSinceLastShot = currentTime - lastShootTimeRef.current;
+
+    if (timeSinceLastShot >= playerFireRate) {
+      // Calculate number of shots that should have occurred during this time
+      // This ensures that if frame rate drops, we still maintain the correct fire rate
+      const shotsMissed = Math.floor(timeSinceLastShot / playerFireRate);
+
+      // Only fire one projectile but update the time to maintain consistency
+      if (shotsMissed > 0) {
+        const shootPosition: [number, number, number] = [
+          tankRef.current.position.x +
+            Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
+          tankRef.current.position.y + 0.7,
+          tankRef.current.position.z +
+            Math.cos(tankRotationRef.current + turretRotationRef.current) * 1.5,
+        ];
+
+        setProjectiles((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(36).substr(2, 9),
+            position: shootPosition,
+            rotation: tankRotationRef.current + turretRotationRef.current,
+          },
+        ]);
+
+        // Update the last shot time accounting for all missed shots
+        lastShootTimeRef.current =
+          currentTime - (timeSinceLastShot % playerFireRate);
+      }
     }
 
     // Log manual shoot button press if needed

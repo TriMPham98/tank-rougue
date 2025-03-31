@@ -129,7 +129,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerMaxHealth: 100,
   playerSpeed: 3,
   playerDamage: 25,
-  playerTurretDamage: 100, // 4x the original value
+  playerTurretDamage: 50, // Set back to 50 from 100
   playerFireRate: 2, // 1 second between shots
   playerCameraRange: 12, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
@@ -259,7 +259,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerMaxHealth: 100,
       playerSpeed: 3,
       playerDamage: 25,
-      playerTurretDamage: 50, // Reset to our doubled value
+      playerTurretDamage: 50, // Keep consistent at 50
       playerFireRate: 0.665, // Reset to our 33% increased value
       playerCameraRange: 12,
       playerHealthRegen: 0,
@@ -367,6 +367,23 @@ export const useGameState = create<GameState>((set, get) => ({
       const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
       const availableUpgrades = shuffled.slice(0, 3);
 
+      // Calculate main turret damage increase based on a diminishing percentage of NPC health scaling
+      // NPCs gain health at level * 9 rate (linear scaling)
+      // Start at 65% scaling but decrease to 55% at higher levels
+      const baseNpcHealthScaling = 9; // From levelGenerator.ts
+      let turretScalingPercentage = 0.65; // Start at 65% of NPC health scaling
+
+      // Gradually reduce scaling percentage as levels increase
+      if (newLevel > 10) {
+        // Decrease by 0.01 for each level above 10, bottoming out at 0.55 (55%)
+        turretScalingPercentage = Math.max(0.55, 0.65 - (newLevel - 10) * 0.01);
+      }
+
+      // Calculate the turret damage increase for this level
+      const turretDamageIncrease = Math.floor(
+        baseNpcHealthScaling * turretScalingPercentage
+      );
+
       // Adjust safe zone for the new level
       const maxRadius = 50;
       const minRadius = 5; // Reduced from 10 to make the final zone smaller
@@ -467,6 +484,7 @@ export const useGameState = create<GameState>((set, get) => ({
       return {
         level: newLevel,
         playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
+        playerTurretDamage: state.playerTurretDamage + turretDamageIncrease, // Diminishing % of NPC health scaling
         enemiesDefeated: 0, // Reset counter for the new level
         enemiesRequiredForNextLevel: nextLevelRequirement,
         showUpgradeUI: true, // Show upgrade UI after level up
@@ -557,7 +575,25 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerHealthRegen = state.playerHealthRegen + 0.5; // Linear increase by 0.5
           break;
         case "turretDamage":
-          updates.playerTurretDamage = state.playerTurretDamage + 5; // Linear increase by 5
+          // Calculate upgrade based on the same diminishing percentage of NPC health scaling
+          const baseNpcHealthScaling = 9; // From levelGenerator.ts
+          let turretScalingPercentage = 0.65; // Start at 65% of NPC health scaling
+
+          // Gradually reduce scaling percentage as levels increase
+          if (state.level > 10) {
+            turretScalingPercentage = Math.max(
+              0.55,
+              0.65 - (state.level - 10) * 0.01
+            );
+          }
+
+          const baseUpgrade = 12; // Increase base upgrade to offset diminishing scaling
+          const levelScaling = Math.floor(
+            state.level * baseNpcHealthScaling * turretScalingPercentage
+          );
+          const totalIncrease = baseUpgrade + levelScaling;
+
+          updates.playerTurretDamage = state.playerTurretDamage + totalIncrease;
           break;
         case "bulletVelocity":
           updates.playerBulletVelocity = state.playerBulletVelocity + 2; // Linear increase by 2
