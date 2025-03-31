@@ -53,6 +53,7 @@ const GameUI = () => {
     safeZoneTargetRadius,
     safeZoneShrinkRate,
     safeZoneDamage,
+    isPreZoneChangeLevel, // Get the pre-zone change level flag
   } = useGameState();
 
   // Check for weapon selection opportunity when level changes
@@ -388,6 +389,63 @@ const GameUI = () => {
     };
   }, [isSafezoneWarningVisible]);
 
+  // Add warning for pre-zone change levels
+  const [showZoneWarning, setShowZoneWarning] = useState(false);
+  const zoneWarningOpacityRef = useRef(0);
+
+  // Calculate next zone values for warning
+  const calculateNextZoneInfo = useCallback(() => {
+    const maxRadius = 50;
+    const minRadius = 5;
+    const radiusDecrease = 4;
+    const currentZoneLevel = Math.floor(level / 5);
+    const nextZoneLevel = currentZoneLevel + 1;
+    const nextZoneLevelNumber = nextZoneLevel * 5;
+    const nextZoneTargetRadius = Math.max(
+      minRadius,
+      maxRadius - nextZoneLevel * radiusDecrease
+    );
+
+    return { nextZoneTargetRadius, nextZoneLevelNumber };
+  }, [level]);
+
+  const { nextZoneTargetRadius, nextZoneLevelNumber } = calculateNextZoneInfo();
+
+  // Effect to show and animate zone warning on pre-zone change levels
+  useEffect(() => {
+    if (!isPreZoneChangeLevel || !safeZoneActive || isPaused || isGameOver) {
+      setShowZoneWarning(false);
+      return;
+    }
+
+    // Show warning when entering a pre-zone change level
+    setShowZoneWarning(true);
+
+    // Start opacity animation
+    let startTime: number;
+    const duration = 1500; // 1.5 seconds for full animation cycle
+
+    const animateZoneWarning = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+
+      // Oscillate between 0.5 and 0.9 opacity
+      zoneWarningOpacityRef.current =
+        0.5 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 5;
+
+      if (showZoneWarning) {
+        requestAnimationFrame(animateZoneWarning);
+      }
+    };
+
+    const animationId = requestAnimationFrame(animateZoneWarning);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      setShowZoneWarning(false);
+    };
+  }, [isPreZoneChangeLevel, safeZoneActive, isPaused, isGameOver]);
+
   // Create a minimap to show player position and safe zone
   const renderMinimap = useCallback(() => {
     const mapSize = 100; // Size in pixels
@@ -468,7 +526,7 @@ const GameUI = () => {
     const zoneShrinkProgress = calculateZoneShrinkProgress();
 
     // Determine if we're on final level before zone change (to highlight urgency)
-    const isPreZoneChangeLevel = level % 5 === 4;
+    const isPreZoneChangeLevel = level % 5 === 4 && level >= 4;
 
     // Get an urgency color based on progress and levels remaining
     const getUrgencyColor = () => {
@@ -489,6 +547,18 @@ const GameUI = () => {
       return "#4caf50"; // Green when complete or nearly complete
     };
 
+    // Calculate the next zone's target radius (for visual preview on pre-zone change levels)
+    const getNextZoneTargetRadius = () => {
+      const maxRadius = 50;
+      const minRadius = 5;
+      const radiusDecrease = 4;
+      const nextZoneLevel = Math.floor(level / 5) + 1;
+      return Math.max(minRadius, maxRadius - nextZoneLevel * radiusDecrease);
+    };
+
+    const nextZoneRadius = getNextZoneTargetRadius();
+    const nextZoneRadiusPixels = (nextZoneRadius / gameWorldSize) * mapSize;
+
     return (
       <div
         className="minimap"
@@ -499,7 +569,7 @@ const GameUI = () => {
           width: `${mapSize}px`,
           height: `${mapSize}px`,
           backgroundColor: "rgba(0, 0, 0, 0.5)",
-          border: "2px solid #666",
+          border: `2px solid ${isPreZoneChangeLevel ? "#ff9500" : "#666"}`, // Orange border on pre-zone change levels
           borderRadius: "5px",
           zIndex: 100,
         }}>
@@ -542,6 +612,24 @@ const GameUI = () => {
                   borderRadius: "50%",
                   border: "1px dashed #ff5555",
                   backgroundColor: "rgba(255, 85, 85, 0.2)",
+                }}
+              />
+            )}
+
+            {/* Next zone preview circle - only show on pre-zone change levels */}
+            {isPreZoneChangeLevel && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: `${safeZoneCenterY - nextZoneRadiusPixels}px`,
+                  left: `${safeZoneCenterX - nextZoneRadiusPixels}px`,
+                  width: `${nextZoneRadiusPixels * 2}px`,
+                  height: `${nextZoneRadiusPixels * 2}px`,
+                  borderRadius: "50%",
+                  border: "2px dashed #ff9500", // Orange for warning
+                  backgroundColor: "rgba(255, 149, 0, 0.15)", // Light orange background
+                  transition: "opacity 0.5s ease-in-out",
+                  animation: "pulse 2s infinite", // Add pulsing animation
                 }}
               />
             )}
@@ -630,7 +718,18 @@ const GameUI = () => {
             <div>
               Zone: {zoneLevel > 0 ? `Level ${zoneLevel}` : "Inactive"}
               {isZoneChangeLevel && level > 0 ? " (New)" : ""}
-              {zoneLevel > 0 && !isZoneChangeLevel && (
+              {isPreZoneChangeLevel && (
+                <span
+                  style={{
+                    marginLeft: "4px",
+                    color: "#ff9500",
+                    fontWeight: "bold",
+                    fontSize: "8px",
+                  }}>
+                  NEXT ZONE INCOMING
+                </span>
+              )}
+              {zoneLevel > 0 && !isZoneChangeLevel && !isPreZoneChangeLevel && (
                 <span style={{ marginLeft: "4px", fontSize: "7px" }}>
                   → {nextZoneLevel} in {levelsUntilNextZone} level
                   {levelsUntilNextZone !== 1 ? "s" : ""}
@@ -655,7 +754,7 @@ const GameUI = () => {
                       width: `${zoneProgress}%`,
                       height: "100%",
                       backgroundColor: isPreZoneChangeLevel
-                        ? "#ff5555"
+                        ? "#ff9500" // Change to orange for pre-zone change levels
                         : "#33ccff",
                       transition: "width 0.5s ease-out",
                     }}
@@ -674,7 +773,12 @@ const GameUI = () => {
                     Complete
                   </span>
                 ) : (
-                  <span> {zoneShrinkProgress.toFixed(0)}% complete</span>
+                  <span
+                    style={{
+                      color: isPreZoneChangeLevel ? "#ff9500" : "white",
+                    }}>
+                    {zoneShrinkProgress.toFixed(0)}% complete
+                  </span>
                 )}
               </div>
             )}
@@ -695,11 +799,28 @@ const GameUI = () => {
                   style={{
                     width: `${zoneShrinkProgress}%`,
                     height: "100%",
-                    backgroundColor: getUrgencyColor(),
+                    backgroundColor: isPreZoneChangeLevel
+                      ? "#ff9500" // Always orange for pre-zone change levels
+                      : getUrgencyColor(),
                     transition:
                       "width 0.5s ease-out, background-color 0.5s ease-out",
                   }}
                 />
+              </div>
+            )}
+
+            {/* Next zone info - only show on pre-zone change levels */}
+            {isPreZoneChangeLevel && (
+              <div
+                style={{
+                  fontSize: "7px",
+                  marginTop: "2px",
+                  color: "#ff9500",
+                  fontWeight: "bold",
+                }}>
+                Next Zone: {nextZoneRadius.toFixed(1)} units{" "}
+                <span style={{ fontSize: "6px" }}>↓</span> (
+                {(safeZoneRadius - nextZoneRadius).toFixed(1)} decrease)
               </div>
             )}
 
@@ -742,6 +863,36 @@ const GameUI = () => {
 
   return (
     <div className="game-ui">
+      {/* Zone Change Warning */}
+      {showZoneWarning && !isGameOver && !isPaused && (
+        <div
+          className="zone-change-warning"
+          style={{
+            position: "absolute",
+            top: "12%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: `rgba(255, 149, 0, ${zoneWarningOpacityRef.current})`,
+            color: "white",
+            padding: "12px 24px",
+            borderRadius: "5px",
+            fontWeight: "bold",
+            textShadow: "0 0 5px rgba(0, 0, 0, 0.7)",
+            zIndex: 101,
+            textAlign: "center",
+            boxShadow: "0 0 20px rgba(255, 149, 0, 0.5)",
+            border: "1px solid #ffb74d",
+          }}>
+          <div style={{ fontSize: "16px" }}>
+            ⚠️ WARNING: NEXT ZONE IMMINENT ⚠️
+          </div>
+          <div style={{ fontSize: "14px", marginTop: "6px" }}>
+            Safe zone will shrink to {nextZoneTargetRadius.toFixed(1)} units at
+            level {nextZoneLevelNumber}
+          </div>
+        </div>
+      )}
+
       {/* Minimap */}
       {!isGameOver && !isPaused && renderMinimap()}
 

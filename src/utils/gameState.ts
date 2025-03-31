@@ -63,6 +63,7 @@ interface GameState {
   safeZoneShrinkRate: number;
   safeZoneDamage: number;
   safeZoneActive: boolean;
+  isPreZoneChangeLevel: boolean; // New property to identify levels right before zone changes
 
   // Upgrade system
   showUpgradeUI: boolean;
@@ -145,6 +146,7 @@ export const useGameState = create<GameState>((set, get) => ({
   safeZoneShrinkRate: 0.02, // How fast the circle shrinks (reduced from 0.05)
   safeZoneDamage: 1, // Damage per second outside the safe zone
   safeZoneActive: false, // Safe zone not active initially
+  isPreZoneChangeLevel: false, // Initial value
 
   // Upgrade system
   showUpgradeUI: false,
@@ -287,6 +289,7 @@ export const useGameState = create<GameState>((set, get) => ({
       safeZoneShrinkRate: 0.02, // Updated from 0.05 to match new slower shrink rate
       safeZoneDamage: 1,
       safeZoneActive: false,
+      isPreZoneChangeLevel: false,
     }),
 
   togglePause: () =>
@@ -328,6 +331,9 @@ export const useGameState = create<GameState>((set, get) => ({
       }
 
       const newLevel = state.level + 1;
+
+      // Check if this is a level right before a zone change (levels 4, 9, 14, etc.)
+      const isPreZoneChangeLevel = newLevel % 5 === 4 && newLevel >= 4;
 
       // Calculate required enemies for next level based on game phase
       // Early game (levels 1-24): 1-12 enemies
@@ -467,6 +473,7 @@ export const useGameState = create<GameState>((set, get) => ({
         enemiesRequiredForNextLevel: nextLevelRequirement,
         showUpgradeUI: true, // Show upgrade UI after level up
         availableUpgrades, // Set available upgrades
+        isPreZoneChangeLevel, // Set the flag for pre-zone change level
 
         // Update safe zone parameters
         safeZoneRadius: newCurrentRadius,

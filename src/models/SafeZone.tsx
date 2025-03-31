@@ -17,10 +17,13 @@ const SafeZone = () => {
     isPaused,
     isGameOver,
     level,
+    isPreZoneChangeLevel, // Get pre-zone change level status
   } = useGameState();
 
   // Add state to track progress towards next zone level
   const [zoneProgress, setZoneProgress] = useState(0);
+  // Add state for next zone preview animation
+  const [previewOpacity, setPreviewOpacity] = useState(0);
 
   // Reference to the cylinder mesh
   const cylinderRef = useRef<THREE.Mesh>(null);
@@ -32,6 +35,11 @@ const SafeZone = () => {
   const targetCylinderRef = useRef<THREE.Mesh>(null);
   const targetTopRingRef = useRef<THREE.Mesh>(null);
   const targetBottomRingRef = useRef<THREE.Mesh>(null);
+
+  // References for next zone preview (one level ahead)
+  const nextZoneCylinderRef = useRef<THREE.Mesh>(null);
+  const nextZoneTopRingRef = useRef<THREE.Mesh>(null);
+  const nextZoneBottomRingRef = useRef<THREE.Mesh>(null);
 
   // Reference for damage tick
   const lastDamageTime = useRef(0);
@@ -53,6 +61,9 @@ const SafeZone = () => {
   // Detect when player reaches a zone level (divisible by 5)
   const prevLevelRef = useRef(level);
   const isZoneCompletionEnforced = useRef(false);
+
+  // Animation timing for preview effect
+  const animationTimeRef = useRef(0);
 
   // Set the initial value
   useEffect(() => {
@@ -113,9 +124,6 @@ const SafeZone = () => {
   const nextZoneLevelNumber = nextZoneLevel * 5;
   const levelsUntilNextZone = nextZoneLevelNumber - level;
 
-  // Determine if we're on final level before zone change (to highlight urgency)
-  const isPreZoneChangeLevel = level % 5 === 4;
-
   // Calculate the target radius for the next zone level
   const nextZoneTargetRadius = (() => {
     const maxRadius = 50;
@@ -140,12 +148,31 @@ const SafeZone = () => {
     );
   };
 
+  // Effect for animating the next zone preview on pre-zone change levels
+  useEffect(() => {
+    if (!isPreZoneChangeLevel || !safeZoneActive) {
+      setPreviewOpacity(0);
+      return;
+    }
+
+    // Start preview animation when entering a pre-zone change level
+    const interval = setInterval(() => {
+      // Oscillate opacity between 0.1 and 0.5 for pulsing effect
+      setPreviewOpacity(0.1 + 0.4 * Math.abs(Math.sin(Date.now() / 800)));
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [isPreZoneChangeLevel, safeZoneActive]);
+
   // Update safe zone radius and apply damage outside the zone
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !safeZoneActive) return;
 
     const currentState = useGameState.getState();
     const currentTime = state.clock.getElapsedTime();
+
+    // Update animation time ref for pulsing effects
+    animationTimeRef.current += delta;
 
     // Force the radius to target on zone change levels (divisible by 5)
     if (
@@ -311,6 +338,41 @@ const SafeZone = () => {
       targetTopRingRef.current.geometry = newTargetTopRingGeometry;
       targetBottomRingRef.current.geometry = newTargetBottomRingGeometry;
     }
+
+    // Update next zone preview visualization (on pre-zone change levels)
+    if (
+      isPreZoneChangeLevel &&
+      nextZoneCylinderRef.current &&
+      nextZoneTopRingRef.current &&
+      nextZoneBottomRingRef.current
+    ) {
+      const nextRingThickness = 0.3;
+
+      // Update geometries if needed
+      nextZoneCylinderRef.current.geometry.dispose();
+      nextZoneCylinderRef.current.geometry = new THREE.CylinderGeometry(
+        nextZoneTargetRadius,
+        nextZoneTargetRadius,
+        40,
+        64,
+        1,
+        true
+      );
+
+      nextZoneTopRingRef.current.geometry.dispose();
+      nextZoneTopRingRef.current.geometry = new THREE.RingGeometry(
+        nextZoneTargetRadius - nextRingThickness,
+        nextZoneTargetRadius,
+        64
+      );
+
+      nextZoneBottomRingRef.current.geometry.dispose();
+      nextZoneBottomRingRef.current.geometry = new THREE.RingGeometry(
+        nextZoneTargetRadius - nextRingThickness,
+        nextZoneTargetRadius,
+        64
+      );
+    }
   });
 
   // Define color based on the zone level
@@ -352,6 +414,9 @@ const SafeZone = () => {
     if (currentZoneLevel <= 6) return "#ff0000"; // Pure red
     return "#cc0000"; // Dark red for high levels
   };
+
+  // Get next zone preview color (orange warning color for pre-zone levels)
+  const getNextZoneColor = () => "#ff9500"; // Consistent orange for next zone preview
 
   // Calculate if this is a zone level with pulsing effect (every 5 levels)
   const shouldPulse = isZoneChangeLevel && isShrinkingRef.current;
@@ -487,6 +552,72 @@ const SafeZone = () => {
         </>
       )}
 
+      {/* Next zone preview - only show on pre-zone change levels (4, 9, 14, etc.) */}
+      {isPreZoneChangeLevel && (
+        <>
+          {/* Next zone cylindrical preview */}
+          <mesh ref={nextZoneCylinderRef} position={[0, 0, 0]}>
+            <cylinderGeometry
+              args={[
+                nextZoneTargetRadius,
+                nextZoneTargetRadius,
+                40,
+                64,
+                1,
+                true,
+              ]}
+            />
+            <meshBasicMaterial
+              color={getNextZoneColor()}
+              transparent
+              opacity={previewOpacity * 0.2} // Lighter opacity for cylinder
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+
+          {/* Next zone top ring */}
+          <mesh
+            ref={nextZoneTopRingRef}
+            position={[0, 20, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry
+              args={[nextZoneTargetRadius - 0.4, nextZoneTargetRadius, 64]}
+            />
+            <meshBasicMaterial
+              color={getNextZoneColor()}
+              transparent
+              opacity={previewOpacity * 0.8} // Higher opacity for the ring
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+
+          {/* Next zone bottom ring */}
+          <mesh
+            ref={nextZoneBottomRingRef}
+            position={[0, -20, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry
+              args={[nextZoneTargetRadius - 0.4, nextZoneTargetRadius, 64]}
+            />
+            <meshBasicMaterial
+              color={getNextZoneColor()}
+              transparent
+              opacity={previewOpacity * 0.8} // Higher opacity for the ring
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </>
+      )}
+
       {/* Add vertical lines connecting the circles */}
       {Array.from({ length: 16 }).map((_, index) => {
         const angle = (index / 16) * Math.PI * 2;
@@ -523,6 +654,30 @@ const SafeZone = () => {
                 color={getTargetZoneColor()}
                 transparent
                 opacity={isPreZoneChangeLevel ? 0.4 : 0.25} // Increase opacity when approaching next zone
+                depthWrite={false}
+                depthTest={false}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+          );
+        })}
+
+      {/* Add next zone preview vertical markers */}
+      {isPreZoneChangeLevel &&
+        Array.from({ length: 12 }).map((_, index) => {
+          const angle = (index / 12) * Math.PI * 2;
+          const x = Math.sin(angle) * nextZoneTargetRadius;
+          const z = Math.cos(angle) * nextZoneTargetRadius;
+          return (
+            <mesh
+              key={`next-zone-line-${index}`}
+              position={[x, 0, z]}
+              rotation={[0, 0, 0]}>
+              <boxGeometry args={[0.15, 40, 0.15]} />
+              <meshBasicMaterial
+                color={getNextZoneColor()}
+                transparent
+                opacity={previewOpacity * 0.5} // Match the pulsing effect
                 depthWrite={false}
                 depthTest={false}
                 blending={THREE.AdditiveBlending}
