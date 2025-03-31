@@ -329,8 +329,25 @@ export const useGameState = create<GameState>((set, get) => ({
 
       const newLevel = state.level + 1;
 
-      // Modified: Always require only 1 enemy per level for faster debugging
-      const nextLevelRequirement = 1;
+      // Calculate required enemies for next level based on game phase
+      // Early game (levels 1-24): 1-12 enemies
+      // Mid game (levels 25-50): 13-25 enemies
+      // Late game (levels 51+): 25+ enemies with steeper scaling
+      let nextLevelRequirement;
+
+      if (newLevel <= 24) {
+        // Early game: Linear scaling from 1 to 12
+        nextLevelRequirement = Math.ceil(newLevel / 2);
+      } else if (newLevel <= 50) {
+        // Mid game: Linear scaling from 13 to 25
+        nextLevelRequirement = 12 + Math.ceil((newLevel - 24) / 2);
+      } else {
+        // Late game: Steeper scaling starting from 25
+        const baseRequirement = 25;
+        const lateGameLevel = newLevel - 50;
+        // Exponential growth for late game
+        nextLevelRequirement = baseRequirement + Math.ceil(lateGameLevel * 1.5);
+      }
 
       // Generate random upgrade options (3 options)
       const allUpgrades: UpgradeableStat[] = [
