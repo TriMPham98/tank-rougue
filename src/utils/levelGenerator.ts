@@ -259,7 +259,7 @@ export const generateEnemies = (
 
     if (level >= 5 && random < bomberProbability) {
       type = "bomber";
-      health = 40 + level * 2; // Reduced from level * 3 to level * 2
+      health = 40 + level * 3; // Increased from level * 2 to level * 3 but removed exponential component
       speed = 4.0; // Much faster movement speed
     } else if (
       random < turretProbability + bomberProbability &&
@@ -267,17 +267,14 @@ export const generateEnemies = (
     ) {
       type = "turret";
       const turretBaseHealth = 50;
-      const linearScale = level * 6; // Reduced from level * 10 to level * 6
-      const exponentialScale = Math.floor(Math.sqrt(level) * 4); // Reduced from sqrt(level) * 5 to sqrt(level) * 4
-      health = turretBaseHealth + linearScale + exponentialScale;
+      const linearScale = level * 9; // Increased from level * 6 to level * 9, removing exponential component
+      health = turretBaseHealth + linearScale;
       turretCount++;
     } else {
       type = "tank";
       const tankBaseHealth = 75;
-      const linearScale = level * 6; // Reduced from level * 10 to level * 6
-      const exponentialScale = Math.floor(Math.sqrt(level) * 4); // Reduced from sqrt(level) * 5 to sqrt(level) * 4
-      health =
-        tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+      const linearScale = level * 9; // Increased from level * 6 to level * 9, removing exponential component
+      health = tankBaseHealth + linearScale;
       // Slightly reduce speed for better gameplay balance with increased tank frequency
       speed = 1.3;
     }

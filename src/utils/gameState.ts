@@ -143,7 +143,7 @@ export const useGameState = create<GameState>((set, get) => ({
   safeZoneRadius: 50, // Initial radius covers the whole map
   safeZoneCenter: [0, 0], // Center of the map
   safeZoneTargetRadius: 50, // Target radius for shrinking
-  safeZoneShrinkRate: 0.05, // Shrink rate for the safe zone
+  safeZoneShrinkRate: 0.05, // Increased from 0.035 to 0.05 for faster shrinking
   safeZoneDamage: 1, // Damage per second outside the safe zone
   safeZoneActive: false, // Safe zone not active initially
   isPreZoneChangeLevel: false, // Initial value
@@ -206,10 +206,8 @@ export const useGameState = create<GameState>((set, get) => ({
           enemy.type = "tank";
           // Adjust health and speed to match tank stats
           const tankBaseHealth = 75;
-          const linearScale = state.level * 6; // Reduced from level * 10 to level * 6
-          const exponentialScale = Math.floor(Math.sqrt(state.level) * 4); // Reduced from sqrt(level) * 5 to sqrt(level) * 4
-          enemy.health =
-            tankBaseHealth + linearScale + Math.floor(exponentialScale * 0.7);
+          const linearScale = state.level * 9; // Updated to match levelGenerator.ts
+          enemy.health = tankBaseHealth + linearScale;
           enemy.speed = 1.3;
         }
       }
@@ -286,7 +284,7 @@ export const useGameState = create<GameState>((set, get) => ({
       safeZoneRadius: 50,
       safeZoneCenter: [0, 0],
       safeZoneTargetRadius: 50,
-      safeZoneShrinkRate: 0.035, // Increased from 0.02 to match the new faster shrink rate
+      safeZoneShrinkRate: 0.05, // Increased from 0.035 to 0.05 for faster shrinking
       safeZoneDamage: 1,
       safeZoneActive: false,
       isPreZoneChangeLevel: false,
@@ -442,7 +440,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
         // We must complete this shrinking before reaching the next level divisible by 5
         // Set a safety factor to ensure it completes slightly before reaching that level
-        const safetyFactor = 0.6; // Changed from 0.8 to 0.6 - complete 40% early for faster shrinking
+        const safetyFactor = 0.4; // Changed from 0.6 to 0.4 - complete 60% early for even faster shrinking
 
         // Calculate required shrink rate
         const calculatedShrinkRate = Math.max(

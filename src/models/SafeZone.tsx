@@ -198,7 +198,7 @@ const SafeZone = () => {
       // Calculate new radius with a smoother transition
       const newRadius = Math.max(
         currentState.safeZoneTargetRadius,
-        currentRadiusRef.current - currentState.safeZoneShrinkRate * delta * 1.2 // Increased from 0.8 to 1.2 for faster shrinking
+        currentRadiusRef.current - currentState.safeZoneShrinkRate * delta * 1.5 // Increased from 1.2 to 1.5 for even faster shrinking
       );
 
       // Only update state if the difference is significant (e.g., more than 0.01)
