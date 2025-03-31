@@ -242,7 +242,6 @@ const LaserWeapon = ({
             laserRef.current?.position.z || 0,
           ]}
           targetId={targetEnemyRef.current}
-          rotation={laserRef.current?.rotation.y || 0}
           damage={laserDamage * DAMAGE_TICK_RATE}
           range={weaponRange}
           color="#00FFFF"
