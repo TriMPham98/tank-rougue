@@ -429,6 +429,66 @@ const GameUI = () => {
     const zoneLevel = Math.floor(level / 5);
     const isZoneChangeLevel = level % 5 === 0 && level > 0;
 
+    // Calculate next zone level and progress towards it
+    const nextZoneLevel = zoneLevel + 1;
+    const nextZoneLevelNumber = nextZoneLevel * 5;
+    const levelsUntilNextZone = nextZoneLevelNumber - level;
+    const zoneProgress = ((5 - levelsUntilNextZone) / 5) * 100;
+
+    // Calculate progress for zone shrinking
+    const calculateZoneShrinkProgress = () => {
+      if (isZoneChangeLevel) return 100; // Always 100% on zone change levels
+
+      // If target radius equals current radius, we're done shrinking
+      if (safeZoneRadius <= safeZoneTargetRadius) return 100;
+
+      // Calculate the next zone's target radius
+      const maxRadius = 50;
+      const minRadius = 5;
+      const radiusDecrease = 4;
+      const nextZoneTargetRadius = Math.max(
+        minRadius,
+        maxRadius - nextZoneLevel * radiusDecrease
+      );
+
+      // Calculate initial radius for this zone cycle
+      const initialZoneRadius = 50 - zoneLevel * 4;
+
+      // Calculate how much has been shrunk and how much needs to be shrunk
+      const totalShrinkNeeded = initialZoneRadius - nextZoneTargetRadius;
+      const currentShrink = initialZoneRadius - safeZoneRadius;
+
+      // Calculate percentage complete
+      return Math.min(
+        100,
+        Math.max(0, (currentShrink / totalShrinkNeeded) * 100)
+      );
+    };
+
+    const zoneShrinkProgress = calculateZoneShrinkProgress();
+
+    // Determine if we're on final level before zone change (to highlight urgency)
+    const isPreZoneChangeLevel = level % 5 === 4;
+
+    // Get an urgency color based on progress and levels remaining
+    const getUrgencyColor = () => {
+      // On change levels, always green
+      if (isZoneChangeLevel) return "#4caf50";
+
+      // On pre-change level, use red if zone not complete
+      if (isPreZoneChangeLevel) {
+        if (zoneShrinkProgress < 90) return "#f44336"; // Red if not near completion
+        if (zoneShrinkProgress < 100) return "#ff9800"; // Orange if close to complete
+        return "#4caf50"; // Green if complete
+      }
+
+      // Normal progression colors
+      if (zoneShrinkProgress < 40) return "#2196f3"; // Blue for early progress
+      if (zoneShrinkProgress < 75) return "#03a9f4"; // Light blue for mid progress
+      if (zoneShrinkProgress < 90) return "#ff9800"; // Orange for getting close
+      return "#4caf50"; // Green when complete or nearly complete
+    };
+
     return (
       <div
         className="minimap"
@@ -560,7 +620,7 @@ const GameUI = () => {
           <div
             style={{
               position: "absolute",
-              top: "-45px", // Moved up to accommodate countdown
+              top: "-65px", // Moved up to accommodate more info
               left: "0",
               width: "100%",
               fontSize: "8px",
@@ -570,7 +630,79 @@ const GameUI = () => {
             <div>
               Zone: {zoneLevel > 0 ? `Level ${zoneLevel}` : "Inactive"}
               {isZoneChangeLevel && level > 0 ? " (New)" : ""}
+              {zoneLevel > 0 && !isZoneChangeLevel && (
+                <span style={{ marginLeft: "4px", fontSize: "7px" }}>
+                  → {nextZoneLevel} in {levelsUntilNextZone} level
+                  {levelsUntilNextZone !== 1 ? "s" : ""}
+                </span>
+              )}
             </div>
+            <div>
+              {/* Zone progress bar - only show if in active zone */}
+              {zoneLevel > 0 && !isZoneChangeLevel && (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "3px",
+                    backgroundColor: "#333",
+                    marginTop: "2px",
+                    marginBottom: "2px",
+                    borderRadius: "1px",
+                    overflow: "hidden",
+                  }}>
+                  <div
+                    style={{
+                      width: `${zoneProgress}%`,
+                      height: "100%",
+                      backgroundColor: isPreZoneChangeLevel
+                        ? "#ff5555"
+                        : "#33ccff",
+                      transition: "width 0.5s ease-out",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Zone shrink progress - show target completion */}
+            {zoneLevel > 0 && (
+              <div style={{ fontSize: "7px" }}>
+                <span>Zone Shrink:</span>
+                {zoneShrinkProgress >= 100 ? (
+                  <span style={{ color: "#4caf50", fontWeight: "bold" }}>
+                    {" "}
+                    Complete
+                  </span>
+                ) : (
+                  <span> {zoneShrinkProgress.toFixed(0)}% complete</span>
+                )}
+              </div>
+            )}
+
+            {/* Zone shrink progress bar */}
+            {zoneLevel > 0 && zoneShrinkProgress < 100 && (
+              <div
+                style={{
+                  width: "100%",
+                  height: "3px",
+                  backgroundColor: "#333",
+                  marginTop: "2px",
+                  marginBottom: "2px",
+                  borderRadius: "1px",
+                  overflow: "hidden",
+                }}>
+                <div
+                  style={{
+                    width: `${zoneShrinkProgress}%`,
+                    height: "100%",
+                    backgroundColor: getUrgencyColor(),
+                    transition:
+                      "width 0.5s ease-out, background-color 0.5s ease-out",
+                  }}
+                />
+              </div>
+            )}
+
             <div>
               Radius: {safeZoneRadius.toFixed(1)} →{" "}
               {safeZoneTargetRadius.toFixed(1)} units

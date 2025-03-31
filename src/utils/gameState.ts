@@ -383,20 +383,79 @@ export const useGameState = create<GameState>((set, get) => ({
       const newSafeZoneDamage =
         baseDamage + zoneReductionLevel * damageIncreasePerLevel;
 
-      // Increase shrink rate as levels progress, but at a slower rate
-      const baseShrinkRate = 0.02; // Reduced from 0.05
-      const shrinkRateIncreasePerLevel = 0.01; // Reduced from 0.02
-      // Only increase shrink rate every 5 levels
-      const newShrinkRate =
-        baseShrinkRate + zoneReductionLevel * shrinkRateIncreasePerLevel;
+      // Calculate how many levels until next zone change (next multiple of 5)
+      const levelsUntilNextZoneChange = 5 - (newLevel % 5);
+
+      // Estimate average enemy count for the next few levels
+      const avgEnemiesPerLevel = Math.ceil((newLevel + 2) / 2); // Simple approximation
+
+      // Estimate total enemies needed to be killed before next zone change
+      // Need to sum the enemies required for each level from current to next zone change
+      let totalEnemiesBeforeNextZone = 0;
+      for (let i = 0; i < levelsUntilNextZoneChange; i++) {
+        const levelNum = newLevel + i;
+        // Use the same formula as the game uses to calculate enemies required per level
+        if (levelNum <= 24) {
+          totalEnemiesBeforeNextZone += Math.ceil(levelNum / 2);
+        } else if (levelNum <= 50) {
+          totalEnemiesBeforeNextZone += 12 + Math.ceil((levelNum - 24) / 2);
+        } else {
+          const baseRequirement = 25;
+          const lateGameLevel = levelNum - 50;
+          totalEnemiesBeforeNextZone +=
+            baseRequirement + Math.ceil(lateGameLevel * 1.5);
+        }
+      }
+
+      // Estimate time to next zone change based on enemies needed
+      // Assume it takes ~10 seconds to defeat each enemy (very rough estimate)
+      const estimatedSecondsToNextZone = totalEnemiesBeforeNextZone * 10;
+
+      // Calculate shrink rate based on need
+      let newShrinkRate;
+      let newCurrentRadius = state.safeZoneRadius;
+
+      // If we just entered a level divisible by 5, the zone should already be at target radius
+      // For all other levels, calculate the appropriate shrink rate
+      if (newLevel % 5 === 0 && newLevel > 0) {
+        // On levels divisible by 5, force the current radius to equal the target
+        newCurrentRadius = newTargetRadius;
+        // Set a default shrink rate since we won't be shrinking until next zone level
+        newShrinkRate = 0.01;
+      } else {
+        // For other levels, we need to shrink at the right pace
+        // Calculate the NEXT zone target radius (for the next level divisible by 5)
+        const nextZoneLevel = Math.floor(newLevel / 5) + 1;
+        const nextZoneTargetRadius = Math.max(
+          minRadius,
+          maxRadius - nextZoneLevel * radiusDecrease
+        );
+
+        // Calculate how much we need to shrink total
+        const totalRadiusToShrink = state.safeZoneRadius - nextZoneTargetRadius;
+
+        // We must complete this shrinking before reaching the next level divisible by 5
+        // Set a safety factor to ensure it completes slightly before reaching that level
+        const safetyFactor = 0.8; // Complete 20% early
+
+        // Calculate required shrink rate
+        const calculatedShrinkRate = Math.max(
+          0.01, // Minimum shrink rate
+          totalRadiusToShrink / (estimatedSecondsToNextZone * safetyFactor)
+        );
+
+        // Cap the shrink rate at a reasonable maximum to avoid too rapid shrinking
+        const maxShrinkRate = 0.1;
+        newShrinkRate = Math.min(maxShrinkRate, calculatedShrinkRate);
+      }
 
       // Keep the safe zone center position fixed instead of randomly moving it
       const currentCenter = state.safeZoneCenter;
 
       // If this is the first level or the safe zone wasn't active, set the current radius to max
-      const newCurrentRadius = !state.safeZoneActive
-        ? maxRadius
-        : state.safeZoneRadius;
+      if (!state.safeZoneActive) {
+        newCurrentRadius = maxRadius;
+      }
 
       // Only activate the safe zone if we're at level 5 or beyond
       const shouldActivateSafeZone = newLevel >= 5;

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGameState } from "../utils/gameState";
 import * as THREE from "three";
@@ -18,6 +18,9 @@ const SafeZone = () => {
     isGameOver,
     level,
   } = useGameState();
+
+  // Add state to track progress towards next zone level
+  const [zoneProgress, setZoneProgress] = useState(0);
 
   // Reference to the cylinder mesh
   const cylinderRef = useRef<THREE.Mesh>(null);
@@ -40,32 +43,125 @@ const SafeZone = () => {
   const isShrinkingRef = useRef(false);
   const targetRadiusRef = useRef(safeZoneTargetRadius);
 
+  // Track initial and target radius for progress calculation
+  const initialRadiusRef = useRef(safeZoneRadius);
+
+  // Store estimated time to completion
+  const estimatedTimeToCompleteRef = useRef(0);
+  const startShrinkTimeRef = useRef(0);
+
+  // Detect when player reaches a zone level (divisible by 5)
+  const prevLevelRef = useRef(level);
+  const isZoneCompletionEnforced = useRef(false);
+
   // Set the initial value
   useEffect(() => {
+    // When we enter a level divisible by 5, enforce that we're at target radius
+    if (level % 5 === 0 && level > 0 && prevLevelRef.current !== level) {
+      currentRadiusRef.current = safeZoneTargetRadius;
+      initialRadiusRef.current = safeZoneTargetRadius;
+      isZoneCompletionEnforced.current = true;
+
+      // Force update the state to ensure the zone is at the correct radius
+      useGameState.setState({
+        safeZoneRadius: safeZoneTargetRadius,
+      });
+    } else {
+      isZoneCompletionEnforced.current = false;
+    }
+
+    // Update previous level reference
+    prevLevelRef.current = level;
+
     // Only update the current radius if:
     // 1. It's not actively shrinking, or
     // 2. The new radius is smaller than the current one (level transition)
-    if (!isShrinkingRef.current || safeZoneRadius < currentRadiusRef.current) {
+    // 3. We're not enforcing zone completion (for levels divisible by 5)
+    if (
+      (!isShrinkingRef.current || safeZoneRadius < currentRadiusRef.current) &&
+      !isZoneCompletionEnforced.current
+    ) {
       currentRadiusRef.current = safeZoneRadius;
+      // When starting a new shrink, record the initial radius
+      initialRadiusRef.current = safeZoneRadius;
+
+      // Record start time when beginning to shrink to a new target
+      if (safeZoneRadius > safeZoneTargetRadius) {
+        startShrinkTimeRef.current = Date.now() / 1000; // Convert to seconds
+
+        // Calculate rough estimate of time to completion based on shrink rate
+        const radiusDifference = safeZoneRadius - safeZoneTargetRadius;
+        estimatedTimeToCompleteRef.current =
+          radiusDifference / safeZoneShrinkRate;
+      }
     }
 
     // Always update the target radius so we know where to shrink to
     targetRadiusRef.current = safeZoneTargetRadius;
-  }, [safeZoneRadius, safeZoneTargetRadius]);
+  }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
 
   // Missing ref declaration
   const lastRadiusUpdateTime = useRef(0);
 
   // Check if we're on a level where the zone changes
-  const isZoneChangeLevel = level % 5 === 0;
+  const isZoneChangeLevel = level % 5 === 0 && level > 0;
   // Calculate the current zone level (1 for levels 5-9, 2 for levels 10-14, etc.)
   const currentZoneLevel = Math.floor(level / 5);
+
+  // Calculate next zone level and progress towards it
+  const nextZoneLevel = currentZoneLevel + 1;
+  const nextZoneLevelNumber = nextZoneLevel * 5;
+  const levelsUntilNextZone = nextZoneLevelNumber - level;
+
+  // Determine if we're on final level before zone change (to highlight urgency)
+  const isPreZoneChangeLevel = level % 5 === 4;
+
+  // Calculate the target radius for the next zone level
+  const nextZoneTargetRadius = (() => {
+    const maxRadius = 50;
+    const minRadius = 5;
+    const radiusDecrease = 4;
+    return Math.max(minRadius, maxRadius - nextZoneLevel * radiusDecrease);
+  })();
+
+  // Calculate the percentage progress towards the next zone level target
+  const getZoneCompletionPercentage = () => {
+    if (isZoneChangeLevel) return 100; // Always 100% on zone change levels
+
+    // Calculate how far we've shrunk from the initial zone radius toward the next zone target
+    const initialZoneRadius = 50 - currentZoneLevel * 4;
+    const totalShrinkNeeded = initialZoneRadius - nextZoneTargetRadius;
+    const currentShrink = initialZoneRadius - safeZoneRadius;
+
+    // Calculate the percentage and ensure it's between 0-100
+    return Math.min(
+      100,
+      Math.max(0, (currentShrink / totalShrinkNeeded) * 100)
+    );
+  };
 
   // Update safe zone radius and apply damage outside the zone
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !safeZoneActive) return;
 
     const currentState = useGameState.getState();
+    const currentTime = state.clock.getElapsedTime();
+
+    // Force the radius to target on zone change levels (divisible by 5)
+    if (
+      isZoneChangeLevel &&
+      currentRadiusRef.current !== targetRadiusRef.current
+    ) {
+      currentRadiusRef.current = targetRadiusRef.current;
+
+      // Update the game state to reflect this
+      useGameState.setState({
+        safeZoneRadius: targetRadiusRef.current,
+      });
+
+      // Skip the rest of the shrinking logic
+      return;
+    }
 
     // Only update the state if we need to shrink
     if (currentRadiusRef.current > currentState.safeZoneTargetRadius) {
@@ -89,6 +185,14 @@ const SafeZone = () => {
           });
           lastRadiusUpdateTime.current = state.clock.elapsedTime;
         }
+
+        // Calculate progress percentage for visual feedback
+        const totalShrinkAmount =
+          initialRadiusRef.current - targetRadiusRef.current;
+        const shrunkAmount =
+          initialRadiusRef.current - currentRadiusRef.current;
+        const progressPercentage = (shrunkAmount / totalShrinkAmount) * 100;
+        setZoneProgress(Math.min(100, Math.max(0, progressPercentage)));
       }
 
       // Check if shrinking is complete
@@ -97,6 +201,7 @@ const SafeZone = () => {
         0.1
       ) {
         isShrinkingRef.current = false;
+        setZoneProgress(100); // Ensure we show 100% when complete
       }
     } else {
       // Reset shrinking flag when target is reached
@@ -232,7 +337,12 @@ const SafeZone = () => {
   // Safe zone opacity increases with zone level to make danger more visible
   const getSafeZoneOpacity = () => {
     const baseOpacity = 0.15;
-    return baseOpacity + Math.min(0.35, currentZoneLevel * 0.05);
+    const zoneIncrease = Math.min(0.35, currentZoneLevel * 0.05);
+
+    // Increase opacity when approaching the next zone level
+    const urgencyBonus = isPreZoneChangeLevel ? 0.15 : 0;
+
+    return baseOpacity + zoneIncrease + urgencyBonus;
   };
 
   // Get target zone color (red with intensity based on level)
@@ -245,6 +355,9 @@ const SafeZone = () => {
 
   // Calculate if this is a zone level with pulsing effect (every 5 levels)
   const shouldPulse = isZoneChangeLevel && isShrinkingRef.current;
+
+  // Also pulse when we're about to change zones (last level before new zone)
+  const shouldUrgencyPulse = isPreZoneChangeLevel && isShrinkingRef.current;
 
   // Use a different opacity for pulse effect on new zone levels
   const getPulseOpacity = () => {
@@ -262,7 +375,11 @@ const SafeZone = () => {
         <meshBasicMaterial
           color={getSafeZoneColor()}
           transparent
-          opacity={shouldPulse ? getPulseOpacity() : getSafeZoneOpacity()}
+          opacity={
+            shouldPulse || shouldUrgencyPulse
+              ? getPulseOpacity()
+              : getSafeZoneOpacity()
+          }
           side={THREE.DoubleSide}
           depthWrite={false}
           depthTest={false}
@@ -322,7 +439,7 @@ const SafeZone = () => {
             <meshBasicMaterial
               color={getTargetZoneColor()}
               transparent
-              opacity={0.05}
+              opacity={isPreZoneChangeLevel ? 0.08 : 0.05} // Increase opacity when approaching next zone
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -341,7 +458,7 @@ const SafeZone = () => {
             <meshBasicMaterial
               color={getTargetZoneColor()}
               transparent
-              opacity={0.5}
+              opacity={isPreZoneChangeLevel ? 0.7 : 0.5} // Increase opacity when approaching next zone
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -360,7 +477,7 @@ const SafeZone = () => {
             <meshBasicMaterial
               color={getTargetZoneColor()}
               transparent
-              opacity={0.5}
+              opacity={isPreZoneChangeLevel ? 0.7 : 0.5} // Increase opacity when approaching next zone
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -405,7 +522,7 @@ const SafeZone = () => {
               <meshBasicMaterial
                 color={getTargetZoneColor()}
                 transparent
-                opacity={0.25}
+                opacity={isPreZoneChangeLevel ? 0.4 : 0.25} // Increase opacity when approaching next zone
                 depthWrite={false}
                 depthTest={false}
                 blending={THREE.AdditiveBlending}
