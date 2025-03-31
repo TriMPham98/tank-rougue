@@ -17,8 +17,8 @@ export const availableWeapons: SecondaryWeapon[] = [
     description:
       "Fires instant laser beams that deal moderate damage with no travel time.",
     damage: 30,
-    cooldown: 1.5,
-    range: 20,
+    cooldown: 0.5,
+    range: 40,
     projectileSpeed: 100,
   },
   {

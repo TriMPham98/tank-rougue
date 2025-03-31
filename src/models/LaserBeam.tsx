@@ -1,151 +1,184 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Cylinder } from "@react-three/drei";
-import { Vector3, Mesh, Object3D, MathUtils } from "three";
+// Import Mesh
+import { Vector3, Object3D, MathUtils, Mesh } from "three";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 
 interface LaserBeamProps {
   startPosition: [number, number, number];
   targetId: string;
-  rotation: number;
   damage: number;
   range: number;
   color: string;
 }
 
+const DAMAGE_INTERVAL = 0.1; // Apply damage every 100ms
+
 const LaserBeam = ({
   startPosition,
   targetId,
-  rotation,
   damage,
   range,
   color,
 }: LaserBeamProps) => {
-  const beamRef = useRef<Object3D>(null);
+  // CORRECTED: Type the ref as Mesh
+  const beamRef = useRef<Mesh>(null);
   const lastDamageTimeRef = useRef(0);
-  const damageIntervalRef = useRef(0.05); // Apply damage every 50ms
 
-  // Access game state
   const damageEnemy = useGameState((state) => state.damageEnemy);
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
   const enemies = useGameState((state) => state.enemies);
 
-  // Effect for logging the beam creation
+  const startVec = useRef(new Vector3()).current;
+  const targetCenterVec = useRef(new Vector3()).current;
+  const directionVec = useRef(new Vector3()).current;
+  const endPointVec = useRef(new Vector3()).current;
+  const midPointVec = useRef(new Vector3()).current;
+  const obstaclePosVec = useRef(new Vector3()).current;
+  const vecToObstacle = useRef(new Vector3()).current;
+
   useEffect(() => {
     debug.log(`Laser beam created, targeting enemy ${targetId}`);
+    if (beamRef.current) {
+      // Ensure beam starts potentially visible if conditions allow
+      beamRef.current.visible = false; // Start hidden until first frame update
+    }
     return () => {
       debug.log(`Laser beam destroyed`);
     };
   }, [targetId]);
 
   useFrame((state, delta) => {
-    if (!beamRef.current || isPaused || isGameOver) return;
+    if (!beamRef.current) return; // Early exit if ref not ready
 
-    // Find the target enemy
+    if (isPaused || isGameOver) {
+      beamRef.current.visible = false;
+      return;
+    }
+
     const targetEnemy = enemies.find((e) => e.id === targetId);
-    if (!targetEnemy) return;
 
-    // Set up vectors
-    const start = new Vector3(...startPosition);
-    const targetPos = new Vector3(
+    if (!targetEnemy) {
+      beamRef.current.visible = false;
+      return;
+    }
+
+    startVec.set(...startPosition);
+    targetCenterVec.set(
       targetEnemy.position[0],
-      targetEnemy.position[1] + 1, // Aim at center mass
+      targetEnemy.position[1] + 0.5, // Adjust Y offset if needed
       targetEnemy.position[2]
     );
 
-    // Calculate distance to target
-    const distanceToTarget = start.distanceTo(targetPos);
+    const distanceToTarget = startVec.distanceTo(targetCenterVec);
 
-    // Check if target is within range
-    if (distanceToTarget > range) return;
+    if (distanceToTarget > range) {
+      beamRef.current.visible = false;
+      return;
+    }
 
-    // Check for obstacles between beam and target
+    directionVec.copy(targetCenterVec).sub(startVec); // Get direction vector (not normalized yet)
+
+    // --- Obstacle Check ---
+    let effectiveBeamLength = distanceToTarget;
     let isBlocked = false;
+    const directionNormalized = directionVec.clone().normalize(); // Need normalized for raycasting
+
     for (const obstacle of terrainObstacles) {
-      const obstaclePos = new Vector3(...obstacle.position);
+      obstaclePosVec.set(...obstacle.position);
+      // IMPORTANT: Adjust this radius calculation based on your obstacle geometry/size definition
       const obstacleRadius =
-        obstacle.type === "rock" ? obstacle.size : obstacle.size * 0.3;
+        (obstacle.type === "rock" ? obstacle.size : obstacle.size * 0.7) * 0.5 +
+        0.1;
 
-      // Simple line-sphere intersection check
-      const directionToTarget = targetPos.clone().sub(start).normalize();
-      const toObstacle = obstaclePos.clone().sub(start);
-      const projectionLength = toObstacle.dot(directionToTarget);
+      vecToObstacle.copy(obstaclePosVec).sub(startVec);
+      const tca = vecToObstacle.dot(directionNormalized);
 
-      // Skip if obstacle is behind starting point or beyond target
-      if (projectionLength < 0 || projectionLength > distanceToTarget) continue;
+      if (tca < 0 || tca > effectiveBeamLength) continue;
 
-      // Calculate closest point on beam line to obstacle
-      const closestPoint = start
-        .clone()
-        .add(directionToTarget.clone().multiplyScalar(projectionLength));
-      const distanceToBeam = obstaclePos.distanceTo(closestPoint);
+      const d2 = vecToObstacle.lengthSq() - tca * tca;
+      const radiusSq = obstacleRadius * obstacleRadius;
 
-      if (distanceToBeam < obstacleRadius) {
-        isBlocked = true;
-        break;
+      if (d2 <= radiusSq) {
+        const thc = Math.sqrt(radiusSq - d2);
+        const t0 = tca - thc;
+
+        if (t0 >= 0 && t0 < effectiveBeamLength) {
+          effectiveBeamLength = t0;
+          isBlocked = true;
+          // Optimization: If we want the beam to stop at the very first thing it hits,
+          // we could potentially break here, but checking all ensures we stop at the CLOSEST one.
+        }
       }
     }
 
-    // Position and scale the beam
-    if (beamRef.current) {
-      // Calculate direction vector from start to target
-      const direction = targetPos.clone().sub(start).normalize();
-
-      // Calculate effective beam length based on whether it's blocked
-      const beamLength = isBlocked
-        ? Math.min(distanceToTarget, 5)
-        : distanceToTarget;
-
-      // Calculate the end point of the beam
-      const endPoint = start
-        .clone()
-        .add(direction.clone().multiplyScalar(beamLength));
-
-      // Calculate the midpoint for positioning
-      const midPoint = new Vector3(
-        (start.x + endPoint.x) / 2,
-        (start.y + endPoint.y) / 2,
-        (start.z + endPoint.z) / 2
-      );
-
-      // Position at midpoint
-      beamRef.current.position.copy(midPoint);
-
-      // Properly orient the beam (Cylinder's default orientation is along Y-axis)
-      // We need to rotate it to align with our direction vector
-      beamRef.current.lookAt(endPoint);
-
-      // Apply additional 90-degree rotation to make the cylinder lie along its length
-      beamRef.current.rotateX(MathUtils.degToRad(90));
-
-      // Scale for thickness and length (note the order of x,y,z is different now)
-      beamRef.current.scale.set(0.05, beamLength / 2, 0.05);
+    // --- Zero Length Check ---
+    const MIN_BEAM_LENGTH = 0.01; // Define a small threshold
+    if (effectiveBeamLength < MIN_BEAM_LENGTH) {
+      beamRef.current.visible = false;
+      return; // Don't try to orient/scale a zero-length beam
     }
 
-    // Apply damage to enemy if not blocked and enough time has passed since last damage
+    // Make beam visible if it passed checks and has length
+    beamRef.current.visible = true;
+
+    // --- Beam Positioning, Orientation, and Scaling ---
+    // Recalculate end point based on potentially shortened effectiveBeamLength
+    // Use the *normalized* direction vector here
+    endPointVec
+      .copy(startVec)
+      .addScaledVector(directionNormalized, effectiveBeamLength);
+
+    midPointVec.copy(startVec).lerp(endPointVec, 0.5);
+
+    beamRef.current.position.copy(midPointVec);
+
+    // Orientation: Point Z towards end point, then rotate geometry
+    beamRef.current.lookAt(endPointVec);
+    // Reset potential accumulated rotation before applying the correction
+    // (Though lookAt usually resets orientation, this ensures clean state)
+    beamRef.current.rotation.set(0, 0, 0); // Reset local rotation
+    beamRef.current.lookAt(endPointVec); // Apply lookAt
+    beamRef.current.rotateX(Math.PI / 2); // Correct Cylinder alignment
+
+    // Scaling
+    const beamThickness = 0.05;
+    beamRef.current.scale.set(
+      beamThickness,
+      effectiveBeamLength,
+      beamThickness
+    );
+
+    // --- Apply Damage ---
     if (!isBlocked) {
       const currentTime = state.clock.getElapsedTime();
-      if (currentTime - lastDamageTimeRef.current > damageIntervalRef.current) {
+      if (currentTime - lastDamageTimeRef.current >= DAMAGE_INTERVAL) {
         damageEnemy(targetId, damage);
         lastDamageTimeRef.current = currentTime;
       }
+    } else {
+      lastDamageTimeRef.current = state.clock.getElapsedTime(); // Reset timer if blocked
     }
   });
 
   return (
     <Cylinder
+      // Assign the CORRECTLY TYPED ref
       ref={beamRef}
-      args={[1, 1, 1, 8]} // Base cylinder dimensions (will be scaled in useFrame)
-      position={startPosition}>
+      args={[1, 1, 1, 8]} // Base geometry (radiusTop=1, radiusBottom=1, height=1, radialSegments=8)
+      visible={false} // Start invisible, useFrame controls visibility
+    >
       <meshStandardMaterial
         color={color}
         emissive={color}
-        emissiveIntensity={2}
+        emissiveIntensity={2.5}
         transparent={true}
-        opacity={0.7}
+        opacity={0.75}
+        depthWrite={false} // Good for transparency
       />
     </Cylinder>
   );
