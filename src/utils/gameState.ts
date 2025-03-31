@@ -142,7 +142,7 @@ export const useGameState = create<GameState>((set, get) => ({
   safeZoneRadius: 50, // Initial radius covers the whole map
   safeZoneCenter: [0, 0], // Center of the map
   safeZoneTargetRadius: 50, // Target radius for shrinking
-  safeZoneShrinkRate: 0.05, // How fast the circle shrinks
+  safeZoneShrinkRate: 0.02, // How fast the circle shrinks (reduced from 0.05)
   safeZoneDamage: 1, // Damage per second outside the safe zone
   safeZoneActive: false, // Safe zone not active initially
 
@@ -284,7 +284,7 @@ export const useGameState = create<GameState>((set, get) => ({
       safeZoneRadius: 50,
       safeZoneCenter: [0, 0],
       safeZoneTargetRadius: 50,
-      safeZoneShrinkRate: 0.05,
+      safeZoneShrinkRate: 0.02, // Updated from 0.05 to match new slower shrink rate
       safeZoneDamage: 1,
       safeZoneActive: false,
     }),
@@ -348,8 +348,8 @@ export const useGameState = create<GameState>((set, get) => ({
 
       // Adjust safe zone for the new level
       const maxRadius = 50;
-      const minRadius = 10;
-      const radiusDecrease = 5;
+      const minRadius = 5; // Reduced from 10 to make the final zone smaller
+      const radiusDecrease = 4; // Decreased from 5 for less aggressive shrinking
 
       // Calculate new target radius for the circle
       const newTargetRadius = Math.max(
@@ -363,9 +363,9 @@ export const useGameState = create<GameState>((set, get) => ({
       const newSafeZoneDamage =
         baseDamage + (newLevel - 1) * damageIncreasePerLevel;
 
-      // Increase shrink rate as levels progress
-      const baseShrinkRate = 0.05;
-      const shrinkRateIncreasePerLevel = 0.02;
+      // Increase shrink rate as levels progress, but at a slower rate
+      const baseShrinkRate = 0.02; // Reduced from 0.05
+      const shrinkRateIncreasePerLevel = 0.01; // Reduced from 0.02
       const newShrinkRate =
         baseShrinkRate + (newLevel - 1) * shrinkRateIncreasePerLevel;
 

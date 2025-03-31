@@ -52,18 +52,18 @@ const SafeZone = () => {
 
     // Only update the state if we need to shrink AND only update once per second
     if (currentRadiusRef.current > currentState.safeZoneTargetRadius) {
-      // Calculate new radius
+      // Calculate new radius with a smoother transition
       const newRadius = Math.max(
         currentState.safeZoneTargetRadius,
-        currentRadiusRef.current - currentState.safeZoneShrinkRate * delta
+        currentRadiusRef.current - currentState.safeZoneShrinkRate * delta * 0.8 // Added multiplier for smoother shrinking
       );
 
       // Only update state if the difference is significant (e.g., more than 0.01)
       if (Math.abs(currentRadiusRef.current - newRadius) > 0.01) {
         currentRadiusRef.current = newRadius;
 
-        // Throttle state updates to be less frequent (e.g., every 100ms)
-        if (state.clock.elapsedTime - lastRadiusUpdateTime.current > 0.1) {
+        // Throttle state updates to be less frequent (e.g., every 200ms instead of 100ms)
+        if (state.clock.elapsedTime - lastRadiusUpdateTime.current > 0.2) {
           useGameState.setState({
             safeZoneRadius: newRadius,
           });
