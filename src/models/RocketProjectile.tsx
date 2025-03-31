@@ -45,7 +45,7 @@ const RocketProjectile = ({
   const getState = useRef(useGameState.getState).current;
 
   // Splash damage radius
-  const splashRadius = 5;
+  const splashRadius = 10;
 
   // Explode function for applying splash damage
   const explode = () => {
