@@ -103,12 +103,13 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
           firepower!
         </p>
         <div className="weapon-grid">
-          {availableWeapons.map((weapon) => (
+          {availableWeapons.map((weapon, index) => (
             <div
               key={weapon.id}
               className="weapon-card"
               data-weapon-id={weapon.id}
               onClick={(e) => handleWeaponSelect(weapon, e)}>
+              <div className="weapon-key">{index + 1}</div>
               <h3>{weapon.name}</h3>
               <p className="weapon-description">{weapon.description}</p>
               <div className="weapon-stats">

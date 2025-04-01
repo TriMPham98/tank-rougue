@@ -75,16 +75,30 @@ const GameUI = () => {
   // Handle keyboard shortcuts for upgrades
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (!showUpgradeUI || isUpgrading) return;
+      if (isUpgrading) return;
 
-      const keyIndex = parseInt(event.key) - 1; // Convert key 1, 2, 3 to index 0, 1, 2
+      // Handle level upgrades (1-3)
+      if (showUpgradeUI) {
+        const keyIndex = parseInt(event.key) - 1;
+        if (
+          keyIndex >= 0 &&
+          keyIndex < 3 &&
+          keyIndex < availableUpgrades.length
+        ) {
+          handleUpgrade(availableUpgrades[keyIndex]);
+        }
+      }
 
-      if (
-        keyIndex >= 0 &&
-        keyIndex < 3 &&
-        keyIndex < availableUpgrades.length
-      ) {
-        handleUpgrade(availableUpgrades[keyIndex]);
+      // Handle secondary weapon selection (1-4)
+      if (showWeaponSelection) {
+        const keyIndex = parseInt(event.key) - 1;
+        if (
+          keyIndex >= 0 &&
+          keyIndex < 4 &&
+          keyIndex < availableWeapons.length
+        ) {
+          selectWeapon(availableWeapons[keyIndex]);
+        }
       }
     };
 
@@ -92,7 +106,13 @@ const GameUI = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [showUpgradeUI, availableUpgrades, isUpgrading]);
+  }, [
+    showUpgradeUI,
+    showWeaponSelection,
+    availableUpgrades,
+    availableWeapons,
+    isUpgrading,
+  ]);
 
   const handleUpgrade = useCallback(
     (stat: UpgradeableStat) => {
