@@ -98,6 +98,9 @@ const GameUI = () => {
           keyIndex < availableWeapons.length
         ) {
           selectWeapon(availableWeapons[keyIndex]);
+          closeWeaponSelection();
+          // Show upgrade UI after weapon selection
+          useGameState.setState({ showUpgradeUI: true });
         }
       }
     };
@@ -228,9 +231,14 @@ const GameUI = () => {
       <WeaponSelection
         onWeaponSelect={(weapon) => {
           selectWeapon(weapon);
+          closeWeaponSelection();
+          // Show upgrade UI after weapon selection
+          useGameState.setState({ showUpgradeUI: true });
         }}
         onClose={() => {
           closeWeaponSelection();
+          // Show upgrade UI after closing weapon selection
+          useGameState.setState({ showUpgradeUI: true });
         }}
         state={{
           availableWeapons,
