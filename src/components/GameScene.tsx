@@ -234,7 +234,7 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       {/* Dev controls - disabled to prevent keyboard input interference */}
       <OrbitControls enabled={false} />
 
-      <Environment preset="sunset" />
+      {/* <Environment preset="sunset" /> */}
     </Suspense>
   );
 });
