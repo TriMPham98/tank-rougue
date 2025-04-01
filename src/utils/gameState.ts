@@ -397,23 +397,13 @@ export const useGameState = create<GameState>((set, get) => ({
         maxRadius - zoneReductionLevel * radiusDecrease
       );
 
-      // Increase damage outside safe zone as levels progress
-      const baseDamage = 1;
-      const damageIncreasePerLevel = 0.5;
-      // Only increase damage every 5 levels
-      const newSafeZoneDamage =
-        baseDamage + zoneReductionLevel * damageIncreasePerLevel;
-
-      // Calculate how many levels until next zone change (next multiple of 5)
-      const levelsUntilNextZoneChange = 5 - (newLevel % 5);
-
       // Estimate average enemy count for the next few levels
       const avgEnemiesPerLevel = Math.ceil((newLevel + 2) / 2); // Simple approximation
 
       // Estimate total enemies needed to be killed before next zone change
       // Need to sum the enemies required for each level from current to next zone change
       let totalEnemiesBeforeNextZone = 0;
-      for (let i = 0; i < levelsUntilNextZoneChange; i++) {
+      for (let i = 0; i < zoneReductionLevel; i++) {
         const levelNum = newLevel + i;
         // Use the same formula as the game uses to calculate enemies required per level
         if (levelNum <= 24) {
@@ -457,16 +447,23 @@ export const useGameState = create<GameState>((set, get) => ({
 
         // We must complete this shrinking before reaching the next level divisible by 5
         // Set a safety factor to ensure it completes slightly before reaching that level
-        const safetyFactor = 0.4; // Changed from 0.6 to 0.4 - complete 60% early for even faster shrinking
+        const safetyFactor = 0.3; // Changed from 0.4 to 0.3 for even faster shrinking
 
-        // Calculate required shrink rate
-        const calculatedShrinkRate = Math.max(
-          0.01, // Minimum shrink rate
-          totalRadiusToShrink / (estimatedSecondsToNextZone * safetyFactor)
-        );
+        // Calculate required shrink rate with late game scaling
+        let baseShrinkRate =
+          totalRadiusToShrink / (estimatedSecondsToNextZone * safetyFactor);
+
+        // Increase shrink rate in late game (after level 50)
+        if (newLevel > 50) {
+          const lateGameMultiplier = 1 + (newLevel - 50) * 0.1; // 10% increase per level after 50
+          baseShrinkRate *= lateGameMultiplier;
+        }
+
+        // Ensure minimum shrink rate
+        const calculatedShrinkRate = Math.max(0.01, baseShrinkRate);
 
         // Cap the shrink rate at a reasonable maximum to avoid too rapid shrinking
-        const maxShrinkRate = 0.1;
+        const maxShrinkRate = 0.15; // Increased from 0.1 to 0.15 for faster shrinking
         newShrinkRate = Math.min(maxShrinkRate, calculatedShrinkRate);
       }
 
@@ -480,6 +477,21 @@ export const useGameState = create<GameState>((set, get) => ({
 
       // Only activate the safe zone if we're at level 5 or beyond
       const shouldActivateSafeZone = newLevel >= 5;
+
+      // Increase damage outside safe zone as levels progress with late game scaling
+      const baseDamage = 1;
+      const damageIncreasePerLevel = 0.5;
+      // Only increase damage every 5 levels
+      let newSafeZoneDamage =
+        baseDamage + zoneReductionLevel * damageIncreasePerLevel;
+
+      // Add late game damage scaling (after level 50)
+      if (newLevel > 50) {
+        const lateGameLevel = newLevel - 50;
+        // Exponential damage increase in late game
+        const lateGameMultiplier = 1 + Math.pow(lateGameLevel * 0.2, 1.5);
+        newSafeZoneDamage *= lateGameMultiplier;
+      }
 
       return {
         level: newLevel,

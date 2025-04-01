@@ -37,7 +37,7 @@ export const availableWeapons: SecondaryWeapon[] = [
     description:
       "Fires high-damage bullets with excellent range but slow fire rate.",
     damage: 200,
-    cooldown: 5,
+    cooldown: 3,
     range: 50,
     projectileSpeed: 35,
   },
