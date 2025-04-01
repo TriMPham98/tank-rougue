@@ -242,6 +242,7 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 // Move terrain obstacle generation to a separate component
 const TerrainObstacleGenerator = () => {
   const addTerrainObstacle = useGameState((state) => state.addTerrainObstacle);
+  const isGameOver = useGameState((state) => state.isGameOver);
   const [isTerrainReady, setIsTerrainReady] = useState(false);
 
   useEffect(() => {
@@ -337,7 +338,7 @@ const TerrainObstacleGenerator = () => {
         error
       );
     }
-  }, [addTerrainObstacle]);
+  }, [addTerrainObstacle, isGameOver]);
 
   if (!isTerrainReady) {
     debug.log("TerrainObstacleGenerator: Not ready, showing loading indicator");
