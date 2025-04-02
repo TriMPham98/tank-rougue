@@ -6,28 +6,46 @@ import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import Projectile from "./Projectile";
-import SniperRifle from "./SniperRifle"; // Make sure the import path is correct
-import Shotgun from "./Shotgun"; // Import the Shotgun component
-import LaserWeapon from "./LaserWeapon"; // Import the LaserWeapon component
-import RocketLauncher from "./RocketLauncher"; // Import the RocketLauncher component
+import SniperRifle from "./SniperRifle"; // Assume updated path/component
+import Shotgun from "./Shotgun"; // Assume updated path/component
+import LaserWeapon from "./LaserWeapon"; // Assume updated path/component
+import RocketLauncher from "./RocketLauncher"; // Assume updated path/component
+import { WeaponInstance } from "../utils/weaponTypes"; // Assuming you have this type
 
 interface TankProps {
   position: [number, number, number];
 }
 
-// Define a constant for spacing between secondary weapons
-const SECONDARY_WEAPON_SPACING = 0.35; // Slightly reduced spacing to accommodate 4 weapons
+// Define constants for side weapon placement
+const SIDE_WEAPON_DISTANCE = 2.0; // Distance from the tank center
+const SIDE_WEAPON_Y_OFFSET = 0.2; // Vertical offset from tank base
+const MAX_SIDE_WEAPONS = 4;
+
+// Helper type for the weapon component map
+type WeaponComponentType = React.ComponentType<{
+  weaponInstance: WeaponInstance;
+  position: [number, number, number];
+  rotation: number;
+  // Add other props if needed by specific weapon components (e.g., key)
+}>;
+
+// Map weapon IDs to their components
+// Ensure these components are updated to accept `position` and `rotation` props
+const WeaponComponents: Record<string, WeaponComponentType> = {
+  sniper: SniperRifle,
+  shotgun: Shotgun,
+  laser: LaserWeapon,
+  rocket: RocketLauncher,
+};
 
 const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
 
-  // Use refs instead of state for values that shouldn't trigger renders
-  const tankRotationRef = useRef(Math.PI); // Initialize with PI (180 degrees) to face forward
+  const tankRotationRef = useRef(Math.PI);
   const turretRotationRef = useRef(0);
   const lastShootTimeRef = useRef(0);
   const positionRef = useRef<[number, number, number]>([...position]);
-
   const isInitializedRef = useRef(false);
 
   const [projectiles, setProjectiles] = useState<
@@ -37,7 +55,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const { forward, backward, left, right, turretLeft, turretRight, shoot } =
     useKeyboardControls();
 
-  // Get necessary game state values
   const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
   const playerSpeed = useGameState((state) => state.playerSpeed);
   const playerFireRate = useGameState((state) => state.playerFireRate);
@@ -51,35 +68,10 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const selectedWeapons = useGameState((state) => state.selectedWeapons);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
-  // Filter out weapons by type
-  const sniperRifles = selectedWeapons.filter(
-    (weapon) => weapon.id === "sniper"
-  );
-  const shotguns = selectedWeapons.filter((weapon) => weapon.id === "shotgun");
-  const lasers = selectedWeapons.filter((weapon) => weapon.id === "laser");
-  const rocketLaunchers = selectedWeapons.filter(
-    (weapon) => weapon.id === "rocket"
-  ); // Add rocket launchers
+  // Get the first N weapons to be placed around the tank
+  const sideWeapons = selectedWeapons.slice(0, MAX_SIDE_WEAPONS);
 
-  const numSniperRifles = sniperRifles.length;
-  const numShotguns = shotguns.length;
-  const numLasers = lasers.length;
-  const numRocketLaunchers = rocketLaunchers.length; // Count rocket launchers
-
-  // --- Centering Logic ---
-  // Calculate the total width occupied by the weapons
-  const totalSniperWidth = (numSniperRifles - 1) * SECONDARY_WEAPON_SPACING;
-  const totalShotgunWidth = (numShotguns - 1) * SECONDARY_WEAPON_SPACING;
-  const totalLaserWidth = (numLasers - 1) * SECONDARY_WEAPON_SPACING;
-  const totalRocketWidth = (numRocketLaunchers - 1) * SECONDARY_WEAPON_SPACING;
-
-  // Calculate the starting offset (most left position) to center each group
-  const sniperStartOffset = -totalSniperWidth / 2;
-  const shotgunStartOffset = -totalShotgunWidth / 2;
-  const laserStartOffset = -totalLaserWidth / 2;
-  const rocketStartOffset = -totalRocketWidth / 2;
-  // --- End Centering Logic ---
-
+  // --- Collision Check (Unchanged) ---
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
     const mapSize = 50;
     if (Math.abs(newX) > mapSize - 1 || Math.abs(newZ) > mapSize - 1) {
@@ -102,6 +94,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     return false;
   };
 
+  // --- Effects (Unchanged, removed logging for brevity) ---
   useEffect(() => {
     if (playerHealthRegen <= 0) return;
     const interval = setInterval(() => {
@@ -128,8 +121,9 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     return () => {
       debug.log("Tank component cleanup - preserve position state");
     };
-  }, [position, updatePlayerPosition]); // Only depend on initial position and update function
+  }, [position, updatePlayerPosition]);
 
+  // --- Frame Loop (Main turret shooting and movement logic unchanged) ---
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
@@ -163,25 +157,20 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
-    // Main turret auto-shooting - optimized for consistent firing
+    // Main turret auto-shooting
     const currentTime = state.clock.getElapsedTime();
     const timeSinceLastShot = currentTime - lastShootTimeRef.current;
 
     if (timeSinceLastShot >= playerFireRate) {
-      // Calculate number of shots that should have occurred during this time
-      // This ensures that if frame rate drops, we still maintain the correct fire rate
       const shotsMissed = Math.floor(timeSinceLastShot / playerFireRate);
-
-      // Only fire one projectile but update the time to maintain consistency
       if (shotsMissed > 0) {
         const shootPosition: [number, number, number] = [
           tankRef.current.position.x +
             Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
-          tankRef.current.position.y + 0.7,
+          tankRef.current.position.y + 0.7, // Turret height offset
           tankRef.current.position.z +
             Math.cos(tankRotationRef.current + turretRotationRef.current) * 1.5,
         ];
-
         setProjectiles((prev) => [
           ...prev,
           {
@@ -190,8 +179,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             rotation: tankRotationRef.current + turretRotationRef.current,
           },
         ]);
-
-        // Update the last shot time accounting for all missed shots
         lastShootTimeRef.current =
           currentTime - (timeSinceLastShot % playerFireRate);
       }
@@ -218,44 +205,33 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         updatePlayerPosition(newPosition);
       }
     }
+    // Update positionRef even if not moved significantly, so side weapons follow precisely
+    else if (tankRef.current) {
+      positionRef.current = [
+        tankRef.current.position.x,
+        tankRef.current.position.y,
+        tankRef.current.position.z,
+      ];
+    }
   });
 
   const removeProjectile = (id: string) => {
     setProjectiles((prev) => prev.filter((p) => p.id !== id));
   };
 
-  useEffect(() => {
-    if (sniperRifles.length > 0) {
-      debug.log(`Sniper rifles equipped: ${sniperRifles.length}`);
-    }
-  }, [sniperRifles.length]); // Log only when the count changes
-
-  useEffect(() => {
-    if (shotguns.length > 0) {
-      debug.log(`Shotguns equipped: ${shotguns.length}`);
-    }
-  }, [shotguns.length]); // Log only when the count changes
-
-  useEffect(() => {
-    if (lasers.length > 0) {
-      debug.log(`Lasers equipped: ${lasers.length}`);
-    }
-  }, [lasers.length]); // Log when laser count changes
-
-  useEffect(() => {
-    if (rocketLaunchers.length > 0) {
-      debug.log(`Rocket launchers equipped: ${rocketLaunchers.length}`);
-    }
-  }, [rocketLaunchers.length]); // Log when rocket launcher count changes
+  // Calculate current tank properties needed for side weapons
+  // Doing this outside useFrame but before return ensures they have latest ref values for this render pass
+  const currentTankPositionVec = new Vector3(...positionRef.current);
+  const currentTankRotation = tankRotationRef.current; // Use the body rotation
 
   return (
     <>
+      {/* Tank Mesh Group (Unchanged) */}
       <group ref={tankRef}>
         {/* Tank body */}
-        <Box args={[1.5, 0.5, 2]} castShadow receiveShadow>
+        <Box args={[1.5, 0.5, 2]} castShadow receiveShadow position={[0, 0, 0]}>
           <meshStandardMaterial color="green" />
         </Box>
-
         {/* Tank turret */}
         <group position={[0, 0.5, 0]} ref={turretRef}>
           <Cylinder
@@ -264,12 +240,10 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             castShadow>
             <meshStandardMaterial color="darkgreen" />
           </Cylinder>
-          {/* Tank cannon */}
           <Box args={[0.2, 0.2, 1.5]} position={[0, 0.2, 1]} castShadow>
             <meshStandardMaterial color="darkgreen" />
           </Box>
         </group>
-
         {/* Tank tracks */}
         <Box
           args={[0.3, 0.2, 2.2]}
@@ -287,7 +261,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         </Box>
       </group>
 
-      {/* Main Turret Projectiles */}
+      {/* Main Turret Projectiles (Unchanged) */}
       {projectiles.map((projectile) => (
         <Projectile
           key={projectile.id}
@@ -299,71 +273,53 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         />
       ))}
 
-      {/* Render sniper rifles with calculated centered offsets */}
-      {sniperRifles.map((weapon, index) => {
-        // Calculate the specific offset for this weapon instance
-        const currentOffset =
-          sniperStartOffset + index * SECONDARY_WEAPON_SPACING;
+      {/* Render Side Weapons */}
+      {sideWeapons.map((weapon, index) => {
+        // Determine the component to render
+        const WeaponComponent = WeaponComponents[weapon.id];
+        if (!WeaponComponent) {
+          console.warn(`No component found for weapon ID: ${weapon.id}`);
+          return null; // Skip if component not found
+        }
+
+        // Calculate position based on index (0: front, 1: back, 2: left, 3: right)
+        let offsetX = 0;
+        let offsetZ = 0;
+        const angle = currentTankRotation;
+        const dist = SIDE_WEAPON_DISTANCE;
+
+        switch (index) {
+          case 0: // Front
+            offsetX = dist * Math.sin(angle);
+            offsetZ = dist * Math.cos(angle);
+            break;
+          case 1: // Back
+            offsetX = -dist * Math.sin(angle);
+            offsetZ = -dist * Math.cos(angle);
+            break;
+          case 2: // Left
+            offsetX = -dist * Math.cos(angle); // Corrected from sin/cos mixup
+            offsetZ = dist * Math.sin(angle); // Corrected from sin/cos mixup
+            break;
+          case 3: // Right
+            offsetX = dist * Math.cos(angle); // Corrected from sin/cos mixup
+            offsetZ = -dist * Math.sin(angle); // Corrected from sin/cos mixup
+            break;
+        }
+
+        const weaponPosition: [number, number, number] = [
+          currentTankPositionVec.x + offsetX,
+          currentTankPositionVec.y + SIDE_WEAPON_Y_OFFSET, // Use defined Y offset
+          currentTankPositionVec.z + offsetZ,
+        ];
 
         return (
-          <SniperRifle
-            // Use weapon.instanceId for a more stable key if available
-            key={weapon.instanceId || `sniper-${index}`}
-            tankPosition={positionRef.current} // Pass the ref's current value
-            tankRotation={tankRotationRef.current} // Pass the ref's current value
+          <WeaponComponent
+            // Use a stable key if possible (instanceId is good)
+            key={weapon.instanceId || `side-weapon-${index}`}
             weaponInstance={weapon}
-            positionOffset={currentOffset} // Pass the calculated centered offset
-          />
-        );
-      })}
-
-      {/* Render shotguns with calculated centered offsets */}
-      {shotguns.map((weapon, index) => {
-        // Calculate the specific offset for this weapon instance
-        const currentOffset =
-          shotgunStartOffset + index * SECONDARY_WEAPON_SPACING;
-
-        return (
-          <Shotgun
-            key={weapon.instanceId || `shotgun-${index}`}
-            tankPosition={positionRef.current}
-            tankRotation={tankRotationRef.current}
-            weaponInstance={weapon}
-            positionOffset={currentOffset}
-          />
-        );
-      })}
-
-      {/* Render laser weapons with calculated centered offsets */}
-      {lasers.map((weapon, index) => {
-        // Calculate the specific offset for this weapon instance
-        const currentOffset =
-          laserStartOffset + index * SECONDARY_WEAPON_SPACING;
-
-        return (
-          <LaserWeapon
-            key={weapon.instanceId || `laser-${index}`}
-            tankPosition={positionRef.current}
-            tankRotation={tankRotationRef.current}
-            weaponInstance={weapon}
-            positionOffset={currentOffset}
-          />
-        );
-      })}
-
-      {/* Render rocket launchers with calculated centered offsets */}
-      {rocketLaunchers.map((weapon, index) => {
-        // Calculate the specific offset for this weapon instance
-        const currentOffset =
-          rocketStartOffset + index * SECONDARY_WEAPON_SPACING;
-
-        return (
-          <RocketLauncher
-            key={weapon.instanceId || `rocket-${index}`}
-            tankPosition={positionRef.current}
-            tankRotation={tankRotationRef.current}
-            weaponInstance={weapon}
-            positionOffset={currentOffset}
+            position={weaponPosition} // Pass the calculated absolute world position
+            rotation={currentTankRotation} // Pass the tank's body rotation
           />
         );
       })}

@@ -1,22 +1,19 @@
 // src/components/Shotgun.tsx
-import React, { useRef, useEffect, FC } from "react"; // Import FC
+import React, { useRef, useEffect, FC } from "react";
 import { useFrame, RootState } from "@react-three/fiber";
 import { Box } from "@react-three/drei";
 import { Group, Vector3 } from "three";
-// Adjust path as needed for gameState and types
-import { useGameState, SecondaryWeapon, Enemy } from "../utils/gameState";
+import { useGameState, SecondaryWeapon, Enemy } from "../utils/gameState"; // Adjust path if needed
 import { debug } from "../utils/debug";
-import ShotgunPellet from "./ShotgunPellet"; // Import the TSX component
+import ShotgunPellet from "./ShotgunPellet";
 
-// Define the props interface for the Shotgun itself
+// --- UPDATED PROPS INTERFACE ---
 interface ShotgunProps {
-  tankPosition: [number, number, number];
-  tankRotation: number;
-  weaponInstance: SecondaryWeapon; // Use the imported type
-  positionOffset?: number; // Optional prop
+  weaponInstance: SecondaryWeapon;
+  position: [number, number, number]; // Receive absolute position
+  rotation: number; // Receive base rotation (tank body rotation)
 }
 
-// Define the structure for the data stored in projectilesRef
 interface PelletData {
   id: string;
   position: [number, number, number];
@@ -28,55 +25,43 @@ interface PelletData {
 }
 
 const Shotgun: FC<ShotgunProps> = ({
-  tankPosition,
-  tankRotation,
   weaponInstance,
-  positionOffset = 0, // Default value
+  position, // Use directly
+  rotation, // Use directly (as base, aiming will override)
 }) => {
-  // Type the refs
   const shotgunRef = useRef<Group>(null);
   const lastShootTimeRef = useRef<number>(0);
   const targetEnemyRef = useRef<string | null>(null);
-  // Use the PelletData interface for the ref's array type
   const projectilesRef = useRef<PelletData[]>([]);
 
-  // Access game state - Types are inferred
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const enemies = useGameState((state) => state.enemies);
 
-  // Get properties from weapon instance (types inferred from SecondaryWeapon)
   const {
     cooldown,
-    range: weaponRange, // Rename range to avoid conflict
+    range: weaponRange,
     projectileSpeed,
-    damage: damagePerShot, // Rename damage for clarity
-    instanceId = "default_shotgun", // Provide default for instanceId
+    damage: damagePerShot,
+    instanceId = "default_shotgun",
   } = weaponInstance;
 
-  // Shotgun specific constants
   const PELLET_COUNT: number = 5;
   const SPREAD_ANGLE: number = 0.3;
-
-  // Calculate damage per pellet
   const damagePerPellet: number =
     PELLET_COUNT > 0 ? damagePerShot / PELLET_COUNT : 0;
-
-  // Calculate TTL
   const projectileTTL: number =
     projectileSpeed > 0 ? weaponRange / projectileSpeed + 0.5 : 2;
 
-  // --- Find Nearest Enemy ---
-  // Type the return value and the parameter
+  // Find Nearest Enemy (Uses weapon's position for distance check)
   const findNearestEnemy = (): string | null => {
-    if (!enemies.length) return null;
-    const tankPos = new Vector3(...tankPosition);
+    if (!enemies.length || !shotgunRef.current) return null;
+    const weaponPos = shotgunRef.current.position; // Use actual weapon position
     let nearestEnemy: string | null = null;
     let minDistance: number = Infinity;
-    // Type enemy within forEach
     enemies.forEach((enemy: Enemy) => {
       const enemyPos = new Vector3(...enemy.position);
-      const distance: number = tankPos.distanceTo(enemyPos);
+      const distance: number = weaponPos.distanceTo(enemyPos); // Check distance from WEAPON
       if (distance < weaponRange && distance < minDistance) {
         minDistance = distance;
         nearestEnemy = enemy.id;
@@ -85,16 +70,16 @@ const Shotgun: FC<ShotgunProps> = ({
     return nearestEnemy;
   };
 
-  // --- Calculate Angle To Enemy ---
-  // Type the parameter and return value
+  // Calculate Angle To Enemy (Uses weapon's position)
   const calculateAngleToEnemy = (enemyId: string): number => {
     const enemy: Enemy | undefined = enemies.find((e) => e.id === enemyId);
-    if (!enemy) return 0; // Return base rotation if enemy not found
-    // Use current tank position for accuracy if it moves while aiming
-    const currentTankPos =
-      shotgunRef.current?.position ?? new Vector3(...tankPosition);
-    const dx: number = enemy.position[0] - currentTankPos.x;
-    const dz: number = enemy.position[2] - currentTankPos.z;
+    // Use the weapon's *current* world position from the ref
+    if (!enemy || !shotgunRef.current)
+      return shotgunRef.current?.rotation.y ?? 0; // Default to current rotation
+
+    const currentWeaponPos = shotgunRef.current.position;
+    const dx: number = enemy.position[0] - currentWeaponPos.x;
+    const dz: number = enemy.position[2] - currentWeaponPos.z;
     return Math.atan2(dx, dz);
   };
 
@@ -103,16 +88,11 @@ const Shotgun: FC<ShotgunProps> = ({
     const currentShotgun = shotgunRef.current;
     if (!currentShotgun || isPaused || isGameOver) return;
 
-    // Position weapon
-    const horizontalOffset: number =
-      Math.sin(tankRotation + Math.PI / 2) * positionOffset;
-    const depthOffset: number =
-      Math.cos(tankRotation + Math.PI / 2) * positionOffset;
-    currentShotgun.position.x = tankPosition[0] + horizontalOffset;
-    currentShotgun.position.y = tankPosition[1] + 0.5;
-    currentShotgun.position.z = tankPosition[2] + depthOffset;
-    // Base rotation applied first, then aiming rotation overrides if target exists
-    currentShotgun.rotation.y = tankRotation;
+    // --- Apply Position and Base Rotation from Props ---
+    currentShotgun.position.fromArray(position);
+    // We set the base rotation here, but the aiming logic below will override it if a target is found.
+    // If no target is found, it defaults back to aligning with the tank body.
+    currentShotgun.rotation.y = rotation;
 
     // Targeting Logic
     if (
@@ -131,25 +111,26 @@ const Shotgun: FC<ShotgunProps> = ({
 
       const currentTime: number = state.clock.getElapsedTime();
       if (currentTime - lastShootTimeRef.current > cooldown) {
-        const fireOrigin: Vector3 = currentShotgun.position;
-        const barrelLength: number = 1.2;
+        // --- Calculate Fire Position based on Aimed Weapon ---
+        const fireOrigin: Vector3 = currentShotgun.position; // Weapon's current world position
+        const aimedRotation = currentShotgun.rotation.y; // Weapon's current aimed rotation
+        const barrelLength: number = 1.2; // Adjust as needed
         const firePosition: [number, number, number] = [
-          fireOrigin.x + Math.sin(angleToEnemy) * barrelLength,
-          fireOrigin.y,
-          fireOrigin.z + Math.cos(angleToEnemy) * barrelLength,
+          fireOrigin.x + Math.sin(aimedRotation) * barrelLength,
+          fireOrigin.y, // Use weapon's Y
+          fireOrigin.z + Math.cos(aimedRotation) * barrelLength,
         ];
 
         // Fire multiple pellets
         for (let i = 0; i < PELLET_COUNT; i++) {
           const spreadOffset: number = (Math.random() - 0.5) * SPREAD_ANGLE;
-          const pelletRotation: number = angleToEnemy + spreadOffset;
-          const projectileId: string = `${instanceId}-pellet-${performance.now()}-${i}`; // Use performance.now() for better uniqueness
+          const pelletRotation: number = aimedRotation + spreadOffset; // Spread relative to aimed direction
+          const projectileId: string = `${instanceId}-pellet-${performance.now()}-${i}`;
 
-          // Create pellet data object matching the PelletData interface
           const newPelletData: PelletData = {
             id: projectileId,
-            position: firePosition,
-            rotation: pelletRotation,
+            position: firePosition, // Use calculated fire position
+            rotation: pelletRotation, // Use pellet's specific rotation
             damage: damagePerPellet,
             speed: projectileSpeed,
             range: weaponRange,
@@ -161,24 +142,21 @@ const Shotgun: FC<ShotgunProps> = ({
         lastShootTimeRef.current = currentTime;
       }
     }
+    // If no target, the rotation remains aligned with the tank body (set at the start of useFrame)
   });
 
-  // Remove projectile - type the id parameter
   const removeProjectile = (id: string): void => {
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
 
-  // --- Logging Mount/Unmount ---
+  // --- Lifecycle Logging (Unchanged, but positionOffset is no longer relevant) ---
   useEffect(() => {
-    debug.log(
-      `Shotgun instance ${instanceId} mounted, offset: ${positionOffset}`
-    );
+    debug.log(`Shotgun instance ${instanceId} mounted.`);
     return () => {
       debug.log(`Shotgun instance ${instanceId} unmounted`);
     };
-  }, [instanceId, positionOffset]); // Dependencies are correct
+  }, [instanceId]); // Only depends on instanceId now
 
-  // Helper for Box args typing
   const boxArgs = (
     w: number,
     h: number,
@@ -187,9 +165,9 @@ const Shotgun: FC<ShotgunProps> = ({
 
   return (
     <>
-      {/* Shotgun model */}
+      {/* Shotgun model - position/rotation handled by ref updates */}
       <group ref={shotgunRef}>
-        {/* Use helper for args */}
+        {/* Model parts remain the same */}
         <Box args={boxArgs(0.08, 0.1, 1.0)} position={[0, 0, 0.6]} castShadow>
           <meshStandardMaterial color="#5D4037" />
         </Box>
@@ -250,7 +228,7 @@ const Shotgun: FC<ShotgunProps> = ({
         </Box>
       </group>
 
-      {/* Render all active pellets - type pelletData in map */}
+      {/* Render projectiles */}
       {projectilesRef.current.map((pelletData: PelletData) => (
         <ShotgunPellet
           key={pelletData.id}
@@ -261,7 +239,7 @@ const Shotgun: FC<ShotgunProps> = ({
           speed={pelletData.speed}
           range={pelletData.range}
           ttl={pelletData.ttl}
-          onRemove={removeProjectile} // Pass the correctly typed callback
+          onRemove={removeProjectile}
         />
       ))}
     </>

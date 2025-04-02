@@ -1,23 +1,23 @@
+// src/components/SniperRifle.tsx
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box } from "@react-three/drei";
 import { Group, Vector3 } from "three";
-import { useGameState, SecondaryWeapon } from "../utils/gameState";
+import { useGameState, SecondaryWeapon, Enemy } from "../utils/gameState"; // Adjust path
 import { debug } from "../utils/debug";
 import SniperProjectile from "./SniperProjectile";
 
+// --- UPDATED PROPS INTERFACE ---
 interface SniperRifleProps {
-  tankPosition: [number, number, number];
-  tankRotation: number;
   weaponInstance: SecondaryWeapon;
-  positionOffset?: number;
+  position: [number, number, number]; // Receive absolute position
+  rotation: number; // Receive base rotation
 }
 
 const SniperRifle = ({
-  tankPosition,
-  tankRotation,
   weaponInstance,
-  positionOffset = 0,
+  position, // Use directly
+  rotation, // Use directly (as base, aiming will override)
 }: SniperRifleProps) => {
   const rifleRef = useRef<Group>(null);
   const lastShootTimeRef = useRef(0);
@@ -27,115 +27,94 @@ const SniperRifle = ({
       id: string;
       position: [number, number, number];
       rotation: number;
-      targetId: string | null;
+      targetId: string | null; // Keep targetId if SniperProjectile uses it for guidance/initial velocity
+      // Add damage if SniperProjectile needs it directly
+      damage: number;
     }[]
   >([]);
 
-  // Access game state
-  const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
+  const playerTurretDamage = useGameState((state) => state.playerTurretDamage); // Used for projectile damage
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const enemies = useGameState((state) => state.enemies);
 
-  // Get cooldown from weapon properties
   const cooldown = weaponInstance.cooldown;
   const weaponRange = weaponInstance.range;
-  const instanceId = weaponInstance.instanceId || "default";
+  const baseDamage = weaponInstance.damage; // Get base damage
+  const instanceId = weaponInstance.instanceId || "default_sniper";
 
-  // Find nearest enemy for auto-aim
+  // Find Nearest Enemy (Uses weapon's position)
   const findNearestEnemy = (): string | null => {
-    if (!enemies.length) return null;
-
-    const tankPos = new Vector3(
-      tankPosition[0],
-      tankPosition[1],
-      tankPosition[2]
-    );
-    let nearestEnemy = null;
-    let minDistance = Infinity;
-
-    enemies.forEach((enemy) => {
-      const enemyPos = new Vector3(
-        enemy.position[0],
-        enemy.position[1],
-        enemy.position[2]
-      );
-      const distance = tankPos.distanceTo(enemyPos);
-
-      // Only consider enemies within the sniper's range
+    if (!enemies.length || !rifleRef.current) return null;
+    const weaponPos = rifleRef.current.position; // Use weapon's actual position
+    let nearestEnemy: string | null = null;
+    let minDistance: number = Infinity;
+    enemies.forEach((enemy: Enemy) => {
+      const enemyPos = new Vector3(...enemy.position);
+      const distance: number = weaponPos.distanceTo(enemyPos); // Check from WEAPON
       if (distance < weaponRange && distance < minDistance) {
         minDistance = distance;
         nearestEnemy = enemy.id;
       }
     });
-
     return nearestEnemy;
   };
 
-  // Calculate angle to target enemy
+  // Calculate Angle To Enemy (Uses weapon's position)
   const calculateAngleToEnemy = (enemyId: string): number => {
-    const enemy = enemies.find((e) => e.id === enemyId);
-    if (!enemy) return 0;
+    const enemy: Enemy | undefined = enemies.find((e) => e.id === enemyId);
+    if (!enemy || !rifleRef.current) return rifleRef.current?.rotation.y ?? 0;
 
-    const dx = enemy.position[0] - tankPosition[0];
-    const dz = enemy.position[2] - tankPosition[2];
-
+    const currentWeaponPos = rifleRef.current.position;
+    const dx: number = enemy.position[0] - currentWeaponPos.x;
+    const dz: number = enemy.position[2] - currentWeaponPos.z;
     return Math.atan2(dx, dz);
   };
 
   // Auto-aim and fire at enemies
   useFrame((state, delta) => {
-    if (!rifleRef.current || isPaused || isGameOver) return;
+    const currentRifle = rifleRef.current;
+    if (!currentRifle || isPaused || isGameOver) return;
 
-    // Position the rifle relative to tank with offset
-    // Apply horizontal offset based on positionOffset
-    const horizontalOffset =
-      Math.sin(tankRotation + Math.PI / 2) * positionOffset;
-    const depthOffset = Math.cos(tankRotation + Math.PI / 2) * positionOffset;
+    // --- Apply Position and Base Rotation from Props ---
+    currentRifle.position.fromArray(position);
+    currentRifle.rotation.y = rotation; // Set base rotation
 
-    rifleRef.current.position.x = tankPosition[0] + horizontalOffset;
-    rifleRef.current.position.y = tankPosition[1] + 0.5;
-    rifleRef.current.position.z = tankPosition[2] + depthOffset;
-    rifleRef.current.rotation.y = tankRotation;
-
-    // Find a target if we don't have one or if current target no longer exists
+    // Targeting Logic
     if (
       !targetEnemyRef.current ||
       !enemies.some((e) => e.id === targetEnemyRef.current)
     ) {
       targetEnemyRef.current = findNearestEnemy();
-      if (targetEnemyRef.current) {
-        debug.log(
-          `Sniper ${instanceId} locked on target: ${targetEnemyRef.current}`
-        );
-      }
     }
 
-    // If we have a target, aim and fire
+    // Aiming and Firing
     if (targetEnemyRef.current) {
-      // Calculate angle to enemy
       const angleToEnemy = calculateAngleToEnemy(targetEnemyRef.current);
+      currentRifle.rotation.y = angleToEnemy; // Aim weapon model
 
-      // Rotate the rifle to aim at enemy (auto-aim)
-      rifleRef.current.rotation.y = angleToEnemy;
-
-      // Fire if cooldown has passed
       const currentTime = state.clock.getElapsedTime();
       if (currentTime - lastShootTimeRef.current > cooldown) {
-        // Calculate firing position (tip of the rifle barrel)
+        // --- Calculate Fire Position based on Aimed Weapon ---
+        const fireOrigin = currentRifle.position;
+        const aimedRotation = currentRifle.rotation.y;
+        const barrelLength = 1.8; // Adjust as needed for sniper barrel
         const firePosition: [number, number, number] = [
-          rifleRef.current.position.x + Math.sin(angleToEnemy) * 1.8, // Adjusted for smaller rifle
-          rifleRef.current.position.y,
-          rifleRef.current.position.z + Math.cos(angleToEnemy) * 1.8, // Adjusted for smaller rifle
+          fireOrigin.x + Math.sin(aimedRotation) * barrelLength,
+          fireOrigin.y, // Use weapon's Y
+          fireOrigin.z + Math.cos(aimedRotation) * barrelLength,
         ];
 
-        // Add new projectile
+        // Calculate final damage including player stat bonus
+        const finalDamage = baseDamage * (1 + playerTurretDamage / 10);
+
         const projectileId = Math.random().toString(36).substr(2, 9);
         projectilesRef.current.push({
           id: projectileId,
           position: firePosition,
-          rotation: angleToEnemy,
-          targetId: targetEnemyRef.current,
+          rotation: aimedRotation, // Projectile starts facing aim direction
+          targetId: targetEnemyRef.current, // Pass target if needed by projectile
+          damage: finalDamage, // Pass calculated damage
         });
 
         debug.log(
@@ -144,37 +123,33 @@ const SniperRifle = ({
         lastShootTimeRef.current = currentTime;
       }
     }
+    // If no target, rotation remains aligned with tank body
   });
 
-  // Remove projectile from the ref
   const removeProjectile = (id: string) => {
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
 
-  // Add an effect to log when the component is mounted for debugging
+  // --- Lifecycle Logging (Unchanged, positionOffset removed) ---
   useEffect(() => {
-    debug.log(
-      `Sniper rifle instance ${instanceId} mounted, offset: ${positionOffset}`
-    );
+    debug.log(`Sniper rifle instance ${instanceId} mounted.`);
     return () => {
       debug.log(`Sniper rifle instance ${instanceId} unmounted`);
     };
-  }, [instanceId, positionOffset]);
+  }, [instanceId]);
 
   return (
     <>
-      {/* Sniper rifle model - now half the size with more details */}
+      {/* Sniper rifle model - position/rotation handled by ref updates */}
       <group ref={rifleRef}>
-        {/* Rifle main body - slimmer overall */}
+        {/* Model parts remain the same */}
         <Box
-          args={[0.07, 0.08, 1.75]} // Half the size
+          args={[0.07, 0.08, 1.75]}
           position={[0, 0, 0.75]}
           rotation={[0, 0, 0]}
           castShadow>
           <meshStandardMaterial color="#252525" />
         </Box>
-
-        {/* Rifle stock */}
         <Box
           args={[0.06, 0.12, 0.4]}
           position={[0, 0.02, 0]}
@@ -182,8 +157,6 @@ const SniperRifle = ({
           castShadow>
           <meshStandardMaterial color="#1A1A1A" />
         </Box>
-
-        {/* Rifle barrel - longer, thinner */}
         <Box args={[0.05, 0.05, 1.2]} position={[0, 0, 1.4]} castShadow>
           <meshStandardMaterial
             color="#202020"
@@ -191,13 +164,9 @@ const SniperRifle = ({
             roughness={0.2}
           />
         </Box>
-
-        {/* Scope mount */}
         <Box args={[0.08, 0.04, 0.25]} position={[0, 0.1, 1]} castShadow>
           <meshStandardMaterial color="#181818" />
         </Box>
-
-        {/* Main scope body */}
         <Box args={[0.06, 0.15, 0.35]} position={[0, 0.19, 1]} castShadow>
           <meshStandardMaterial
             color="#111111"
@@ -205,8 +174,6 @@ const SniperRifle = ({
             roughness={0.3}
           />
         </Box>
-
-        {/* Scope front lens */}
         <Box args={[0.04, 0.04, 0.01]} position={[0, 0.19, 1.18]} castShadow>
           <meshStandardMaterial
             color="#88CCFF"
@@ -214,13 +181,9 @@ const SniperRifle = ({
             emissiveIntensity={0.5}
           />
         </Box>
-
-        {/* Scope rear lens */}
         <Box args={[0.04, 0.04, 0.01]} position={[0, 0.19, 0.83]} castShadow>
           <meshStandardMaterial color="#000000" />
         </Box>
-
-        {/* Bolt handle */}
         <Box
           args={[0.02, 0.02, 0.15]}
           position={[0.08, 0.02, 0.7]}
@@ -228,18 +191,12 @@ const SniperRifle = ({
           castShadow>
           <meshStandardMaterial color="#333333" metalness={0.6} />
         </Box>
-
-        {/* Trigger guard */}
         <Box args={[0.03, 0.07, 0.12]} position={[0, -0.05, 0.4]} castShadow>
           <meshStandardMaterial color="#222222" />
         </Box>
-
-        {/* Magazine */}
         <Box args={[0.05, 0.12, 0.2]} position={[0, -0.1, 0.6]} castShadow>
           <meshStandardMaterial color="#333333" />
         </Box>
-
-        {/* Bipod left leg */}
         <Box
           args={[0.02, 0.08, 0.02]}
           position={[-0.05, -0.05, 2]}
@@ -247,8 +204,6 @@ const SniperRifle = ({
           castShadow>
           <meshStandardMaterial color="#282828" />
         </Box>
-
-        {/* Bipod right leg */}
         <Box
           args={[0.02, 0.08, 0.02]}
           position={[0.05, -0.05, 2]}
@@ -285,7 +240,7 @@ const SniperRifle = ({
           id={projectile.id}
           position={projectile.position}
           rotation={projectile.rotation}
-          damage={playerTurretDamage}
+          damage={projectile.damage} // Pass damage from the stored data
           targetId={projectile.targetId}
           onRemove={removeProjectile}
         />
