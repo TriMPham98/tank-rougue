@@ -16,7 +16,7 @@ interface TankProps {
 }
 
 // Define a constant for spacing between secondary weapons
-const SECONDARY_WEAPON_SPACING = 0.4; // Adjust this value as needed for visual spacing
+const SECONDARY_WEAPON_SPACING = 0.35; // Slightly reduced spacing to accommodate 4 weapons
 
 const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const tankRef = useRef<Group>(null);
@@ -71,13 +71,13 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const totalSniperWidth = (numSniperRifles - 1) * SECONDARY_WEAPON_SPACING;
   const totalShotgunWidth = (numShotguns - 1) * SECONDARY_WEAPON_SPACING;
   const totalLaserWidth = (numLasers - 1) * SECONDARY_WEAPON_SPACING;
-  const totalRocketWidth = (numRocketLaunchers - 1) * SECONDARY_WEAPON_SPACING; // Add width for rocket launchers
+  const totalRocketWidth = (numRocketLaunchers - 1) * SECONDARY_WEAPON_SPACING;
 
   // Calculate the starting offset (most left position) to center each group
   const sniperStartOffset = -totalSniperWidth / 2;
   const shotgunStartOffset = -totalShotgunWidth / 2;
   const laserStartOffset = -totalLaserWidth / 2;
-  const rocketStartOffset = -totalRocketWidth / 2; // Starting offset for rocket launchers
+  const rocketStartOffset = -totalRocketWidth / 2;
   // --- End Centering Logic ---
 
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
