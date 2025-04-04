@@ -16,7 +16,7 @@ export const availableWeapons: SecondaryWeapon[] = [
     name: "Laser Cannon",
     description:
       "Fires instant laser beams that deal moderate damage with no travel time.",
-    damage: 50,
+    damage: 100,
     cooldown: 0.5,
     range: 15,
     projectileSpeed: 100,
