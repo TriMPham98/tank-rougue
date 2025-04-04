@@ -215,15 +215,15 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           castShadow
           receiveShadow>
           <meshStandardMaterial
-            color="#2E8B57" // Sea green for a heroic yet tactical look
+            color="#2E8B57"
             metalness={0.3}
             roughness={0.7}
           />
         </Box>
-        {/* Sloped Front Armor */}
+        {/* Sloped Rear Armor (changed from front) */}
         <Box
           args={[1.2, 0.4, 0.5]}
-          position={[0, 0.2, 1.35]}
+          position={[0, 0.2, -1.35]}
           rotation={[Math.PI / 6, 0, 0]}
           castShadow
           receiveShadow>
