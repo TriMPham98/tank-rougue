@@ -189,7 +189,9 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       );
       const rotationDiff = targetRotation - tankRotationRef.current;
       const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      tankRotationRef.current += wrappedDiff * delta;
+      // Increase turn rate for bombers to make them turn more quickly
+      const turnRate = isBomber ? 2.5 : 1;
+      tankRotationRef.current += wrappedDiff * delta * turnRate;
       tankRef.current.rotation.y = tankRotationRef.current;
 
       if (isBomber || distanceToPlayer > 5) {
