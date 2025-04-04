@@ -228,7 +228,7 @@ export const generateEnemies = (
     while (attempts < turretMaxRegenAttempts && !positionFound) {
       position = generateRandomPosition(config.gridSize, existingPositions);
 
-      if (type === "turret" && safeZoneActive) {
+      if ((type === "turret" || type === "tank") && safeZoneActive) {
         const turretPosVec = new THREE.Vector2(position[0], position[2]);
         const centerVec = new THREE.Vector2(
           safeZoneCenter[0],
@@ -243,7 +243,7 @@ export const generateEnemies = (
           attempts++;
           if (attempts >= turretMaxRegenAttempts) {
             debug.warn(
-              `Turret spawn failed after ${attempts} attempts to find position in safe zone. Placing near center.`
+              `${type} spawn failed after ${attempts} attempts to find position in safe zone. Placing near center.`
             );
             // Fallback: Place near the center of the safe zone, slightly offset
             const angle = Math.random() * Math.PI * 2;
@@ -264,7 +264,7 @@ export const generateEnemies = (
             ) {
               position = [safeZoneCenter[0], 0.5, safeZoneCenter[1]]; // Absolute fallback
               debug.warn(
-                `Fallback turret position near center also obstructed. Placing AT center.`
+                `Fallback ${type} position near center also obstructed. Placing AT center.`
               );
             }
             positionFound = true; // Use the fallback position
@@ -272,7 +272,7 @@ export const generateEnemies = (
           // No need to push position to existingPositions here, happens after loop
         }
       } else {
-        // Not a turret or safe zone inactive, position is fine
+        // Not a turret/tank or safe zone inactive, position is fine
         positionFound = true;
       }
     }

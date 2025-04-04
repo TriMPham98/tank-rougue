@@ -116,7 +116,7 @@ export const useRespawnManager = () => {
           }
 
           // Check safe zone if it's a turret
-          if (type === "turret" && safeZoneActive) {
+          if ((type === "turret" || type === "tank") && safeZoneActive) {
             const turretPosVec = new THREE.Vector2(position[0], position[2]);
             const centerVec = new THREE.Vector2(
               safeZoneCenter[0],
@@ -131,7 +131,7 @@ export const useRespawnManager = () => {
               attempts++;
               if (attempts >= turretMaxRegenAttempts) {
                 debug.warn(
-                  `Turret RESPAWN failed after ${attempts} attempts to find position in safe zone. Placing near center.`
+                  `${type} RESPAWN failed after ${attempts} attempts to find position in safe zone. Placing near center.`
                 );
                 // Fallback logic similar to generateEnemies
                 const angle = Math.random() * Math.PI * 2;
@@ -154,7 +154,7 @@ export const useRespawnManager = () => {
                 if (!fallbackClear) {
                   position = [safeZoneCenter[0], 0.5, safeZoneCenter[1]];
                   debug.warn(
-                    `Fallback turret RESPAWN position also obstructed. Placing AT center.`
+                    `Fallback ${type} RESPAWN position also obstructed. Placing AT center.`
                   );
                 }
                 positionFound = true; // Use the fallback position
@@ -162,7 +162,7 @@ export const useRespawnManager = () => {
               // Loop continues to regenerate position
             }
           } else {
-            // Not a turret or safe zone inactive, position is fine
+            // Not a turret/tank or safe zone inactive, position is fine
             positionFound = true;
           }
         }
