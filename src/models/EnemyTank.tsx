@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Box, Cylinder, Sphere, Cone } from "@react-three/drei";
-import { Vector3, Group, Quaternion } from "three";
+import { Box, Cylinder, Sphere } from "@react-three/drei";
+import { Vector3, Group, Quaternion, MeshStandardMaterial } from "three";
 import { Enemy, useGameState } from "../utils/gameState";
 import EnemyProjectile from "./EnemyProjectile";
 import { debug } from "../utils/debug";
@@ -12,7 +12,8 @@ interface EnemyTankProps {
 
 const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const tankRef = useRef<Group>(null);
-  const turretRef = useRef<Group>(null);
+  const turretRef = useRef<Group>(null); // Still needed for non-bombers
+  const flashMaterialRef = useRef<MeshStandardMaterial>(null); // Ref for the flashing material
 
   const tankRotationRef = useRef(0);
   const turretRotationRef = useRef(0);
@@ -36,18 +37,18 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const isBomber = enemy.type === "bomber";
   const isTank = enemy.type === "tank";
   const isTurret = enemy.type === "turret";
-  const tankRadius = isBomber ? 0.8 : 1.25;
+  const tankRadius = isBomber ? 1.2 : 1.25; // Adjusted bomber radius slightly for hovercraft base
   const moveSpeed = enemy.speed || (isBomber ? 2.5 : 1.5);
 
   useEffect(() => {
     maxHealthRef.current = enemy.health;
-  }, []);
+  }, []); // No dependency change needed
 
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...enemy.position);
     }
-  }, []);
+  }, []); // No dependency change needed
 
   const checkTerrainCollision = useCallback(
     (newX: number, newZ: number): boolean => {
@@ -76,78 +77,75 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       }
       return false;
     },
-    [tankRadius]
+    [tankRadius, getState]
   );
 
   useFrame((state, delta) => {
-    if (isPaused || isGameOver) return;
+    if (isPaused || isGameOver || !tankRef.current) return;
 
-    if (isBomber) {
-      if (!tankRef.current) return;
-    } else {
-      if (!tankRef.current || !turretRef.current) return;
-    }
+    if (!isBomber && !turretRef.current) return;
 
     const playerTankPosition = getState().playerTankPosition;
     if (!playerTankPosition) return;
 
+    // --- Health Update ---
     const enemies = getState().enemies;
     const currentEnemy = enemies.find((e) => e.id === enemy.id);
-
     if (currentEnemy) {
       const newHealthPercent = currentEnemy.health / maxHealthRef.current;
       if (newHealthPercent !== healthPercent) {
         setHealthPercent(newHealthPercent);
       }
+    } else {
+      return;
     }
 
-    const directionToPlayer = new Vector3(
-      playerTankPosition[0] - tankRef.current.position.x,
-      0,
-      playerTankPosition[2] - tankRef.current.position.z
-    ).normalize();
+    const currentPositionVec = tankRef.current.position;
+    const playerPositionVec = new Vector3(...playerTankPosition);
 
-    const targetTurretRotation = Math.atan2(
-      directionToPlayer.x,
-      directionToPlayer.z
-    );
+    const directionToPlayer = playerPositionVec
+      .clone()
+      .sub(currentPositionVec)
+      .setY(0)
+      .normalize();
 
-    if (!isBomber) {
+    const distanceToPlayer = currentPositionVec.distanceTo(playerPositionVec);
+
+    // --- Turret Rotation (Non-Bombers) ---
+    if (!isBomber && turretRef.current) {
+      const targetTurretRotation = Math.atan2(
+        directionToPlayer.x,
+        directionToPlayer.z
+      );
+
       if (isTank) {
         const relativeRotation = targetTurretRotation - tankRotationRef.current;
         const turretRotationDiff = relativeRotation - turretRotationRef.current;
         const wrappedTurretDiff =
           ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
         turretRotationRef.current += wrappedTurretDiff * delta * 3;
+        turretRef.current.rotation.y = turretRotationRef.current;
       } else if (isTurret) {
         turretRotationRef.current = targetTurretRotation;
+        turretRef.current.rotation.y = targetTurretRotation;
       }
-
-      turretRef.current!.rotation.y = isTank
-        ? turretRotationRef.current
-        : targetTurretRotation;
     }
 
-    const distanceToPlayer = new Vector3(
-      playerTankPosition[0] - tankRef.current.position.x,
-      0,
-      playerTankPosition[2] - tankRef.current.position.z
-    ).length();
-
-    if (!isBomber) {
+    // --- Shooting (Non-Bombers) ---
+    if (!isBomber && turretRef.current) {
       const shootingRange = isTank ? 20 : 25;
       const fireRate = isTank ? 5.0 : 6.0;
 
       if (distanceToPlayer < shootingRange) {
-        if (
-          state.clock.getElapsedTime() - lastShootTimeRef.current >
-          fireRate
-        ) {
+        const timeSinceLastShot =
+          state.clock.getElapsedTime() - lastShootTimeRef.current;
+        if (timeSinceLastShot > fireRate) {
           const barrelEndLocalZ = isTank ? 1.75 : 2.2;
           const barrelEndLocal = new Vector3(0, 0.2, barrelEndLocalZ);
-          const barrelEndWorld = turretRef.current!.localToWorld(
+          const barrelEndWorld = turretRef.current.localToWorld(
             barrelEndLocal.clone()
           );
+
           const shootPosition: [number, number, number] = [
             barrelEndWorld.x,
             barrelEndWorld.y,
@@ -155,11 +153,14 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           ];
 
           const worldQuaternion = new Quaternion();
-          turretRef.current!.getWorldQuaternion(worldQuaternion);
-          const direction = new Vector3(0, 0, 1).applyQuaternion(
+          turretRef.current.getWorldQuaternion(worldQuaternion);
+          const shootDirection = new Vector3(0, 0, 1).applyQuaternion(
             worldQuaternion
           );
-          const projectileRotation = Math.atan2(direction.x, direction.z);
+          const projectileRotation = Math.atan2(
+            shootDirection.x,
+            shootDirection.z
+          );
 
           setProjectiles((prev) => [
             ...prev,
@@ -171,11 +172,12 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           ]);
 
           lastShootTimeRef.current = state.clock.getElapsedTime();
-          debug.log(`Enemy ${enemy.id} fired at player`);
+          debug.log(`Enemy ${enemy.id} (${enemy.type}) fired at player`);
         }
       }
     }
 
+    // --- Movement and Body Rotation (Tank & Bomber) ---
     if (isTank || isBomber) {
       const targetRotation = Math.atan2(
         directionToPlayer.x,
@@ -183,28 +185,38 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       );
       const rotationDiff = targetRotation - tankRotationRef.current;
       const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      const turnRate = isBomber ? 2.5 : 1;
+      const turnRate = isBomber ? 2.0 : 1.0;
       tankRotationRef.current += wrappedDiff * delta * turnRate;
       tankRef.current.rotation.y = tankRotationRef.current;
 
-      if (isBomber || distanceToPlayer > 5) {
-        const newX =
-          tankRef.current.position.x +
-          Math.sin(tankRotationRef.current) * delta * moveSpeed;
-        const newZ =
-          tankRef.current.position.z +
-          Math.cos(tankRotationRef.current) * delta * moveSpeed;
+      let shouldMove = false;
+      if (isBomber) {
+        shouldMove = true;
+      } else if (isTank) {
+        shouldMove = distanceToPlayer > 8;
+      }
 
-        if (!checkTerrainCollision(newX, newZ)) {
-          tankRef.current.position.x = newX;
-          tankRef.current.position.z = newZ;
+      if (shouldMove) {
+        const moveDirection = new Vector3(
+          Math.sin(tankRotationRef.current),
+          0,
+          Math.cos(tankRotationRef.current)
+        );
+        const potentialX =
+          currentPositionVec.x + moveDirection.x * delta * moveSpeed;
+        const potentialZ =
+          currentPositionVec.z + moveDirection.z * delta * moveSpeed;
+
+        if (!checkTerrainCollision(potentialX, potentialZ)) {
+          tankRef.current.position.x = potentialX;
+          tankRef.current.position.z = potentialZ;
 
           if (isBomber) {
             tankRef.current.position.y =
-              0.5 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
+              0.2 + Math.sin(state.clock.getElapsedTime() * 4) * 0.1;
           }
 
-          if (Math.random() < 0.05) {
+          if (Math.random() < 0.1) {
             const newPosition: [number, number, number] = [
               tankRef.current.position.x,
               tankRef.current.position.y,
@@ -213,18 +225,61 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             updateEnemyPosition(enemy.id, newPosition);
           }
         } else {
-          tankRotationRef.current += (Math.random() - 0.5) * Math.PI * 0.25;
-          if (Math.random() < 0.1) {
-            debug.log(`Enemy ${enemy.id} avoiding rock obstacle`);
+          tankRotationRef.current +=
+            (Math.random() - 0.5) * Math.PI * 0.5 * delta * 5;
+          if (Math.random() < 0.05) {
+            debug.log(`Enemy ${enemy.id} avoiding obstacle`);
           }
         }
+      }
 
-        if (isBomber && distanceToPlayer < 2) {
-          debug.log(`Bomber ${enemy.id} exploded on player!`);
-          const takeDamage = getState().takeDamage;
-          takeDamage(25);
-          damageEnemy(enemy.id, 1000);
-        }
+      if (isBomber && distanceToPlayer < 2) {
+        debug.log(`Bomber ${enemy.id} exploded on player!`);
+        const takeDamage = getState().takeDamage;
+        takeDamage(25);
+        damageEnemy(enemy.id, 1000);
+      }
+    }
+
+    // --- Bomber Flashing Animation ---
+    if (isBomber && flashMaterialRef.current) {
+      const maxFlashDistance = 15;
+      const minFlashDistance = 2;
+      const baseFreq = 2; // Reduced from 4
+      const freqMultiplier = 6; // Reduced from 12
+
+      const proximity = Math.max(
+        0,
+        Math.min(
+          1,
+          1 -
+            (distanceToPlayer - minFlashDistance) /
+              (maxFlashDistance - minFlashDistance)
+        )
+      );
+
+      if (distanceToPlayer < maxFlashDistance) {
+        const currentFreq = baseFreq + proximity * freqMultiplier;
+        const sineValue = Math.sin(
+          state.clock.elapsedTime * Math.PI * 2 * currentFreq
+        );
+
+        const flashFactor = (sineValue + 1) / 2;
+
+        const minOpacity = 0.1;
+        const maxOpacity = 0.7;
+        const minIntensity = 0.2;
+        const maxIntensity = 1.0;
+
+        flashMaterialRef.current.opacity =
+          minOpacity + flashFactor * (maxOpacity - minOpacity);
+        flashMaterialRef.current.emissiveIntensity =
+          minIntensity + flashFactor * (maxIntensity - minIntensity);
+        flashMaterialRef.current.needsUpdate = true;
+      } else {
+        flashMaterialRef.current.opacity = 0.0;
+        flashMaterialRef.current.emissiveIntensity = 0;
+        flashMaterialRef.current.needsUpdate = true;
       }
     }
   });
@@ -240,187 +295,267 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     setProjectiles((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
+  // Updated bomber geometry constants
+  const bomberBaseRadius = 1.2;
+  const bomberBaseBottomRadius = 1.4;
+  const bomberBaseHeight = 0.3;
+  const bomberCockpitSize = 0.8;
+  const bomberThrusterRadius = 0.3;
+  const bomberThrusterHeight = 0.6;
+
   return (
     <>
-      <group ref={tankRef}>
+      <group ref={tankRef} name={`enemy-${enemy.id}-${enemy.type}`}>
         {isBomber ? (
           <>
-            <Sphere
-              args={[0.8, 16, 16]}
-              position={[0, 0, 0]}
+            {/* Angular Hovercraft Base (Skirt) */}
+            <Cylinder
+              args={[
+                bomberBaseRadius,
+                bomberBaseBottomRadius,
+                bomberBaseHeight,
+                8,
+              ]}
+              position={[0, bomberBaseHeight / 2, 0]}
               castShadow
               receiveShadow
               onClick={() => handleHit(25)}>
               <meshStandardMaterial
-                color="yellow"
-                emissive="orange"
-                emissiveIntensity={0.3}
+                color="#4A4A4A"
+                roughness={0.5}
+                metalness={0.7}
               />
-            </Sphere>
+            </Cylinder>
+
+            {/* Angular Cockpit */}
+            <Box
+              args={[
+                bomberCockpitSize,
+                bomberCockpitSize * 0.5,
+                bomberCockpitSize,
+              ]}
+              position={[0, bomberBaseHeight + bomberCockpitSize * 0.25, 0]}
+              rotation={[0, Math.PI / 4, 0]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial
+                color="#FFD700"
+                roughness={0.3}
+                metalness={0.5}
+              />
+            </Box>
+
+            {/* Rear Thruster Housing (Angular) */}
             <Cylinder
-              args={[0.3, 0.5, 0.8, 12]}
-              position={[0, 0, -0.8]}
+              args={[
+                bomberThrusterRadius,
+                bomberThrusterRadius,
+                bomberThrusterHeight,
+                6,
+              ]}
+              position={[
+                0,
+                bomberBaseHeight / 2 + 0.1,
+                -bomberBaseRadius * 0.8,
+              ]}
               rotation={[Math.PI / 2, 0, 0]}
               castShadow
-              receiveShadow
               onClick={() => handleHit(25)}>
               <meshStandardMaterial
                 color="darkgray"
-                emissive="red"
-                emissiveIntensity={0.5}
+                roughness={0.4}
+                metalness={0.6}
               />
             </Cylinder>
+
+            {/* Side Thrusters (Fins) */}
             <Box
-              args={[0.6, 0.1, 0.4]}
-              position={[0.6, 0, 0]}
+              args={[0.2, 0.4, bomberBaseRadius * 0.8]}
+              position={[bomberBaseRadius * 0.8, bomberBaseHeight / 2 + 0.2, 0]}
+              rotation={[0, 0, Math.PI / 6]}
               castShadow
-              receiveShadow
               onClick={() => handleHit(25)}>
-              <meshStandardMaterial color="goldenrod" />
-            </Box>
-            <Box
-              args={[0.6, 0.1, 0.4]}
-              position={[-0.6, 0, 0]}
-              castShadow
-              receiveShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color="goldenrod" />
-            </Box>
-            <Sphere args={[0.85, 16, 16]} position={[0, 0, 0]} renderOrder={1}>
               <meshStandardMaterial
+                color="#4A4A4A"
+                roughness={0.5}
+                metalness={0.7}
+              />
+            </Box>
+            <Box
+              args={[0.2, 0.4, bomberBaseRadius * 0.8]}
+              position={[
+                -bomberBaseRadius * 0.8,
+                bomberBaseHeight / 2 + 0.2,
+                0,
+              ]}
+              rotation={[0, 0, -Math.PI / 6]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial
+                color="#4A4A4A"
+                roughness={0.5}
+                metalness={0.7}
+              />
+            </Box>
+
+            {/* Flashing Sphere Effect */}
+            <Sphere
+              args={[bomberBaseRadius * 1.1, 24, 24]}
+              position={[0, bomberBaseHeight / 2, 0]}
+              renderOrder={1}>
+              <meshStandardMaterial
+                ref={flashMaterialRef}
                 color="red"
-                transparent
-                opacity={0.3 + Math.sin(Date.now() * 0.005) * 0.15}
                 emissive="red"
-                emissiveIntensity={0.2}
+                emissiveIntensity={0}
+                transparent={true}
+                opacity={0}
+                depthWrite={false}
               />
             </Sphere>
           </>
         ) : (
-          <Box
-            args={isTank ? [1.5, 0.5, 2] : [1.8, 0.7, 1.8]}
-            castShadow
-            receiveShadow
-            onClick={() => handleHit(25)}>
-            <meshStandardMaterial color={isTank ? "red" : "darkblue"} />
-          </Box>
-        )}
-        {!isBomber && (
-          <group position={[0, 0.5, 0]} ref={turretRef}>
-            {/* Turret Base */}
-            <Cylinder
-              args={isTank ? [0.6, 0.7, 0.4, 16] : [0.7, 0.8, 0.5, 16]}
-              position={[0, 0.2, 0]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
-            </Cylinder>
-            {/* Turret Hatch */}
-            <Cylinder
-              args={[0.3, 0.3, 0.1, 16]}
-              position={[0, 0.45, -0.2]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
-            </Cylinder>
-            {/* Main Barrel */}
-            <Cylinder
-              args={isTank ? [0.1, 0.1, 1.5, 16] : [0.12, 0.12, 2, 16]}
-              position={[0, 0.2, isTank ? 1 : 1.2]}
-              rotation={[Math.PI / 2, 0, 0]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color={isTank ? "darkgray" : "navy"} />
-            </Cylinder>
-            {/* Barrel Muzzle */}
-            <Cylinder
-              args={isTank ? [0.15, 0.15, 0.2, 16] : [0.18, 0.18, 0.25, 16]}
-              position={[0, 0.2, isTank ? 1.85 : 2.35]}
-              rotation={[Math.PI / 2, 0, 0]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color={isTank ? "black" : "darkgray"} />
-            </Cylinder>
-            {/* Antenna */}
-            <Cylinder
-              args={[0.02, 0.02, 1, 8]}
-              position={[0.3, 0.65, -0.3]}
-              rotation={[0, 0, Math.PI / 6]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color="gray" />
-            </Cylinder>
-            {/* Side Armor Plate */}
-            <Box
-              args={[0.2, 0.3, 0.8]}
-              position={[isTank ? 0.55 : 0.65, 0.2, 0]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
-            </Box>
-            <Box
-              args={[0.2, 0.3, 0.8]}
-              position={[isTank ? -0.55 : -0.65, 0.2, 0]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
-            </Box>
-            {/* Vision Port */}
-            <Box
-              args={[0.2, 0.1, 0.1]}
-              position={[0, 0.35, isTank ? 0.4 : 0.5]}
-              castShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color="black" />
-            </Box>
-          </group>
-        )}
-        {isTank ? (
           <>
             <Box
-              args={[0.3, 0.2, 2.2]}
-              position={[-0.7, -0.3, 0]}
+              args={isTank ? [1.5, 0.5, 2] : [1.8, 0.7, 1.8]}
               castShadow
               receiveShadow
               onClick={() => handleHit(25)}>
-              <meshStandardMaterial color="black" />
+              <meshStandardMaterial color={isTank ? "red" : "darkblue"} />
             </Box>
-            <Box
-              args={[0.3, 0.2, 2.2]}
-              position={[0.7, -0.3, 0]}
-              castShadow
-              receiveShadow
-              onClick={() => handleHit(25)}>
-              <meshStandardMaterial color="black" />
-            </Box>
+            <group position={[0, 0.5, 0]} ref={turretRef}>
+              <Cylinder
+                args={isTank ? [0.6, 0.7, 0.4, 16] : [0.7, 0.8, 0.5, 16]}
+                position={[0, 0.2, 0]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial
+                  color={isTank ? "darkred" : "royalblue"}
+                />
+              </Cylinder>
+              <Cylinder
+                args={[0.3, 0.3, 0.1, 16]}
+                position={[0, 0.45, -0.2]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial
+                  color={isTank ? "darkred" : "royalblue"}
+                />
+              </Cylinder>
+              <Cylinder
+                args={isTank ? [0.1, 0.1, 1.5, 16] : [0.12, 0.12, 2, 16]}
+                position={[0, 0.2, isTank ? 1 : 1.2]}
+                rotation={[Math.PI / 2, 0, 0]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial color={isTank ? "darkgray" : "navy"} />
+              </Cylinder>
+              <Cylinder
+                args={isTank ? [0.15, 0.15, 0.2, 16] : [0.18, 0.18, 0.25, 16]}
+                position={[0, 0.2, isTank ? 1.85 : 2.35]}
+                rotation={[Math.PI / 2, 0, 0]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial color={isTank ? "black" : "darkgray"} />
+              </Cylinder>
+              <Cylinder
+                args={[0.02, 0.02, 1, 8]}
+                position={[0.3, 0.65, -0.3]}
+                rotation={[0, 0, Math.PI / 6]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial color="gray" />
+              </Cylinder>
+              <Box
+                args={[0.2, 0.3, 0.8]}
+                position={[isTank ? 0.55 : 0.65, 0.2, 0]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial
+                  color={isTank ? "darkred" : "royalblue"}
+                />
+              </Box>
+              <Box
+                args={[0.2, 0.3, 0.8]}
+                position={[isTank ? -0.55 : -0.65, 0.2, 0]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial
+                  color={isTank ? "darkred" : "royalblue"}
+                />
+              </Box>
+              <Box
+                args={[0.2, 0.1, 0.1]}
+                position={[0, 0.35, isTank ? 0.4 : 0.5]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial color="black" />
+              </Box>
+            </group>
+            {isTank ? (
+              <>
+                <Box
+                  args={[0.3, 0.2, 2.2]}
+                  position={[-0.7, -0.3, 0]}
+                  castShadow
+                  receiveShadow
+                  onClick={() => handleHit(25)}>
+                  <meshStandardMaterial color="black" />
+                </Box>
+                <Box
+                  args={[0.3, 0.2, 2.2]}
+                  position={[0.7, -0.3, 0]}
+                  castShadow
+                  receiveShadow
+                  onClick={() => handleHit(25)}>
+                  <meshStandardMaterial color="black" />
+                </Box>
+              </>
+            ) : (
+              <Box
+                args={[1.8, 0.3, 1.8]}
+                position={[0, -0.15, 0]}
+                castShadow
+                receiveShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial color="navy" />
+              </Box>
+            )}
           </>
-        ) : (
-          <Box
-            args={[2, 0.3, 2]}
-            position={[0, -0.3, 0]}
-            castShadow
-            receiveShadow
-            onClick={() => handleHit(25)}>
-            <meshStandardMaterial color={isBomber ? "goldenrod" : "navy"} />
-          </Box>
         )}
+
+        {/* Health Bar */}
         <Box
           args={[1, 0.1, 0.1]}
-          position={[0, isBomber ? 1.2 : isTank ? 1.2 : 1.5, 0]}
+          position={[
+            0,
+            isBomber
+              ? bomberBaseHeight + bomberCockpitSize * 0.5 + 0.2
+              : isTank
+              ? 1.2
+              : 1.5,
+            0,
+          ]}
           renderOrder={1}>
           <meshBasicMaterial color="red" transparent depthTest={false} />
         </Box>
         <Box
           args={[healthPercent, 0.1, 0.1]}
           position={[
-            -(0.5 - healthPercent / 2),
-            isBomber ? 1.2 : isTank ? 1.2 : 1.5,
-            0.001,
+            -(1 - healthPercent) / 2,
+            isBomber
+              ? bomberBaseHeight + bomberCockpitSize * 0.5 + 0.2
+              : isTank
+              ? 1.2
+              : 1.5,
+            0.01,
           ]}
           renderOrder={2}>
-          <meshBasicMaterial color="green" transparent depthTest={false} />
+          <meshBasicMaterial color="lime" transparent depthTest={false} />
         </Box>
       </group>
+
+      {/* Enemy Projectiles */}
       {projectiles.map((projectile) => (
         <EnemyProjectile
           key={projectile.id}
