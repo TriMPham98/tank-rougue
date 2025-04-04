@@ -243,10 +243,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
     // --- Bomber Flashing Animation ---
     if (isBomber && flashMaterialRef.current) {
-      const maxFlashDistance = 15;
-      const minFlashDistance = 2;
-      const baseFreq = 2; // Reduced from 4
-      const freqMultiplier = 6; // Reduced from 12
+      const maxFlashDistance = 15; // Start flashing within this range
+      const minFlashDistance = 2; // Max flash speed at this range (explosion range)
+      const baseFreq = 0.5; // Very slow base frequency (0.5 flashes per second)
+      const freqMultiplier = 1; // Minimal increase when close (up to 1.5 Hz max)
 
       const proximity = Math.max(
         0,
@@ -266,10 +266,11 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
         const flashFactor = (sineValue + 1) / 2;
 
-        const minOpacity = 0.1;
-        const maxOpacity = 0.7;
-        const minIntensity = 0.2;
-        const maxIntensity = 1.0;
+        // Much gentler ranges
+        const minOpacity = 0.05; // Barely visible at minimum
+        const maxOpacity = 0.3; // Subtle at maximum
+        const minIntensity = 0.1; // Very low glow
+        const maxIntensity = 0.4; // Gentle peak
 
         flashMaterialRef.current.opacity =
           minOpacity + flashFactor * (maxOpacity - minOpacity);
