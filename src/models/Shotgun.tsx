@@ -39,11 +39,9 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   } = weaponInstance;
 
   const PELLET_COUNT: number = 5;
-  const SPREAD_ANGLE: number = 1.2;
-  const damagePerPellet: number =
-    PELLET_COUNT > 0 ? damagePerShot / PELLET_COUNT : 0;
-  const projectileTTL: number =
-    projectileSpeed > 0 ? weaponRange / projectileSpeed : 2;
+  const SPREAD_ANGLE: number = 1.2; // Spread angle in radians
+  const damagePerPellet: number = damagePerShot / PELLET_COUNT;
+  const projectileTTL: number = weaponRange / projectileSpeed;
 
   useWeaponTracking({
     weaponInstance,
@@ -53,11 +51,13 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
     barrelLength: 1.2,
     onFire: (firePosition, targetId, damage) => {
       debug.log(`Firing from position: ${firePosition}`);
+      // Get the current weapon rotation from the ref
+      const currentRotation = shotgunRef.current?.rotation.y ?? rotation;
+
       for (let i = 0; i < PELLET_COUNT; i++) {
-        const spreadOffset: number = (Math.random() - 0.5) * SPREAD_ANGLE;
-        const pelletRotation: number =
-          shotgunRef.current?.rotation.y ?? 0 + spreadOffset;
-        const projectileId: string = `${instanceId}-pellet-${performance.now()}-${i}`;
+        const spreadOffset = (Math.random() - 0.5) * SPREAD_ANGLE;
+        const pelletRotation = currentRotation + spreadOffset;
+        const projectileId = `${instanceId}-pellet-${performance.now()}-${i}`;
 
         const newPelletData: PelletData = {
           id: projectileId,

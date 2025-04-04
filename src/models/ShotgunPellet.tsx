@@ -39,6 +39,7 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
   const enemies = useGameState((state) => state.enemies);
   const safeZoneRadius = useGameState((state) => state.safeZoneRadius); // Use dynamic safe zone radius
   const safeZoneCenter = useGameState((state) => state.safeZoneCenter);
+  const playerTankPosition = useGameState((state) => state.playerTankPosition);
 
   useFrame((state: RootState, delta: number) => {
     const currentPellet = pelletRef.current;
@@ -89,7 +90,23 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
       return;
     }
 
-    // 5. Check Collisions with Terrain
+    // 5. Check Collisions with Player Tank
+    if (playerTankPosition) {
+      const playerPos = new Vector3(...playerTankPosition);
+      const playerRadius = 1.5; // Player tank collision radius
+      const distanceToPlayer = currentPosition.distanceTo(playerPos);
+
+      if (distanceToPlayer < playerRadius + 0.08) {
+        debug.log(
+          `Pellet ${id} removed: Hit player tank at ${playerPos.x}, ${playerPos.z}`
+        );
+        hasCollidedRef.current = true;
+        onRemove(id);
+        return;
+      }
+    }
+
+    // 6. Check Collisions with Terrain
     for (const obstacle of terrainObstacles) {
       const obstaclePos = new Vector3(
         obstacle.position[0],
@@ -110,7 +127,7 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
       }
     }
 
-    // 6. Check Enemy Collisions
+    // 7. Check Enemy Collisions
     for (const enemy of enemies) {
       const enemyPos = new Vector3(
         enemy.position[0],
