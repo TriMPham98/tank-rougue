@@ -1,36 +1,31 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Box, Cylinder } from "@react-three/drei";
+import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Group, Vector3 } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import Projectile from "./Projectile";
-import SniperRifle from "./SniperRifle"; // Assume updated path/component
-import Shotgun from "./Shotgun"; // Assume updated path/component
-import LaserWeapon from "./LaserWeapon"; // Assume updated path/component
-import RocketLauncher from "./RocketLauncher"; // Assume updated path/component
-import { WeaponInstance } from "../utils/weaponTypes"; // Assuming you have this type
+import SniperRifle from "./SniperRifle";
+import Shotgun from "./Shotgun";
+import LaserWeapon from "./LaserWeapon";
+import RocketLauncher from "./RocketLauncher";
+import { WeaponInstance } from "../utils/weaponTypes";
 
 interface TankProps {
   position: [number, number, number];
 }
 
-// Define constants for side weapon placement
-const SIDE_WEAPON_DISTANCE = 2.0; // Distance from the tank center
-const SIDE_WEAPON_Y_OFFSET = 0.2; // Vertical offset from tank base
+const SIDE_WEAPON_DISTANCE = 2.0;
+const SIDE_WEAPON_Y_OFFSET = 0.2;
 const MAX_SIDE_WEAPONS = 4;
 
-// Helper type for the weapon component map
 type WeaponComponentType = React.ComponentType<{
   weaponInstance: WeaponInstance;
   position: [number, number, number];
   rotation: number;
-  // Add other props if needed by specific weapon components (e.g., key)
 }>;
 
-// Map weapon IDs to their components
-// Ensure these components are updated to accept `position` and `rotation` props
 const WeaponComponents: Record<string, WeaponComponentType> = {
   sniper: SniperRifle,
   shotgun: Shotgun,
@@ -68,10 +63,8 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const selectedWeapons = useGameState((state) => state.selectedWeapons);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
-  // Get the first N weapons to be placed around the tank
   const sideWeapons = selectedWeapons.slice(0, MAX_SIDE_WEAPONS);
 
-  // --- Collision Check (Unchanged) ---
   const checkTerrainCollision = (newX: number, newZ: number): boolean => {
     const mapSize = 50;
     if (Math.abs(newX) > mapSize - 1 || Math.abs(newZ) > mapSize - 1) {
@@ -94,7 +87,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     return false;
   };
 
-  // --- Effects (Unchanged, removed logging for brevity) ---
   useEffect(() => {
     if (playerHealthRegen <= 0) return;
     const interval = setInterval(() => {
@@ -123,16 +115,13 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     };
   }, [position, updatePlayerPosition]);
 
-  // --- Frame Loop (Main turret shooting and movement logic unchanged) ---
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
-    // Rotation
     if (left) tankRotationRef.current += delta * 3.5;
     if (right) tankRotationRef.current -= delta * 3.5;
     tankRef.current.rotation.y = tankRotationRef.current;
 
-    // Movement
     let moved = false;
     const moveSpeed = playerSpeed;
     if (forward || backward) {
@@ -150,14 +139,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       }
     }
 
-    // Turret rotation
     if (turretRef.current) {
       if (turretLeft) turretRotationRef.current += delta * 2.5;
       if (turretRight) turretRotationRef.current -= delta * 2.5;
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
-    // Main turret auto-shooting
     const currentTime = state.clock.getElapsedTime();
     const timeSinceLastShot = currentTime - lastShootTimeRef.current;
 
@@ -167,7 +154,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         const shootPosition: [number, number, number] = [
           tankRef.current.position.x +
             Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
-          tankRef.current.position.y + 0.7, // Turret height offset
+          tankRef.current.position.y + 0.7,
           tankRef.current.position.z +
             Math.cos(tankRotationRef.current + turretRotationRef.current) * 1.5,
         ];
@@ -184,12 +171,10 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       }
     }
 
-    // Log manual shoot button press if needed
     if (shoot) {
       debug.log(`Shoot button pressed (main turret auto-fires)`);
     }
 
-    // Update position in game state if moved significantly
     if (moved) {
       const newPosition: [number, number, number] = [
         tankRef.current.position.x,
@@ -204,9 +189,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         positionRef.current = newPosition;
         updatePlayerPosition(newPosition);
       }
-    }
-    // Update positionRef even if not moved significantly, so side weapons follow precisely
-    else if (tankRef.current) {
+    } else if (tankRef.current) {
       positionRef.current = [
         tankRef.current.position.x,
         tankRef.current.position.y,
@@ -219,49 +202,173 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     setProjectiles((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Calculate current tank properties needed for side weapons
-  // Doing this outside useFrame but before return ensures they have latest ref values for this render pass
   const currentTankPositionVec = new Vector3(...positionRef.current);
-  const currentTankRotation = tankRotationRef.current; // Use the body rotation
+  const currentTankRotation = tankRotationRef.current;
 
   return (
     <>
-      {/* Tank Mesh Group (Unchanged) */}
       <group ref={tankRef}>
-        {/* Tank body */}
-        <Box args={[1.5, 0.5, 2]} castShadow receiveShadow position={[0, 0, 0]}>
-          <meshStandardMaterial color="green" />
+        {/* Tank Body - Slightly larger with angled armor */}
+        <Box
+          args={[1.8, 0.6, 2.2]}
+          position={[0, 0, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#2E8B57" // Sea green for a heroic yet tactical look
+            metalness={0.3}
+            roughness={0.7}
+          />
         </Box>
-        {/* Tank turret */}
+        {/* Sloped Front Armor */}
+        <Box
+          args={[1.2, 0.4, 0.5]}
+          position={[0, 0.2, 1.35]}
+          rotation={[Math.PI / 6, 0, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#2E8B57"
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </Box>
+        {/* Tracks with detail */}
+        <Box
+          args={[0.4, 0.25, 2.4]}
+          position={[-0.8, -0.3, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial color="#333333" roughness={0.9} />
+        </Box>
+        <Box
+          args={[0.4, 0.25, 2.4]}
+          position={[0.8, -0.3, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial color="#333333" roughness={0.9} />
+        </Box>
+        {/* Track Guards */}
+        <Box
+          args={[0.2, 0.1, 2.2]}
+          position={[-0.8, 0.05, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#2E8B57"
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </Box>
+        <Box
+          args={[0.2, 0.1, 2.2]}
+          position={[0.8, 0.05, 0]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#2E8B57"
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </Box>
+
+        {/* Turret Group */}
         <group position={[0, 0.5, 0]} ref={turretRef}>
+          {/* Turret Base - Larger and more detailed */}
           <Cylinder
-            args={[0.6, 0.6, 0.4, 16]}
-            position={[0, 0.2, 0]}
+            args={[0.7, 0.8, 0.5, 20]}
+            position={[0, 0.25, 0]}
             castShadow>
-            <meshStandardMaterial color="darkgreen" />
+            <meshStandardMaterial
+              color="darkolivegreen"
+              metalness={0.4}
+              roughness={0.6}
+            />
           </Cylinder>
-          <Box args={[0.2, 0.2, 1.5]} position={[0, 0.2, 1]} castShadow>
-            <meshStandardMaterial color="darkgreen" />
+          {/* Turret Hatch */}
+          <Cylinder
+            args={[0.35, 0.35, 0.15, 16]}
+            position={[0, 0.55, -0.3]}
+            castShadow>
+            <meshStandardMaterial
+              color="darkolivegreen"
+              metalness={0.4}
+              roughness={0.6}
+            />
+          </Cylinder>
+          {/* Main Barrel */}
+          <Cylinder
+            args={[0.12, 0.12, 1.8, 16]}
+            position={[0, 0.25, 1.1]}
+            rotation={[Math.PI / 2, 0, 0]}
+            castShadow>
+            <meshStandardMaterial
+              color="gray"
+              metalness={0.5}
+              roughness={0.5}
+            />
+          </Cylinder>
+          {/* Barrel Muzzle Brake */}
+          <Cylinder
+            args={[0.18, 0.18, 0.3, 16]}
+            position={[0, 0.25, 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+            castShadow>
+            <meshStandardMaterial
+              color="black"
+              metalness={0.6}
+              roughness={0.4}
+            />
+          </Cylinder>
+          {/* Side Armor Plates */}
+          <Box args={[0.25, 0.35, 1]} position={[0.65, 0.25, 0]} castShadow>
+            <meshStandardMaterial
+              color="darkolivegreen"
+              metalness={0.4}
+              roughness={0.6}
+            />
           </Box>
+          <Box args={[0.25, 0.35, 1]} position={[-0.65, 0.25, 0]} castShadow>
+            <meshStandardMaterial
+              color="darkolivegreen"
+              metalness={0.4}
+              roughness={0.6}
+            />
+          </Box>
+          {/* Antenna */}
+          <Cylinder
+            args={[0.03, 0.03, 1.2, 8]}
+            position={[0.4, 0.75, -0.4]}
+            rotation={[0, 0, Math.PI / 8]}
+            castShadow>
+            <meshStandardMaterial
+              color="silver"
+              metalness={0.8}
+              roughness={0.2}
+            />
+          </Cylinder>
+          {/* Vision Port */}
+          <Box args={[0.25, 0.15, 0.15]} position={[0, 0.4, 0.5]} castShadow>
+            <meshStandardMaterial
+              color="black"
+              emissive="blue"
+              emissiveIntensity={0.2}
+            />
+          </Box>
+          {/* Heroic Accent - Glowing Crystal */}
+          <Sphere args={[0.2, 16, 16]} position={[0, 0.75, 0]} castShadow>
+            <meshStandardMaterial
+              color="cyan"
+              emissive="cyan"
+              emissiveIntensity={0.5 + Math.sin(Date.now() * 0.005) * 0.3}
+              transparent
+              opacity={0.8}
+            />
+          </Sphere>
         </group>
-        {/* Tank tracks */}
-        <Box
-          args={[0.3, 0.2, 2.2]}
-          position={[-0.7, -0.3, 0]}
-          castShadow
-          receiveShadow>
-          <meshStandardMaterial color="black" />
-        </Box>
-        <Box
-          args={[0.3, 0.2, 2.2]}
-          position={[0.7, -0.3, 0]}
-          castShadow
-          receiveShadow>
-          <meshStandardMaterial color="black" />
-        </Box>
       </group>
 
-      {/* Main Turret Projectiles (Unchanged) */}
+      {/* Main Turret Projectiles */}
       {projectiles.map((projectile) => (
         <Projectile
           key={projectile.id}
@@ -273,16 +380,14 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         />
       ))}
 
-      {/* Render Side Weapons */}
+      {/* Side Weapons */}
       {sideWeapons.map((weapon, index) => {
-        // Determine the component to render
         const WeaponComponent = WeaponComponents[weapon.id];
         if (!WeaponComponent) {
           console.warn(`No component found for weapon ID: ${weapon.id}`);
-          return null; // Skip if component not found
+          return null;
         }
 
-        // Calculate position based on index (0: front, 1: back, 2: left, 3: right)
         let offsetX = 0;
         let offsetZ = 0;
         const angle = currentTankRotation;
@@ -298,28 +403,27 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             offsetZ = -dist * Math.cos(angle);
             break;
           case 2: // Left
-            offsetX = -dist * Math.cos(angle); // Corrected from sin/cos mixup
-            offsetZ = dist * Math.sin(angle); // Corrected from sin/cos mixup
+            offsetX = -dist * Math.cos(angle);
+            offsetZ = dist * Math.sin(angle);
             break;
           case 3: // Right
-            offsetX = dist * Math.cos(angle); // Corrected from sin/cos mixup
-            offsetZ = -dist * Math.sin(angle); // Corrected from sin/cos mixup
+            offsetX = dist * Math.cos(angle);
+            offsetZ = -dist * Math.sin(angle);
             break;
         }
 
         const weaponPosition: [number, number, number] = [
           currentTankPositionVec.x + offsetX,
-          currentTankPositionVec.y + SIDE_WEAPON_Y_OFFSET, // Use defined Y offset
+          currentTankPositionVec.y + SIDE_WEAPON_Y_OFFSET,
           currentTankPositionVec.z + offsetZ,
         ];
 
         return (
           <WeaponComponent
-            // Use a stable key if possible (instanceId is good)
             key={weapon.instanceId || `side-weapon-${index}`}
             weaponInstance={weapon}
-            position={weaponPosition} // Pass the calculated absolute world position
-            rotation={currentTankRotation} // Pass the tank's body rotation
+            position={weaponPosition}
+            rotation={currentTankRotation}
           />
         );
       })}
