@@ -356,13 +356,18 @@ export const useGameState = create<GameState>((set, get) => ({
       // Generate random upgrade options (3 options)
       const allUpgrades: UpgradeableStat[] = [
         "tankSpeed",
-        "fireRate",
         "cameraRange",
         "maxHealth",
         "healthRegen",
         "turretDamage",
         "bulletVelocity",
       ];
+
+      // Only add fireRate if not maxed out
+      if (state.playerFireRate > 0.2) {
+        // 0.2s = 5 shots/sec
+        allUpgrades.push("fireRate");
+      }
 
       const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
       const availableUpgrades = shuffled.slice(0, 3);
@@ -572,8 +577,13 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerSpeed = state.playerSpeed + 0.5; // Linear increase by 0.5
           break;
         case "fireRate":
-          // Lower number = faster firing
-          updates.playerFireRate = Math.max(0.1, state.playerFireRate - 0.05); // Linear decrease by 0.05
+          // Cap at 5 shots/sec (0.2s between shots)
+          const minFireRate = 0.2; // 5 shots per second
+          const newFireRate = Math.max(
+            minFireRate,
+            state.playerFireRate - 0.05
+          );
+          updates.playerFireRate = newFireRate;
           break;
         case "cameraRange":
           updates.playerCameraRange = state.playerCameraRange + 2; // Linear increase by 2

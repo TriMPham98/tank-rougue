@@ -935,7 +935,7 @@ const GameUI = () => {
         }}>
         <div className="health-container">
           <div className="health-label" style={{ fontSize: "1em" }}>
-            HP: {playerHealth}/{playerMaxHealth}
+            HP: {playerHealth.toFixed(1)}/{playerMaxHealth.toFixed(1)}
           </div>
           <div className="health-bar-container">
             <div
