@@ -8,7 +8,7 @@ export const availableWeapons: SecondaryWeapon[] = [
       "Fires grenades that deal high damage and have a large explosion radius.",
     damage: 75,
     cooldown: 7,
-    range: 30,
+    range: 20,
     projectileSpeed: 20,
   },
   {
@@ -18,7 +18,7 @@ export const availableWeapons: SecondaryWeapon[] = [
       "Fires instant laser beams that deal moderate damage with no travel time.",
     damage: 50,
     cooldown: 0.5,
-    range: 50,
+    range: 15,
     projectileSpeed: 100,
   },
   {
