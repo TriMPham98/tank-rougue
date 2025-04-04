@@ -39,7 +39,7 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   } = weaponInstance;
 
   const PELLET_COUNT: number = 5;
-  const SPREAD_ANGLE: number = 1.2; // Spread angle in radians
+  const SPREAD_ANGLE: number = 0.25; // 0.5 is the spread angle for the shotgun
   const damagePerPellet: number = damagePerShot / PELLET_COUNT;
   const projectileTTL: number = weaponRange / projectileSpeed;
 
