@@ -1,11 +1,11 @@
 // src/components/RocketLauncher.tsx
 import { useRef, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder } from "@react-three/drei";
-import { Group, Vector3 } from "three";
-import { useGameState, SecondaryWeapon, Enemy } from "../utils/gameState"; // Adjust path
+import { Group } from "three";
+import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path
 import { debug } from "../utils/debug";
 import RocketProjectile from "./RocketProjectile";
+import { useWeaponTracking } from "../utils/weaponTracking";
 
 // --- UPDATED PROPS INTERFACE ---
 interface RocketLauncherProps {
@@ -16,12 +16,10 @@ interface RocketLauncherProps {
 
 const RocketLauncher = ({
   weaponInstance,
-  position, // Use directly
-  rotation, // Use directly (as base, aiming will override)
+  position,
+  rotation,
 }: RocketLauncherProps) => {
   const launcherRef = useRef<Group>(null);
-  const lastShootTimeRef = useRef(0);
-  const targetEnemyRef = useRef<string | null>(null);
   const projectilesRef = useRef<
     {
       id: string;
@@ -31,105 +29,33 @@ const RocketLauncher = ({
     }[]
   >([]);
 
-  const playerTurretDamage = useGameState((state) => state.playerTurretDamage); // Keep for damage calc
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
-  const enemies = useGameState((state) => state.enemies);
 
-  const cooldown = weaponInstance.cooldown || 5;
-  const weaponRange = weaponInstance.range || 40;
-  const baseDamage = weaponInstance.damage || 30;
-  const instanceId = weaponInstance.instanceId || "default_rocket";
-
-  // Find Nearest Enemy (Uses weapon's position)
-  const findNearestEnemy = (): string | null => {
-    if (!enemies.length || !launcherRef.current) return null;
-    const weaponPos = launcherRef.current.position; // Use weapon's actual position
-    let nearestEnemy: string | null = null;
-    let minDistance: number = Infinity;
-    enemies.forEach((enemy: Enemy) => {
-      const enemyPos = new Vector3(...enemy.position);
-      const distance: number = weaponPos.distanceTo(enemyPos); // Check from WEAPON
-      if (distance < weaponRange && distance < minDistance) {
-        minDistance = distance;
-        nearestEnemy = enemy.id;
-      }
-    });
-    return nearestEnemy;
-  };
-
-  // Calculate Angle To Enemy (Uses weapon's position)
-  const calculateAngleToEnemy = (enemyId: string): number => {
-    const enemy: Enemy | undefined = enemies.find((e) => e.id === enemyId);
-    if (!enemy || !launcherRef.current)
-      return launcherRef.current?.rotation.y ?? 0;
-
-    const currentWeaponPos = launcherRef.current.position;
-    const dx: number = enemy.position[0] - currentWeaponPos.x;
-    const dz: number = enemy.position[2] - currentWeaponPos.z;
-    return Math.atan2(dx, dz);
-  };
-
-  // Auto-aim and fire at enemies
-  useFrame((state, delta) => {
-    const currentLauncher = launcherRef.current;
-    if (!currentLauncher || isPaused || isGameOver) return;
-
-    // --- Apply Position and Base Rotation from Props ---
-    currentLauncher.position.fromArray(position);
-    currentLauncher.rotation.y = rotation; // Set base rotation
-
-    // Targeting Logic
-    if (
-      !targetEnemyRef.current ||
-      !enemies.some((e) => e.id === targetEnemyRef.current)
-    ) {
-      targetEnemyRef.current = findNearestEnemy();
-    }
-
-    // Aiming and Firing
-    if (targetEnemyRef.current) {
-      const angleToEnemy = calculateAngleToEnemy(targetEnemyRef.current);
-      currentLauncher.rotation.y = angleToEnemy; // Aim weapon model
-
-      const currentTime = state.clock.getElapsedTime();
-      if (currentTime - lastShootTimeRef.current > cooldown) {
-        // --- Calculate Fire Position based on Aimed Weapon ---
-        const fireOrigin = currentLauncher.position;
-        const aimedRotation = currentLauncher.rotation.y;
-        const barrelLength = 1.5; // Adjust as needed
-        const firePosition: [number, number, number] = [
-          fireOrigin.x + Math.sin(aimedRotation) * barrelLength,
-          fireOrigin.y + 0.1, // Offset slightly above launcher center
-          fireOrigin.z + Math.cos(aimedRotation) * barrelLength,
-        ];
-
-        const finalDamage = baseDamage * (1 + playerTurretDamage / 10);
-        const projectileId = Math.random().toString(36).substr(2, 9);
-
-        projectilesRef.current.push({
-          id: projectileId,
-          position: firePosition,
-          rotation: aimedRotation, // Rocket initially faces aim direction
-          targetId: targetEnemyRef.current,
-        });
-
-        debug.log(
-          `Rocket launcher ${instanceId} fired at enemy ${
-            targetEnemyRef.current
-          } (Damage: ${finalDamage.toFixed(1)})`
-        );
-        lastShootTimeRef.current = currentTime;
-      }
-    }
-    // If no target, rotation remains aligned with tank body
+  // Use the shared weapon tracking logic
+  const { instanceId } = useWeaponTracking({
+    weaponInstance,
+    position,
+    rotation,
+    weaponRef: launcherRef as React.RefObject<Group>,
+    barrelLength: 1.5,
+    fireOffsetY: 0.1,
+    onFire: (firePosition, targetId, damage) => {
+      const projectileId = Math.random().toString(36).substr(2, 9);
+      projectilesRef.current.push({
+        id: projectileId,
+        position: firePosition,
+        rotation: launcherRef.current?.rotation.y ?? 0,
+        targetId: targetId,
+      });
+    },
   });
 
   const removeProjectile = (id: string) => {
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
 
-  // --- Lifecycle Logging (Unchanged, positionOffset removed) ---
+  // --- Lifecycle Logging ---
   useEffect(() => {
     debug.log(`Rocket launcher instance ${instanceId} mounted.`);
     return () => {
@@ -192,7 +118,10 @@ const RocketLauncher = ({
           id={projectile.id}
           position={projectile.position}
           rotation={projectile.rotation}
-          damage={baseDamage * (1 + playerTurretDamage / 10)}
+          damage={
+            weaponInstance.damage *
+            (1 + useGameState.getState().playerTurretDamage / 10)
+          }
           targetId={projectile.targetId}
           onRemove={removeProjectile}
         />

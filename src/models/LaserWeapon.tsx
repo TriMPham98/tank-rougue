@@ -1,11 +1,11 @@
 // src/components/LaserWeapon.tsx
 import { useRef, useEffect, useState } from "react";
-import { useFrame } from "@react-three/fiber";
 import { Box } from "@react-three/drei";
-import { Group, Vector3 } from "three";
-import { useGameState, SecondaryWeapon, Enemy } from "../utils/gameState"; // Adjust path
+import { Group } from "three";
+import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path
 import { debug } from "../utils/debug";
 import LaserBeam from "./LaserBeam";
+import { useWeaponTracking } from "../utils/weaponTracking";
 
 // --- UPDATED PROPS INTERFACE ---
 interface LaserWeaponProps {
@@ -16,143 +16,41 @@ interface LaserWeaponProps {
 
 const LaserWeapon = ({
   weaponInstance,
-  position, // Use directly
-  rotation, // Use directly (as base, aiming will override)
+  position,
+  rotation,
 }: LaserWeaponProps) => {
   const laserRef = useRef<Group>(null);
-  const lastFireTimeRef = useRef(0);
-  const targetEnemyRef = useRef<string | null>(null);
   const [isBeamActive, setIsBeamActive] = useState(false);
   const firingDurationRef = useRef(0);
 
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
-  const enemies = useGameState((state) => state.enemies);
 
   const {
     cooldown,
     range: weaponRange,
-    // projectileSpeed, // Not directly used for beam?
     damage: laserDamage,
     instanceId = "default_laser",
   } = weaponInstance;
 
   const MAX_FIRING_DURATION = 2.5;
   const DAMAGE_TICK_RATE = 0.1;
-  // const lastDamageTimeRef = useRef(0); // Damage application likely handled within LaserBeam
 
-  // Find Nearest Enemy (Uses weapon's position)
-  const findNearestEnemy = (): string | null => {
-    if (!enemies.length || !laserRef.current) return null;
-    const weaponPos = laserRef.current.position; // Use weapon's actual position
-    let nearestEnemy: string | null = null;
-    let minDistance: number = Infinity;
-    enemies.forEach((enemy: Enemy) => {
-      const enemyPos = new Vector3(...enemy.position);
-      const distance: number = weaponPos.distanceTo(enemyPos); // Check from WEAPON
-      if (distance < weaponRange && distance < minDistance) {
-        minDistance = distance;
-        nearestEnemy = enemy.id;
-      }
-    });
-    return nearestEnemy;
-  };
-
-  // Calculate Angle To Enemy (Uses weapon's position)
-  const calculateAngleToEnemy = (enemyId: string): number => {
-    const enemy: Enemy | undefined = enemies.find((e) => e.id === enemyId);
-    if (!enemy || !laserRef.current) return laserRef.current?.rotation.y ?? 0;
-
-    const currentWeaponPos = laserRef.current.position;
-    const dx: number = enemy.position[0] - currentWeaponPos.x;
-    const dz: number = enemy.position[2] - currentWeaponPos.z;
-    return Math.atan2(dx, dz);
-  };
-
-  // Auto-aim and fire at enemies
-  useFrame((state, delta) => {
-    const currentLaser = laserRef.current;
-    if (!currentLaser || isPaused || isGameOver) return;
-
-    // --- Apply Position and Base Rotation from Props ---
-    currentLaser.position.fromArray(position);
-    currentLaser.rotation.y = rotation; // Set base rotation
-
-    // Targeting Logic
-    if (
-      !targetEnemyRef.current ||
-      !enemies.some((e) => e.id === targetEnemyRef.current)
-    ) {
-      // Stop firing if target is lost
-      if (isBeamActive) {
-        setIsBeamActive(false);
-        lastFireTimeRef.current = state.clock.getElapsedTime(); // Start cooldown now
-        debug.log(`Laser ${instanceId} stopped firing (target lost/invalid)`);
-      }
-      targetEnemyRef.current = findNearestEnemy();
-    }
-
-    // Aiming and Firing Control
-    if (targetEnemyRef.current) {
-      const angleToEnemy = calculateAngleToEnemy(targetEnemyRef.current);
-      currentLaser.rotation.y = angleToEnemy; // Aim weapon model
-
-      const currentTime = state.clock.getElapsedTime();
-
-      // Check if we can start firing
-      if (!isBeamActive && currentTime - lastFireTimeRef.current > cooldown) {
-        setIsBeamActive(true);
-        firingDurationRef.current = 0;
-        debug.log(
-          `Laser ${instanceId} started firing at enemy ${targetEnemyRef.current}`
-        );
-      }
-
-      // If laser is active, update duration and check stop conditions
-      if (isBeamActive) {
-        firingDurationRef.current += delta;
-        // Stop if duration exceeds max OR if target goes out of range (check inside LaserBeam or here)
-        // Simple duration check:
-        if (firingDurationRef.current >= MAX_FIRING_DURATION) {
-          setIsBeamActive(false);
-          lastFireTimeRef.current = currentTime;
-          debug.log(
-            `Laser ${instanceId} stopped firing (max duration reached)`
-          );
-        }
-        // Optional: Add range check here too
-        const enemy = enemies.find((e) => e.id === targetEnemyRef.current);
-        if (enemy) {
-          const enemyPos = new Vector3(...enemy.position);
-          if (currentLaser.position.distanceTo(enemyPos) > weaponRange) {
-            setIsBeamActive(false);
-            lastFireTimeRef.current = currentTime;
-            debug.log(
-              `Laser ${instanceId} stopped firing (target out of range)`
-            );
-          }
-        }
-      }
-    } else {
-      // No target, ensure beam is off
-      if (isBeamActive) {
-        setIsBeamActive(false);
-        lastFireTimeRef.current = state.clock.getElapsedTime();
-        debug.log(`Laser ${instanceId} stopped firing (no target found/left)`);
-      }
-    }
+  // Use the shared weapon tracking logic
+  const { targetEnemyRef } = useWeaponTracking({
+    weaponInstance,
+    position,
+    rotation,
+    weaponRef: laserRef as React.RefObject<Group>,
+    barrelLength: 1.5,
+    onFire: (firePosition, targetId, damage) => {
+      setIsBeamActive(true);
+      firingDurationRef.current = 0;
+      debug.log(`Laser ${instanceId} started firing at enemy ${targetId}`);
+    },
   });
 
-  // --- Lifecycle Logging (Unchanged, positionOffset removed) ---
-  useEffect(() => {
-    debug.log(`Laser weapon instance ${instanceId} mounted.`);
-    return () => {
-      debug.log(`Laser weapon instance ${instanceId} unmounted`);
-    };
-  }, [instanceId]);
-
   // --- Calculate Beam Start Position ---
-  // This needs to be accurate based on the weapon's current state
   const beamStartPosition = (): [number, number, number] => {
     if (!laserRef.current) return [0, 0, 0]; // Default fallback
 
@@ -166,6 +64,14 @@ const LaserWeapon = ({
       weaponPos.z + Math.cos(weaponRot) * emitterOffset,
     ];
   };
+
+  // --- Lifecycle Logging ---
+  useEffect(() => {
+    debug.log(`Laser weapon instance ${instanceId} mounted.`);
+    return () => {
+      debug.log(`Laser weapon instance ${instanceId} unmounted`);
+    };
+  }, [instanceId]);
 
   return (
     <>

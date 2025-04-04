@@ -1,11 +1,11 @@
 // src/components/SniperRifle.tsx
 import { useRef, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
 import { Box } from "@react-three/drei";
-import { Group, Vector3 } from "three";
-import { useGameState, SecondaryWeapon, Enemy } from "../utils/gameState"; // Adjust path
+import { Group } from "three";
+import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path
 import { debug } from "../utils/debug";
 import SniperProjectile from "./SniperProjectile";
+import { useWeaponTracking } from "../utils/weaponTracking";
 
 // --- UPDATED PROPS INTERFACE ---
 interface SniperRifleProps {
@@ -16,12 +16,10 @@ interface SniperRifleProps {
 
 const SniperRifle = ({
   weaponInstance,
-  position, // Use directly
-  rotation, // Use directly (as base, aiming will override)
+  position,
+  rotation,
 }: SniperRifleProps) => {
   const rifleRef = useRef<Group>(null);
-  const lastShootTimeRef = useRef(0);
-  const targetEnemyRef = useRef<string | null>(null);
   const projectilesRef = useRef<
     {
       id: string;
@@ -33,104 +31,33 @@ const SniperRifle = ({
     }[]
   >([]);
 
-  const playerTurretDamage = useGameState((state) => state.playerTurretDamage); // Used for projectile damage
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
-  const enemies = useGameState((state) => state.enemies);
 
-  const cooldown = weaponInstance.cooldown;
-  const weaponRange = weaponInstance.range;
-  const baseDamage = weaponInstance.damage; // Get base damage
-  const instanceId = weaponInstance.instanceId || "default_sniper";
-
-  // Find Nearest Enemy (Uses weapon's position)
-  const findNearestEnemy = (): string | null => {
-    if (!enemies.length || !rifleRef.current) return null;
-    const weaponPos = rifleRef.current.position; // Use weapon's actual position
-    let nearestEnemy: string | null = null;
-    let minDistance: number = Infinity;
-    enemies.forEach((enemy: Enemy) => {
-      const enemyPos = new Vector3(...enemy.position);
-      const distance: number = weaponPos.distanceTo(enemyPos); // Check from WEAPON
-      if (distance < weaponRange && distance < minDistance) {
-        minDistance = distance;
-        nearestEnemy = enemy.id;
-      }
-    });
-    return nearestEnemy;
-  };
-
-  // Calculate Angle To Enemy (Uses weapon's position)
-  const calculateAngleToEnemy = (enemyId: string): number => {
-    const enemy: Enemy | undefined = enemies.find((e) => e.id === enemyId);
-    if (!enemy || !rifleRef.current) return rifleRef.current?.rotation.y ?? 0;
-
-    const currentWeaponPos = rifleRef.current.position;
-    const dx: number = enemy.position[0] - currentWeaponPos.x;
-    const dz: number = enemy.position[2] - currentWeaponPos.z;
-    return Math.atan2(dx, dz);
-  };
-
-  // Auto-aim and fire at enemies
-  useFrame((state, delta) => {
-    const currentRifle = rifleRef.current;
-    if (!currentRifle || isPaused || isGameOver) return;
-
-    // --- Apply Position and Base Rotation from Props ---
-    currentRifle.position.fromArray(position);
-    currentRifle.rotation.y = rotation; // Set base rotation
-
-    // Targeting Logic
-    if (
-      !targetEnemyRef.current ||
-      !enemies.some((e) => e.id === targetEnemyRef.current)
-    ) {
-      targetEnemyRef.current = findNearestEnemy();
-    }
-
-    // Aiming and Firing
-    if (targetEnemyRef.current) {
-      const angleToEnemy = calculateAngleToEnemy(targetEnemyRef.current);
-      currentRifle.rotation.y = angleToEnemy; // Aim weapon model
-
-      const currentTime = state.clock.getElapsedTime();
-      if (currentTime - lastShootTimeRef.current > cooldown) {
-        // --- Calculate Fire Position based on Aimed Weapon ---
-        const fireOrigin = currentRifle.position;
-        const aimedRotation = currentRifle.rotation.y;
-        const barrelLength = 1.8; // Adjust as needed for sniper barrel
-        const firePosition: [number, number, number] = [
-          fireOrigin.x + Math.sin(aimedRotation) * barrelLength,
-          fireOrigin.y, // Use weapon's Y
-          fireOrigin.z + Math.cos(aimedRotation) * barrelLength,
-        ];
-
-        // Calculate final damage including player stat bonus
-        const finalDamage = baseDamage * (1 + playerTurretDamage / 10);
-
-        const projectileId = Math.random().toString(36).substr(2, 9);
-        projectilesRef.current.push({
-          id: projectileId,
-          position: firePosition,
-          rotation: aimedRotation, // Projectile starts facing aim direction
-          targetId: targetEnemyRef.current, // Pass target if needed by projectile
-          damage: finalDamage, // Pass calculated damage
-        });
-
-        debug.log(
-          `Sniper ${instanceId} fired at enemy ${targetEnemyRef.current}`
-        );
-        lastShootTimeRef.current = currentTime;
-      }
-    }
-    // If no target, rotation remains aligned with tank body
+  // Use the shared weapon tracking logic
+  const { instanceId } = useWeaponTracking({
+    weaponInstance,
+    position,
+    rotation,
+    weaponRef: rifleRef as React.RefObject<Group>,
+    barrelLength: 1.8,
+    onFire: (firePosition, targetId, damage) => {
+      const projectileId = Math.random().toString(36).substr(2, 9);
+      projectilesRef.current.push({
+        id: projectileId,
+        position: firePosition,
+        rotation: rifleRef.current?.rotation.y ?? 0,
+        targetId: targetId,
+        damage: damage,
+      });
+    },
   });
 
   const removeProjectile = (id: string) => {
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
 
-  // --- Lifecycle Logging (Unchanged, positionOffset removed) ---
+  // --- Lifecycle Logging ---
   useEffect(() => {
     debug.log(`Sniper rifle instance ${instanceId} mounted.`);
     return () => {
