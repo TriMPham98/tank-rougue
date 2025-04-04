@@ -1,22 +1,20 @@
 // src/components/ShotgunPellet.tsx
-import React, { useRef, FC } from "react"; // Import FC for Functional Component type
+import React, { useRef, FC } from "react";
 import { useFrame, RootState } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
-// Adjust path as needed for gameState and types
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 
-// Define the props interface
 interface ShotgunPelletProps {
   id: string;
   position: [number, number, number];
-  rotation: number; // Initial direction including spread
+  rotation: number;
   damage: number;
   speed: number;
   range: number;
-  ttl: number; // Time-to-live in seconds
-  onRemove: (id: string) => void; // Type the callback function
+  ttl: number;
+  onRemove: (id: string) => void;
 }
 
 const ShotgunPellet: FC<ShotgunPelletProps> = ({
@@ -29,22 +27,20 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
   ttl,
   onRemove,
 }) => {
-  // Type the refs
   const pelletRef = useRef<Mesh>(null);
   const hasCollidedRef = useRef<boolean>(false);
   const initialPositionRef = useRef<Vector3>(new Vector3(...position));
   const startTimeRef = useRef<number>(performance.now());
 
-  // Access state functions and data - Types are inferred from useGameState selectors
   const damageEnemy = useGameState((state) => state.damageEnemy);
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
   const enemies = useGameState((state) => state.enemies);
+  const safeZoneRadius = useGameState((state) => state.safeZoneRadius); // Use dynamic safe zone radius
+  const safeZoneCenter = useGameState((state) => state.safeZoneCenter);
 
   useFrame((state: RootState, delta: number) => {
-    // Explicitly type state and delta
-    // Use type guard for ref access
     const currentPellet = pelletRef.current;
     if (!currentPellet || hasCollidedRef.current || isPaused || isGameOver) {
       return;
@@ -54,6 +50,7 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
     const elapsedTime: number =
       (performance.now() - startTimeRef.current) / 1000;
     if (elapsedTime > ttl) {
+      debug.log(`Pellet ${id} removed: TTL expired (${elapsedTime} > ${ttl})`);
       hasCollidedRef.current = true;
       onRemove(id);
       return;
@@ -70,17 +67,23 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
       initialPositionRef.current
     );
     if (distanceTraveled > range) {
+      debug.log(
+        `Pellet ${id} removed: Range exceeded (${distanceTraveled} > ${range})`
+      );
       hasCollidedRef.current = true;
       onRemove(id);
       return;
     }
 
-    // 4. Check Map Boundaries
-    const mapSize: number = 50;
-    if (
-      Math.abs(currentPosition.x) > mapSize / 2 ||
-      Math.abs(currentPosition.z) > mapSize / 2
-    ) {
+    // 4. Check Safe Zone Boundary (replacing static mapSize)
+    const distanceFromCenter = Math.sqrt(
+      Math.pow(currentPosition.x - safeZoneCenter[0], 2) +
+        Math.pow(currentPosition.z - safeZoneCenter[1], 2)
+    );
+    if (distanceFromCenter > safeZoneRadius) {
+      debug.log(
+        `Pellet ${id} removed: Exceeded safe zone radius (${distanceFromCenter} > ${safeZoneRadius}) at ${currentPosition.x}, ${currentPosition.z}`
+      );
       hasCollidedRef.current = true;
       onRemove(id);
       return;
@@ -98,7 +101,9 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
         currentPosition.distanceTo(obstaclePos);
 
       if (distanceToObstacle < obstacleRadius + 0.08) {
-        // Collision with terrain
+        debug.log(
+          `Pellet ${id} removed: Hit terrain at ${obstaclePos.x}, ${obstaclePos.z}`
+        );
         hasCollidedRef.current = true;
         onRemove(id);
         return;
@@ -112,11 +117,13 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
         enemy.position[1],
         enemy.position[2]
       );
-      const enemyRadius: number = enemy.type === "tank" ? 1.5 : 1.0; // Example radii
+      const enemyRadius: number = enemy.type === "tank" ? 1.5 : 1.0;
       const distanceToEnemy: number = currentPosition.distanceTo(enemyPos);
 
       if (distanceToEnemy < enemyRadius + 0.08) {
-        // Hit enemy, apply damage
+        debug.log(
+          `Pellet ${id} hit enemy ${enemy.id} at ${enemyPos.x}, ${enemyPos.z}`
+        );
         damageEnemy(enemy.id, damage);
         hasCollidedRef.current = true;
         onRemove(id);
@@ -125,8 +132,6 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
     }
   });
 
-  // Pellet visual representation
-  // Type args explicitly for Sphere
   const sphereArgs: [
     radius?: number,
     widthSegments?: number,

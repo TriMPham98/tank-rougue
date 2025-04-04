@@ -2,16 +2,15 @@
 import React, { useRef, useEffect, FC } from "react";
 import { Box } from "@react-three/drei";
 import { Group } from "three";
-import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path if needed
+import { useGameState, SecondaryWeapon } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import ShotgunPellet from "./ShotgunPellet";
 import { useWeaponTracking } from "../utils/weaponTracking";
 
-// --- UPDATED PROPS INTERFACE ---
 interface ShotgunProps {
   weaponInstance: SecondaryWeapon;
-  position: [number, number, number]; // Receive absolute position
-  rotation: number; // Receive base rotation (tank body rotation)
+  position: [number, number, number];
+  rotation: number;
 }
 
 interface PelletData {
@@ -40,13 +39,12 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   } = weaponInstance;
 
   const PELLET_COUNT: number = 5;
-  const SPREAD_ANGLE: number = 0.3;
+  const SPREAD_ANGLE: number = 1.2;
   const damagePerPellet: number =
     PELLET_COUNT > 0 ? damagePerShot / PELLET_COUNT : 0;
   const projectileTTL: number =
-    projectileSpeed > 0 ? weaponRange / projectileSpeed + 0.5 : 2;
+    projectileSpeed > 0 ? weaponRange / projectileSpeed : 2;
 
-  // Use the shared weapon tracking logic
   useWeaponTracking({
     weaponInstance,
     position,
@@ -54,17 +52,17 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
     weaponRef: shotgunRef as React.RefObject<Group>,
     barrelLength: 1.2,
     onFire: (firePosition, targetId, damage) => {
-      // Fire multiple pellets
+      debug.log(`Firing from position: ${firePosition}`);
       for (let i = 0; i < PELLET_COUNT; i++) {
         const spreadOffset: number = (Math.random() - 0.5) * SPREAD_ANGLE;
         const pelletRotation: number =
-          shotgunRef.current?.rotation.y ?? 0 + spreadOffset; // Spread relative to aimed direction
+          shotgunRef.current?.rotation.y ?? 0 + spreadOffset;
         const projectileId: string = `${instanceId}-pellet-${performance.now()}-${i}`;
 
         const newPelletData: PelletData = {
           id: projectileId,
-          position: firePosition, // Use calculated fire position
-          rotation: pelletRotation, // Use pellet's specific rotation
+          position: firePosition,
+          rotation: pelletRotation,
           damage: damagePerPellet,
           speed: projectileSpeed,
           range: weaponRange,
@@ -79,13 +77,12 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
 
-  // --- Lifecycle Logging ---
   useEffect(() => {
     debug.log(`Shotgun instance ${instanceId} mounted.`);
     return () => {
       debug.log(`Shotgun instance ${instanceId} unmounted`);
     };
-  }, [instanceId]); // Only depends on instanceId now
+  }, [instanceId]);
 
   const boxArgs = (
     w: number,
@@ -95,9 +92,7 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
 
   return (
     <>
-      {/* Shotgun model - position/rotation handled by ref updates */}
       <group ref={shotgunRef}>
-        {/* Model parts remain the same */}
         <Box args={boxArgs(0.08, 0.1, 1.0)} position={[0, 0, 0.6]} castShadow>
           <meshStandardMaterial color="#5D4037" />
         </Box>
@@ -158,7 +153,6 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
         </Box>
       </group>
 
-      {/* Render projectiles */}
       {projectilesRef.current.map((pelletData: PelletData) => (
         <ShotgunPellet
           key={pelletData.id}
