@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Box, Cylinder } from "@react-three/drei";
+import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Vector3, Group, Quaternion } from "three";
 import { Enemy, useGameState } from "../utils/gameState";
 import EnemyProjectile from "./EnemyProjectile";
@@ -53,17 +53,15 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   // Helper function to check collision with terrain obstacles, specifically rocks
   const checkTerrainCollision = useCallback(
     (newX: number, newZ: number): boolean => {
-      // Map boundary check - Ground is 100x100 centered at origin
-      const mapSize = 50; // Half of the total ground size (100/2)
+      const mapSize = 50;
       if (Math.abs(newX) > mapSize - 1 || Math.abs(newZ) > mapSize - 1) {
-        return true; // Collision with map boundary
+        return true;
       }
 
       const tankPosition = new Vector3(newX, 0, newZ);
       const terrainObstacles = getState().terrainObstacles;
 
       for (const obstacle of terrainObstacles) {
-        // Only check collisions with rocks
         if (obstacle.type === "rock") {
           const obstaclePos = new Vector3(
             obstacle.position[0],
@@ -71,16 +69,14 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             obstacle.position[2]
           );
           const distance = obstaclePos.distanceTo(tankPosition);
-
-          // Use obstacle size to determine collision radius
-          const obstacleRadius = obstacle.size * 0.75; // Rock collision radius
+          const obstacleRadius = obstacle.size * 0.75;
 
           if (distance < tankRadius + obstacleRadius) {
-            return true; // Collision detected
+            return true;
           }
         }
       }
-      return false; // No collision
+      return false;
     },
     [tankRadius]
   );
@@ -189,13 +185,11 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       );
       const rotationDiff = targetRotation - tankRotationRef.current;
       const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      // Increase turn rate for bombers to make them turn more quickly
       const turnRate = isBomber ? 2.5 : 1;
       tankRotationRef.current += wrappedDiff * delta * turnRate;
       tankRef.current.rotation.y = tankRotationRef.current;
 
       if (isBomber || distanceToPlayer > 5) {
-        // Calculate new position
         const newX =
           tankRef.current.position.x +
           Math.sin(tankRotationRef.current) * delta * moveSpeed;
@@ -203,13 +197,16 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           tankRef.current.position.z +
           Math.cos(tankRotationRef.current) * delta * moveSpeed;
 
-        // Check for collision with terrain before moving
         if (!checkTerrainCollision(newX, newZ)) {
-          // No collision, proceed with movement
           tankRef.current.position.x = newX;
           tankRef.current.position.z = newZ;
 
-          // Only update position in game state occasionally to reduce state updates
+          // Add bobbing motion for bomber
+          if (isBomber) {
+            tankRef.current.position.y =
+              0.5 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
+          }
+
           if (Math.random() < 0.05) {
             const newPosition: [number, number, number] = [
               tankRef.current.position.x,
@@ -219,8 +216,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             updateEnemyPosition(enemy.id, newPosition);
           }
         } else {
-          // Collision detected, try to navigate around obstacle
-          // Simple approach: rotate the tank slightly and try again next frame
           tankRotationRef.current += (Math.random() - 0.5) * Math.PI * 0.25;
           if (Math.random() < 0.1) {
             debug.log(`Enemy ${enemy.id} avoiding rock obstacle`);
@@ -230,7 +225,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         if (isBomber && distanceToPlayer < 2) {
           debug.log(`Bomber ${enemy.id} exploded on player!`);
           const takeDamage = getState().takeDamage;
-          takeDamage(50);
+          takeDamage(75); // Increased damage for upgraded bomber
           damageEnemy(enemy.id, 1000);
         }
       }
@@ -251,21 +246,71 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   return (
     <>
       <group ref={tankRef}>
-        <Box
-          args={
-            isBomber
-              ? [1.2, 0.8, 1.2]
-              : isTank
-              ? [1.5, 0.5, 2]
-              : [1.8, 0.7, 1.8]
-          }
-          castShadow
-          receiveShadow
-          onClick={() => handleHit(25)}>
-          <meshStandardMaterial
-            color={isBomber ? "yellow" : isTank ? "red" : "darkblue"}
-          />
-        </Box>
+        {isBomber ? (
+          <>
+            {/* Core spherical body */}
+            <Sphere
+              args={[0.8, 16, 16]}
+              position={[0, 0, 0]}
+              castShadow
+              receiveShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial
+                color="yellow"
+                emissive="orange"
+                emissiveIntensity={0.3}
+              />
+            </Sphere>
+            {/* Rear thruster */}
+            <Cylinder
+              args={[0.3, 0.5, 0.8, 12]}
+              position={[0, 0, -0.8]}
+              rotation={[Math.PI / 2, 0, 0]}
+              castShadow
+              receiveShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial
+                color="darkgray"
+                emissive="red"
+                emissiveIntensity={0.5}
+              />
+            </Cylinder>
+            {/* Side fins */}
+            <Box
+              args={[0.6, 0.1, 0.4]}
+              position={[0.6, 0, 0]}
+              castShadow
+              receiveShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color="goldenrod" />
+            </Box>
+            <Box
+              args={[0.6, 0.1, 0.4]}
+              position={[-0.6, 0, 0]}
+              castShadow
+              receiveShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color="goldenrod" />
+            </Box>
+            {/* Pulsing glow effect */}
+            <Sphere args={[0.9, 16, 16]} position={[0, 0, 0]} renderOrder={1}>
+              <meshBasicMaterial
+                color="red"
+                transparent
+                opacity={0.5 + Math.sin(Date.now() * 0.005) * 0.2}
+                depthTest={false}
+              />
+            </Sphere>
+          </>
+        ) : (
+          <Box
+            args={isTank ? [1.5, 0.5, 2] : [1.8, 0.7, 1.8]}
+            castShadow
+            receiveShadow
+            onClick={() => handleHit(25)}>
+            <meshStandardMaterial color={isTank ? "red" : "darkblue"} />
+          </Box>
+        )}
         {!isBomber && (
           <group position={[0, 0.5, 0]} ref={turretRef}>
             <Cylinder
@@ -315,7 +360,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         )}
         <Box
           args={[1, 0.1, 0.1]}
-          position={[0, isBomber ? 1.0 : isTank ? 1.2 : 1.5, 0]}
+          position={[0, isBomber ? 1.2 : isTank ? 1.2 : 1.5, 0]}
           renderOrder={1}>
           <meshBasicMaterial color="red" transparent depthTest={false} />
         </Box>
@@ -323,7 +368,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           args={[healthPercent, 0.1, 0.1]}
           position={[
             -(0.5 - healthPercent / 2),
-            isBomber ? 1.0 : isTank ? 1.2 : 1.5,
+            isBomber ? 1.2 : isTank ? 1.2 : 1.5,
             0.001,
           ]}
           renderOrder={2}>
