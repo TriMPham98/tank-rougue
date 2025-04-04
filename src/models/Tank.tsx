@@ -153,10 +153,12 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       if (shotsMissed > 0) {
         const shootPosition: [number, number, number] = [
           tankRef.current.position.x +
-            Math.sin(tankRotationRef.current + turretRotationRef.current) * 1.5,
-          tankRef.current.position.y + 0.7,
+            Math.sin(tankRotationRef.current + turretRotationRef.current) *
+              2.15,
+          tankRef.current.position.y + 0.75,
           tankRef.current.position.z +
-            Math.cos(tankRotationRef.current + turretRotationRef.current) * 1.5,
+            Math.cos(tankRotationRef.current + turretRotationRef.current) *
+              2.15,
         ];
         setProjectiles((prev) => [
           ...prev,
@@ -220,7 +222,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             roughness={0.7}
           />
         </Box>
-        {/* Sloped Rear Armor (changed from front) */}
+        {/* Sloped Rear Armor */}
         <Box
           args={[1.2, 0.4, 0.5]}
           position={[0, 0.2, -1.35]}
