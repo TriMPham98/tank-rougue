@@ -37,6 +37,7 @@ export const useWeaponTracking = ({
   const isGameOver = useGameState((state) => state.isGameOver);
   const enemies = useGameState((state) => state.enemies);
   const playerTankPosition = useGameState((state) => state.playerTankPosition);
+  const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
   const cooldown = weaponInstance.cooldown || 5;
   const weaponRange = weaponInstance.range || 40;
@@ -76,7 +77,48 @@ export const useWeaponTracking = ({
     return isWithinShotPath && distanceToShot < playerCollisionRadius;
   };
 
-  // Find nearest enemy within range that won't cause self-damage
+  // Check if a shot would collide with terrain obstacles
+  const wouldCollideWithTerrain = (
+    firePosition: [number, number, number],
+    targetPosition: [number, number, number]
+  ): boolean => {
+    const shotStart = new Vector3(...firePosition);
+    const shotEnd = new Vector3(...targetPosition);
+    const shotDirection = shotEnd.clone().sub(shotStart).normalize();
+    const shotLength = shotStart.distanceTo(shotEnd);
+
+    for (const obstacle of terrainObstacles) {
+      // Skip non-solid obstacles
+      if (obstacle.type !== "rock") continue;
+
+      const obstaclePos = new Vector3(...obstacle.position);
+      const obstacleRadius = obstacle.size * 0.75; // Rock collision radius
+
+      // Calculate closest point on shot line to obstacle center
+      const obstacleToStart = obstaclePos.clone().sub(shotStart);
+      const projection = obstacleToStart.dot(shotDirection);
+      const closestPoint = shotStart
+        .clone()
+        .add(shotDirection.multiplyScalar(projection));
+
+      // Reset shotDirection for next iteration since we modified it
+      shotDirection.copy(shotEnd.clone().sub(shotStart).normalize());
+
+      // Check if closest point is within the shot path
+      const isWithinShotPath = projection >= 0 && projection <= shotLength;
+
+      // Calculate distance from obstacle center to closest point on shot line
+      const distanceToShot = obstaclePos.distanceTo(closestPoint);
+
+      // If the shot passes close enough to the obstacle and is within the path, it's a collision
+      if (isWithinShotPath && distanceToShot < obstacleRadius) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Find nearest enemy within range that won't cause self-damage or hit terrain
   const findNearestEnemy = (): string | null => {
     if (!enemies.length || !weaponRef.current) return null;
     const weaponPos = weaponRef.current.position;
@@ -96,8 +138,11 @@ export const useWeaponTracking = ({
         );
         const firePosition = calculateFirePosition(angleToEnemy);
 
-        // Skip this enemy if the shot would hit the player
-        if (wouldCollideWithPlayer(firePosition, enemy.position)) {
+        // Skip this enemy if the shot would hit the player or terrain
+        if (
+          wouldCollideWithPlayer(firePosition, enemy.position) ||
+          wouldCollideWithTerrain(firePosition, enemy.position)
+        ) {
           continue; // Skip to next enemy
         }
 
@@ -168,9 +213,12 @@ export const useWeaponTracking = ({
       if (currentTime - lastShootTimeRef.current > cooldown) {
         const firePosition = calculateFirePosition(angleToEnemy);
 
-        // Double-check that the shot won't hit the player right before firing
-        if (wouldCollideWithPlayer(firePosition, targetEnemy.position)) {
-          // Shot would hit player, find new target
+        // Double-check that the shot won't hit the player or terrain right before firing
+        if (
+          wouldCollideWithPlayer(firePosition, targetEnemy.position) ||
+          wouldCollideWithTerrain(firePosition, targetEnemy.position)
+        ) {
+          // Shot would hit player or terrain, find new target
           targetEnemyRef.current = null;
           return;
         }
