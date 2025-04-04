@@ -36,27 +36,77 @@ export const useWeaponTracking = ({
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const enemies = useGameState((state) => state.enemies);
+  const playerTankPosition = useGameState((state) => state.playerTankPosition);
 
   const cooldown = weaponInstance.cooldown || 5;
   const weaponRange = weaponInstance.range || 40;
   const baseDamage = weaponInstance.damage || 30;
   const instanceId = weaponInstance.instanceId || "default_weapon";
 
-  // Find nearest enemy within range
+  // Check if a shot would collide with the player tank
+  const wouldCollideWithPlayer = (
+    firePosition: [number, number, number],
+    targetPosition: [number, number, number]
+  ): boolean => {
+    if (!playerTankPosition) return false;
+
+    // Create vectors for the shot path
+    const shotStart = new Vector3(...firePosition);
+    const shotEnd = new Vector3(...targetPosition);
+    const playerPos = new Vector3(...playerTankPosition);
+
+    // Calculate the closest point on the shot line to the player
+    const shotDirection = shotEnd.clone().sub(shotStart).normalize();
+    const playerToShotStart = playerPos.clone().sub(shotStart);
+    const projection = playerToShotStart.dot(shotDirection);
+    const closestPoint = shotStart
+      .clone()
+      .add(shotDirection.multiplyScalar(projection));
+
+    // Calculate the distance from the player to the closest point on the shot line
+    const distanceToShot = playerPos.distanceTo(closestPoint);
+
+    // Player tank collision radius (based on the tank model size)
+    const playerCollisionRadius = 1.25;
+
+    // Check if the closest point is within the shot's path and within collision range
+    const shotLength = shotStart.distanceTo(shotEnd);
+    const isWithinShotPath = projection >= 0 && projection <= shotLength;
+
+    return isWithinShotPath && distanceToShot < playerCollisionRadius;
+  };
+
+  // Find nearest enemy within range that won't cause self-damage
   const findNearestEnemy = (): string | null => {
     if (!enemies.length || !weaponRef.current) return null;
     const weaponPos = weaponRef.current.position;
     let nearestEnemy: string | null = null;
     let minDistance: number = Infinity;
 
-    enemies.forEach((enemy: Enemy) => {
+    // Use regular for...of loop instead of forEach for proper control flow
+    for (const enemy of enemies) {
       const enemyPos = new Vector3(...enemy.position);
       const distance: number = weaponPos.distanceTo(enemyPos);
-      if (distance < weaponRange && distance < minDistance) {
-        minDistance = distance;
-        nearestEnemy = enemy.id;
+
+      if (distance < weaponRange) {
+        // Calculate fire position for this potential target
+        const angleToEnemy = Math.atan2(
+          enemyPos.x - weaponPos.x,
+          enemyPos.z - weaponPos.z
+        );
+        const firePosition = calculateFirePosition(angleToEnemy);
+
+        // Skip this enemy if the shot would hit the player
+        if (wouldCollideWithPlayer(firePosition, enemy.position)) {
+          continue; // Skip to next enemy
+        }
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestEnemy = enemy.id;
+        }
       }
-    });
+    }
 
     return nearestEnemy;
   };
@@ -105,12 +155,26 @@ export const useWeaponTracking = ({
 
     // Aiming and firing
     if (targetEnemyRef.current) {
+      const targetEnemy = enemies.find((e) => e.id === targetEnemyRef.current);
+      if (!targetEnemy) {
+        targetEnemyRef.current = null;
+        return;
+      }
+
       const angleToEnemy = calculateAngleToEnemy(targetEnemyRef.current);
       currentWeapon.rotation.y = angleToEnemy; // Aim weapon model
 
       const currentTime = state.clock.getElapsedTime();
       if (currentTime - lastShootTimeRef.current > cooldown) {
         const firePosition = calculateFirePosition(angleToEnemy);
+
+        // Double-check that the shot won't hit the player right before firing
+        if (wouldCollideWithPlayer(firePosition, targetEnemy.position)) {
+          // Shot would hit player, find new target
+          targetEnemyRef.current = null;
+          return;
+        }
+
         const finalDamage = baseDamage * (1 + playerTurretDamage / 10);
 
         // Call the onFire callback if provided
