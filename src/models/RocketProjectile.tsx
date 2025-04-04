@@ -1,11 +1,11 @@
-import { useRef, useState, useEffect } from "react"; // Added useEffect
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Sphere, Box, Cylinder } from "@react-three/drei"; // Added Cylinder
-import { Mesh, Vector3, MeshStandardMaterial, Color, Group } from "three"; // Added Group, MeshStandardMaterial, Color
+import { Sphere, Box, Cylinder } from "@react-three/drei";
+import { Mesh, Vector3, MeshStandardMaterial, Color, Group } from "three";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 
-// --- Explosion Effect Component (Defined within the same file) ---
+// --- Explosion Effect Component ---
 
 interface ExplosionEffectProps {
   position: Vector3;
@@ -17,9 +17,9 @@ interface ExplosionEffectProps {
 
 const ExplosionEffect = ({
   position,
-  size = 5, // Corresponds roughly to splash radius / 2
-  duration = 0.4, // Short duration
-  color = "#FFA500", // Orange
+  size = 5,
+  duration = 0.4,
+  color = "#FFA500",
   onComplete,
 }: ExplosionEffectProps) => {
   const meshRef = useRef<Mesh>(null);
@@ -34,49 +34,35 @@ const ExplosionEffect = ({
     }
 
     const elapsedTime = clock.elapsedTime - startTimeRef.current;
-    const progress = Math.min(elapsedTime / duration, 1); // 0 to 1
+    const progress = Math.min(elapsedTime / duration, 1);
 
-    // Expand
     const currentScale = progress * size;
     meshRef.current.scale.set(currentScale, currentScale, currentScale);
-
-    // Fade out
     materialRef.current.opacity = 1.0 - progress;
-
-    // Make emissive fade as well
     materialRef.current.emissiveIntensity = (1.0 - progress) * 3;
 
-    // Clean up when done
     if (progress >= 1) {
       onComplete();
     }
   });
 
-  // Ensure cleanup if component unmounts prematurely
   useEffect(() => {
-    // console.log("ExplosionEffect mounted"); // Debug Mount
-    return () => {
-      // console.log("ExplosionEffect unmounting"); // Debug Unmount
-      // Optional: If immediate cleanup is needed without waiting for animation
-      // onComplete();
-    };
-  }, [onComplete]); // Dependency array includes onComplete
+    return () => {};
+  }, [onComplete]);
 
   return (
     <group position={position}>
       <Sphere ref={meshRef} args={[1, 16, 16]} scale={[0.01, 0.01, 0.01]}>
-        {/* Start small */}
         <meshStandardMaterial
           ref={materialRef}
           color={color}
-          emissive={new Color(color)} // Make it glow
+          emissive={new Color(color)}
           emissiveIntensity={3}
           transparent={true}
           opacity={1.0}
-          depthWrite={false} // Often looks better for transparent effects
+          depthWrite={false}
         />
       </Sphere>
-      {/* Optional: Add a point light for effect */}
       <pointLight color={color} intensity={2} distance={size * 1.5} decay={2} />
     </group>
   );
@@ -93,7 +79,6 @@ interface RocketProjectileProps {
   onRemove: (id: string) => void;
 }
 
-// Ground level - adjust if your ground isn't at Y=0
 const GROUND_Y_LEVEL = 0.1;
 
 const RocketProjectile = ({
@@ -104,23 +89,23 @@ const RocketProjectile = ({
   targetId,
   onRemove,
 }: RocketProjectileProps) => {
-  const projectileGroupRef = useRef<Group>(null); // Ref the outer group for position/rotation
-  const visualGroupRef = useRef<Group>(null); // Ref the inner group for pitch rotation
-  const hasExplodedRef = useRef(false); // Tracks if explosion logic ran
+  const projectileGroupRef = useRef<Group>(null);
+  const visualGroupRef = useRef<Group>(null);
+  const hasExplodedRef = useRef(false);
   const initialPositionRef = useRef<Vector3>(new Vector3(...position));
   const distanceTraveledRef = useRef(0);
   const ageRef = useRef(0);
+  // Store the target position at initialization
+  const targetPositionRef = useRef<Vector3 | null>(null);
 
-  // State for managing explosion visual
   const [isExploding, setIsExploding] = useState(false);
   const [explosionPosition, setExplosionPosition] = useState<Vector3 | null>(
     null
   );
 
-  // Arc parameters
   const maxHeight = 5;
+  const splashRadius = 10;
 
-  // Access state functions
   const damageEnemy = useGameState((state) => state.damageEnemy);
   const playerBulletVelocity = useGameState(
     (state) => state.playerBulletVelocity
@@ -128,29 +113,39 @@ const RocketProjectile = ({
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
-
   const getState = useRef(useGameState.getState).current;
 
-  const splashRadius = 10;
+  // Initialize target position if targetId is provided
+  useEffect(() => {
+    if (targetId) {
+      const enemies = getState().enemies;
+      const targetEnemy = enemies.find((e) => e.id === targetId);
+      if (targetEnemy) {
+        targetPositionRef.current = new Vector3(...targetEnemy.position);
+        debug.log(
+          `Rocket ${id} locked target position at [${targetPositionRef.current.x.toFixed(
+            2
+          )}, ${targetPositionRef.current.y.toFixed(
+            2
+          )}, ${targetPositionRef.current.z.toFixed(2)}]`
+        );
+      }
+    }
+  }, [targetId]); // Runs once on mount with targetId
 
   const explode = (explosionPos: Vector3) => {
-    // Prevent multiple explosion triggers
     if (hasExplodedRef.current) return;
-    hasExplodedRef.current = true; // Mark as exploded IMMEDIATELY
+    hasExplodedRef.current = true;
 
     debug.log(
-      `Rocket ${id} starting explosion at [${explosionPos.x.toFixed(
+      `Rocket ${id} exploding at [${explosionPos.x.toFixed(
         2
-      )}, ${explosionPos.y.toFixed(2)}, ${explosionPos.z.toFixed(
-        2
-      )}], radius: ${splashRadius}`
+      )}, ${explosionPos.y.toFixed(2)}, ${explosionPos.z.toFixed(2)}]`
     );
 
-    // Set state to render the explosion effect
-    setExplosionPosition(explosionPos.clone()); // Store the exact position
+    setExplosionPosition(explosionPos.clone());
     setIsExploding(true);
 
-    // Apply splash damage (no visual delay needed for damage calculation)
     const enemies = getState().enemies;
     let hitCount = 0;
     for (const enemy of enemies) {
@@ -161,7 +156,7 @@ const RocketProjectile = ({
         const damageFactor = Math.max(
           0,
           1 - distanceToExplosion / splashRadius
-        ); // Ensure factor is not negative
+        );
         const splashDamage = damage * damageFactor;
         debug.log(
           `Splash damage to enemy ${enemy.id}: ${splashDamage.toFixed(
@@ -173,9 +168,6 @@ const RocketProjectile = ({
       }
     }
     debug.log(`Rocket ${id} explosion hit ${hitCount} enemies`);
-
-    // Note: onRemove(id) is NOT called here anymore.
-    // It will be called by ExplosionEffect's onComplete.
   };
 
   useFrame((state, delta) => {
@@ -184,12 +176,8 @@ const RocketProjectile = ({
       return;
     }
 
-    // Check if already exploded (safety check)
     if (hasExplodedRef.current) {
-      console.warn(
-        `Rocket ${id} in useFrame despite hasExplodedRef being true.`
-      );
-      onRemove(id); // Force removal
+      onRemove(id);
       return;
     }
 
@@ -211,23 +199,7 @@ const RocketProjectile = ({
       moveDistance
     );
 
-    // --- Arc Calculation & Height Adjustment ---
-    const enemies = getState().enemies;
-    const targetEnemy = targetId
-      ? enemies.find((e) => e.id === targetId)
-      : null;
-
-    let progress = 0;
-    let targetPosXZ: Vector3 | null = null;
-
-    if (targetEnemy) {
-      targetPosXZ = new Vector3(
-        targetEnemy.position[0],
-        0,
-        targetEnemy.position[2]
-      );
-    }
-
+    // --- Arc Calculation ---
     const currentPosXZ = new Vector3(
       projectileGroupRef.current.position.x,
       0,
@@ -239,7 +211,13 @@ const RocketProjectile = ({
       initialPositionRef.current.z
     );
 
-    if (targetPosXZ) {
+    let progress = 0;
+    if (targetPositionRef.current) {
+      const targetPosXZ = new Vector3(
+        targetPositionRef.current.x,
+        0,
+        targetPositionRef.current.z
+      );
       const totalDistance = initialPosXZ.distanceTo(targetPosXZ);
       const distanceTraveledXZ = currentPosXZ.distanceTo(initialPosXZ);
       progress =
@@ -259,7 +237,7 @@ const RocketProjectile = ({
       calculatedY
     );
 
-    // --- Rotation Adjustment (Look along trajectory - Pitch only) ---
+    // --- Rotation Adjustment ---
     if (visualGroupRef.current) {
       // Check if the inner group ref is available
       const velocity = projectileGroupRef.current.position
@@ -272,7 +250,7 @@ const RocketProjectile = ({
           velocity.z
         ).length();
         const angle = Math.atan2(velocity.y, horizontalVelocity);
-        visualGroupRef.current.rotation.x = -angle; // Apply pitch to the inner visual group
+        visualGroupRef.current.rotation.x = -angle;
       }
     }
     // Keep Y rotation on the outer group aligned with initial firing direction
@@ -283,9 +261,6 @@ const RocketProjectile = ({
 
     // 1. Ground Collision Check
     if (currentPositionVec.y <= GROUND_Y_LEVEL) {
-      debug.log(
-        `Rocket ${id} hit ground at Y=${currentPositionVec.y.toFixed(2)}`
-      );
       const explosionPos = currentPositionVec.clone();
       explosionPos.y = GROUND_Y_LEVEL + 0.1;
       explode(explosionPos);
@@ -298,7 +273,6 @@ const RocketProjectile = ({
       Math.abs(currentPositionVec.x) > mapSize ||
       Math.abs(currentPositionVec.z) > mapSize
     ) {
-      debug.log(`Rocket ${id} reached map boundary`);
       explode(currentPositionVec);
       return;
     }
@@ -308,7 +282,6 @@ const RocketProjectile = ({
       initialPositionRef.current
     );
     if (distanceTraveledRef.current > 60) {
-      debug.log(`Rocket ${id} reached max range`);
       explode(currentPositionVec);
       return;
     }
@@ -321,35 +294,31 @@ const RocketProjectile = ({
         obstacle.type === "rock" ? obstacle.size * 0.8 : obstacle.size * 0.5;
 
       if (distanceToObstacle < collisionRadius + 0.15) {
-        // Added projectile radius
-        debug.log(`Rocket ${id} hit terrain obstacle type ${obstacle.type}`);
         explode(currentPositionVec);
         return;
       }
     }
 
-    // 5. Enemy Direct Hit
+    const enemies = getState().enemies;
     for (const enemy of enemies) {
       const enemyPos = new Vector3(...enemy.position);
       const distanceToEnemy = enemyPos.distanceTo(currentPositionVec);
       const collisionRadius = enemy.type === "tank" ? 1.8 : 1.0;
 
       if (distanceToEnemy < collisionRadius + 0.15) {
-        // Added projectile radius
-        debug.log(`Direct rocket hit on enemy ${enemy.id}`);
         explode(currentPositionVec);
         return;
       }
     }
 
-    // 6. Reached Target Destination Area (End of Arc)
-    if (progress > 0.98) {
+    // Commit to target position
+    if (targetPositionRef.current && progress >= 0.98) {
       debug.log(
-        `Rocket ${id} reached target destination area (progress ${progress.toFixed(
-          2
-        )})`
+        `Rocket ${id} reached target position (progress ${progress.toFixed(2)})`
       );
-      explode(currentPositionVec);
+      const explosionPos = targetPositionRef.current.clone();
+      explosionPos.y = Math.max(GROUND_Y_LEVEL + 0.1, currentPositionVec.y);
+      explode(explosionPos);
       return;
     }
   });
@@ -361,7 +330,7 @@ const RocketProjectile = ({
       <ExplosionEffect
         position={explosionPosition}
         size={splashRadius * 0.7}
-        onComplete={() => onRemove(id)} // Pass the removal callback
+        onComplete={() => onRemove(id)}
       />
     );
   }
@@ -423,7 +392,7 @@ const RocketProjectile = ({
           intensity={1.5}
           distance={2}
           decay={2}
-          position={[0, 0, -0.3]} // Behind the body
+          position={[0, 0, -0.3]}
         />
         <Sphere args={[0.1, 8, 8]} position={[0, 0, -0.3]}>
           <meshStandardMaterial
