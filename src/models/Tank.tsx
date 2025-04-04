@@ -16,7 +16,7 @@ interface TankProps {
   position: [number, number, number];
 }
 
-const SIDE_WEAPON_DISTANCE = 2.0;
+const SIDE_WEAPON_DISTANCE = 2.25;
 const SIDE_WEAPON_Y_OFFSET = 0.2;
 const MAX_SIDE_WEAPONS = 4;
 
