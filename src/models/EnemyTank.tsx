@@ -222,7 +222,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         if (isBomber && distanceToPlayer < 2) {
           debug.log(`Bomber ${enemy.id} exploded on player!`);
           const takeDamage = getState().takeDamage;
-          takeDamage(75);
+          takeDamage(25);
           damageEnemy(enemy.id, 1000);
         }
       }
