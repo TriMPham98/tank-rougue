@@ -33,7 +33,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   const maxHealthRef = useRef(enemy.health);
 
-  // Tank type dependent constants
   const isBomber = enemy.type === "bomber";
   const isTank = enemy.type === "tank";
   const isTurret = enemy.type === "turret";
@@ -50,7 +49,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     }
   }, []);
 
-  // Helper function to check collision with terrain obstacles, specifically rocks
   const checkTerrainCollision = useCallback(
     (newX: number, newZ: number): boolean => {
       const mapSize = 50;
@@ -201,7 +199,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           tankRef.current.position.x = newX;
           tankRef.current.position.z = newZ;
 
-          // Add bobbing motion for bomber
           if (isBomber) {
             tankRef.current.position.y =
               0.5 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
@@ -225,7 +222,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         if (isBomber && distanceToPlayer < 2) {
           debug.log(`Bomber ${enemy.id} exploded on player!`);
           const takeDamage = getState().takeDamage;
-          takeDamage(75); // Increased damage for upgraded bomber
+          takeDamage(75);
           damageEnemy(enemy.id, 1000);
         }
       }
@@ -248,7 +245,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       <group ref={tankRef}>
         {isBomber ? (
           <>
-            {/* Core spherical body */}
             <Sphere
               args={[0.8, 16, 16]}
               position={[0, 0, 0]}
@@ -261,7 +257,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
                 emissiveIntensity={0.3}
               />
             </Sphere>
-            {/* Rear thruster */}
             <Cylinder
               args={[0.3, 0.5, 0.8, 12]}
               position={[0, 0, -0.8]}
@@ -275,7 +270,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
                 emissiveIntensity={0.5}
               />
             </Cylinder>
-            {/* Side fins */}
             <Box
               args={[0.6, 0.1, 0.4]}
               position={[0.6, 0, 0]}
@@ -292,13 +286,14 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               onClick={() => handleHit(25)}>
               <meshStandardMaterial color="goldenrod" />
             </Box>
-            {/* Pulsing glow effect */}
-            <Sphere args={[0.9, 16, 16]} position={[0, 0, 0]} renderOrder={1}>
-              <meshBasicMaterial
+            {/* Modified pulsing glow effect */}
+            <Sphere args={[0.85, 16, 16]} position={[0, 0, 0]} renderOrder={1}>
+              <meshStandardMaterial
                 color="red"
                 transparent
-                opacity={0.5 + Math.sin(Date.now() * 0.005) * 0.2}
-                depthTest={false}
+                opacity={0.3 + Math.sin(Date.now() * 0.005) * 0.15}
+                emissive="red"
+                emissiveIntensity={0.2}
               />
             </Sphere>
           </>
