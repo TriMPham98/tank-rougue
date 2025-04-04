@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Box, Cylinder, Sphere } from "@react-three/drei";
+import { Box, Cylinder, Sphere, Cone } from "@react-three/drei";
 import { Vector3, Group, Quaternion } from "three";
 import { Enemy, useGameState } from "../utils/gameState";
 import EnemyProjectile from "./EnemyProjectile";
@@ -286,7 +286,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               onClick={() => handleHit(25)}>
               <meshStandardMaterial color="goldenrod" />
             </Box>
-            {/* Modified pulsing glow effect */}
             <Sphere args={[0.85, 16, 16]} position={[0, 0, 0]} renderOrder={1}>
               <meshStandardMaterial
                 color="red"
@@ -308,19 +307,71 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         )}
         {!isBomber && (
           <group position={[0, 0.5, 0]} ref={turretRef}>
+            {/* Turret Base */}
             <Cylinder
-              args={isTank ? [0.6, 0.6, 0.4, 16] : [0.7, 0.5, 0.6, 8]}
+              args={isTank ? [0.6, 0.7, 0.4, 16] : [0.7, 0.8, 0.5, 16]}
               position={[0, 0.2, 0]}
               castShadow
               onClick={() => handleHit(25)}>
               <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
             </Cylinder>
-            <Box
-              args={isTank ? [0.2, 0.2, 1.5] : [0.25, 0.25, 2]}
-              position={[0, 0.2, isTank ? 1 : 1.2]}
+            {/* Turret Hatch */}
+            <Cylinder
+              args={[0.3, 0.3, 0.1, 16]}
+              position={[0, 0.45, -0.2]}
               castShadow
               onClick={() => handleHit(25)}>
               <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
+            </Cylinder>
+            {/* Main Barrel */}
+            <Cylinder
+              args={isTank ? [0.1, 0.1, 1.5, 16] : [0.12, 0.12, 2, 16]}
+              position={[0, 0.2, isTank ? 1 : 1.2]}
+              rotation={[Math.PI / 2, 0, 0]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color={isTank ? "darkgray" : "navy"} />
+            </Cylinder>
+            {/* Barrel Muzzle */}
+            <Cylinder
+              args={isTank ? [0.15, 0.15, 0.2, 16] : [0.18, 0.18, 0.25, 16]}
+              position={[0, 0.2, isTank ? 1.85 : 2.35]}
+              rotation={[Math.PI / 2, 0, 0]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color={isTank ? "black" : "darkgray"} />
+            </Cylinder>
+            {/* Antenna */}
+            <Cylinder
+              args={[0.02, 0.02, 1, 8]}
+              position={[0.3, 0.65, -0.3]}
+              rotation={[0, 0, Math.PI / 6]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color="gray" />
+            </Cylinder>
+            {/* Side Armor Plate */}
+            <Box
+              args={[0.2, 0.3, 0.8]}
+              position={[isTank ? 0.55 : 0.65, 0.2, 0]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
+            </Box>
+            <Box
+              args={[0.2, 0.3, 0.8]}
+              position={[isTank ? -0.55 : -0.65, 0.2, 0]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color={isTank ? "darkred" : "royalblue"} />
+            </Box>
+            {/* Vision Port */}
+            <Box
+              args={[0.2, 0.1, 0.1]}
+              position={[0, 0.35, isTank ? 0.4 : 0.5]}
+              castShadow
+              onClick={() => handleHit(25)}>
+              <meshStandardMaterial color="black" />
             </Box>
           </group>
         )}
