@@ -37,7 +37,7 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
   const enemies = useGameState((state) => state.enemies);
-  const safeZoneRadius = useGameState((state) => state.safeZoneRadius); // Use dynamic safe zone radius
+  const safeZoneRadius = useGameState((state) => state.safeZoneRadius);
   const safeZoneCenter = useGameState((state) => state.safeZoneCenter);
   const playerTankPosition = useGameState((state) => state.playerTankPosition);
 
@@ -70,20 +70,6 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
     if (distanceTraveled > range) {
       debug.log(
         `Pellet ${id} removed: Range exceeded (${distanceTraveled} > ${range})`
-      );
-      hasCollidedRef.current = true;
-      onRemove(id);
-      return;
-    }
-
-    // 4. Check Safe Zone Boundary (replacing static mapSize)
-    const distanceFromCenter = Math.sqrt(
-      Math.pow(currentPosition.x - safeZoneCenter[0], 2) +
-        Math.pow(currentPosition.z - safeZoneCenter[1], 2)
-    );
-    if (distanceFromCenter > safeZoneRadius) {
-      debug.log(
-        `Pellet ${id} removed: Exceeded safe zone radius (${distanceFromCenter} > ${safeZoneRadius}) at ${currentPosition.x}, ${currentPosition.z}`
       );
       hasCollidedRef.current = true;
       onRemove(id);
