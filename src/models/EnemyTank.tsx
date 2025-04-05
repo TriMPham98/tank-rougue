@@ -80,6 +80,71 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     [tankRadius, getState]
   );
 
+  // New function to detect obstacles ahead using ray-casting
+  const detectObstacleAhead = useCallback(
+    (
+      position: Vector3,
+      direction: Vector3,
+      lookAheadDistance: number = 4
+    ): boolean => {
+      const terrainObstacles = getState().terrainObstacles;
+
+      // Cast multiple rays in a small arc in front of the tank
+      const rayAngles = [-15, 0, 15]; // Degrees
+      const rayCount = rayAngles.length;
+
+      for (const angleOffset of rayAngles) {
+        // Calculate the ray direction with offset
+        const rayDirection = direction.clone();
+        const angleRad = (angleOffset * Math.PI) / 180;
+        rayDirection.applyAxisAngle(new Vector3(0, 1, 0), angleRad);
+
+        // Check each obstacle against this ray
+        for (const obstacle of terrainObstacles) {
+          if (obstacle.type === "rock") {
+            const obstaclePos = new Vector3(
+              obstacle.position[0],
+              0,
+              obstacle.position[2]
+            );
+            const obstacleRadius = obstacle.size * 0.75;
+
+            // Vector from ray origin to obstacle center
+            const originToObstacle = obstaclePos.clone().sub(position);
+
+            // Project this vector onto the ray direction
+            const projection = originToObstacle.dot(rayDirection);
+
+            // If obstacle is behind the ray origin or too far, skip
+            if (projection < 0 || projection > lookAheadDistance) continue;
+
+            // Find closest point on ray to obstacle center
+            const closestPoint = position
+              .clone()
+              .add(rayDirection.clone().multiplyScalar(projection));
+
+            // Distance from this point to obstacle center
+            const distanceToRay = obstaclePos.distanceTo(closestPoint);
+
+            // If this distance is less than obstacle radius, ray hits obstacle
+            if (distanceToRay < obstacleRadius + tankRadius * 0.5) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    },
+    [tankRadius, getState]
+  );
+
+  // Track positions to detect when tank is stuck
+  const positionHistoryRef = useRef<Vector3[]>([]);
+  const lastObstacleAvoidTimeRef = useRef(0);
+  const stuckTimeoutRef = useRef(0);
+  const avoidanceDirectionRef = useRef<Vector3 | null>(null);
+
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !tankRef.current) return;
 
@@ -179,6 +244,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
     // --- Movement and Body Rotation (Tank & Bomber) ---
     if (isTank || isBomber) {
+      const currentTime = state.clock.getElapsedTime();
       const targetRotation = Math.atan2(
         directionToPlayer.x,
         directionToPlayer.z
@@ -186,8 +252,113 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       const rotationDiff = targetRotation - tankRotationRef.current;
       const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
       const turnRate = isBomber ? 2.0 : 1.0;
-      tankRotationRef.current += wrappedDiff * delta * turnRate;
+
+      // Store current position for stuck detection (every ~0.5 seconds)
+      if (currentTime % 0.5 < delta) {
+        positionHistoryRef.current.push(currentPositionVec.clone());
+        if (positionHistoryRef.current.length > 5) {
+          positionHistoryRef.current.shift();
+        }
+      }
+
+      // Check if tank is stuck by analyzing position history
+      let isStuck = false;
+      if (positionHistoryRef.current.length >= 5) {
+        let totalMovement = 0;
+        for (let i = 1; i < positionHistoryRef.current.length; i++) {
+          totalMovement += positionHistoryRef.current[i].distanceTo(
+            positionHistoryRef.current[i - 1]
+          );
+        }
+        // If total movement over last 5 positions is very small, consider stuck
+        isStuck = totalMovement < 0.5;
+      }
+
+      // Determine movement direction based on obstacle detection and stuck status
+      let moveDirection = new Vector3(
+        Math.sin(tankRotationRef.current),
+        0,
+        Math.cos(tankRotationRef.current)
+      );
+
+      let shouldChangeDirection = false;
+
+      // If tank is approaching an obstacle
+      const isObstacleAhead = detectObstacleAhead(
+        currentPositionVec,
+        moveDirection,
+        isBomber ? 3 : 2
+      );
+
+      // Logic for obstacle avoidance and unsticking
+      if (isObstacleAhead || isStuck) {
+        // If we've been stuck for a while or just detected an obstacle
+        if (isStuck || currentTime - lastObstacleAvoidTimeRef.current > 2) {
+          shouldChangeDirection = true;
+          lastObstacleAvoidTimeRef.current = currentTime;
+
+          // Generate a new avoidance direction
+          if (isStuck) {
+            // When stuck, try a more dramatic direction change
+            const playerDir = directionToPlayer.clone();
+            // Choose between going left or right of the player
+            const randomAngle =
+              (Math.random() > 0.5 ? 1 : -1) *
+              (Math.PI / 2 + (Math.random() * Math.PI) / 4);
+            playerDir.applyAxisAngle(new Vector3(0, 1, 0), randomAngle);
+            avoidanceDirectionRef.current = playerDir;
+            stuckTimeoutRef.current = currentTime + 1.5; // Longer timeout when stuck
+          } else {
+            // For simple obstacle avoidance, rotate around the obstacle
+            const avoidAngle = (Math.PI / 3) * (Math.random() > 0.5 ? 1 : -1);
+            const avoidDir = moveDirection
+              .clone()
+              .applyAxisAngle(new Vector3(0, 1, 0), avoidAngle);
+            avoidanceDirectionRef.current = avoidDir;
+            stuckTimeoutRef.current = currentTime + 0.7;
+          }
+        }
+      }
+
+      // Use avoidance direction if active
+      if (
+        avoidanceDirectionRef.current &&
+        currentTime < stuckTimeoutRef.current
+      ) {
+        // Gradually turn toward the avoidance direction
+        const avoidRotation = Math.atan2(
+          avoidanceDirectionRef.current.x,
+          avoidanceDirectionRef.current.z
+        );
+        const avoidDiff = avoidRotation - tankRotationRef.current;
+        const wrappedAvoidDiff =
+          ((avoidDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+        // Turn faster during avoidance
+        const avoidTurnRate = (isBomber ? 3.0 : 2.0) * turnRate;
+        tankRotationRef.current += wrappedAvoidDiff * delta * avoidTurnRate;
+      } else {
+        // Clear avoidance direction when timeout expires
+        if (
+          avoidanceDirectionRef.current &&
+          currentTime >= stuckTimeoutRef.current
+        ) {
+          avoidanceDirectionRef.current = null;
+        }
+
+        // Normal rotation toward player when not avoiding
+        tankRotationRef.current += wrappedDiff * delta * turnRate;
+      }
+
+      // Update tank's visual rotation
       tankRef.current.rotation.y = tankRotationRef.current;
+
+      // Update move direction based on current rotation
+      moveDirection = new Vector3(
+        Math.sin(tankRotationRef.current),
+        0,
+        Math.cos(tankRotationRef.current)
+      );
 
       let shouldMove = false;
       if (isBomber) {
@@ -197,11 +368,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       }
 
       if (shouldMove) {
-        const moveDirection = new Vector3(
-          Math.sin(tankRotationRef.current),
-          0,
-          Math.cos(tankRotationRef.current)
-        );
         const potentialX =
           currentPositionVec.x + moveDirection.x * delta * moveSpeed;
         const potentialZ =
@@ -224,7 +390,8 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             ];
             updateEnemyPosition(enemy.id, newPosition);
           }
-        } else {
+        } else if (!shouldChangeDirection) {
+          // Only apply random rotation if we didn't already determine a direction change
           tankRotationRef.current +=
             (Math.random() - 0.5) * Math.PI * 0.5 * delta * 5;
           if (Math.random() < 0.05) {
