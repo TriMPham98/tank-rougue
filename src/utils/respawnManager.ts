@@ -7,10 +7,22 @@ import * as THREE from "three"; // Import THREE for Vector2
 const SPAWN_STATS_DEBUG = false;
 
 const BASE_ENEMIES = 1;
-const getMaxEnemies = (level: number) =>
-  level === 1
-    ? 1
-    : Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 2), 15);
+const getMaxEnemies = (level: number) => {
+  if (level === 1) return 1;
+
+  // Reduce tanks in early game (levels 2-10)
+  if (level <= 10) {
+    return Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 1.25), 15);
+  }
+  // Standard progression (levels 11-39)
+  else if (level < 40) {
+    return Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 2), 15);
+  }
+  // Increase difficulty for late game (level 40+)
+  else {
+    return Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 2.3), 20);
+  }
+};
 
 export const useRespawnManager = () => {
   const prevEnemyCountRef = useRef<number>(0);

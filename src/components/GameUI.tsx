@@ -5,6 +5,22 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
 import "./WeaponSelection.css";
 
+// Define BASE_ENEMIES constant for enemy count calculation
+const BASE_ENEMIES = 1;
+
+// Calculate max enemies for a given level (matches the logic in respawnManager.ts)
+const getMaxEnemies = (level: number): number => {
+  if (level === 1) return 1;
+
+  if (level <= 10) {
+    return Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 1.25), 15);
+  } else if (level < 40) {
+    return Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 2), 15);
+  } else {
+    return Math.min(BASE_ENEMIES + Math.floor(Math.sqrt(level) * 2.3), 20);
+  }
+};
+
 const GameUI = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isOutsideSafeZone, setIsOutsideSafeZone] = useState(false);
@@ -987,9 +1003,14 @@ const GameUI = () => {
             className="level-info"
             style={{ fontSize: "0.8em", opacity: 0.8 }}>
             Enemies:{" "}
-            {level === 1
-              ? 1
-              : Math.min(1 + Math.floor(Math.sqrt(level) * 2), 15)}
+            <span
+              style={{
+                color:
+                  level <= 10 ? "#8aff8a" : level >= 40 ? "#ff8a8a" : "white",
+                fontWeight: level >= 40 ? "bold" : "normal",
+              }}>
+              {getMaxEnemies(level)}
+            </span>
           </div>
           <div
             className="level-progress-container"

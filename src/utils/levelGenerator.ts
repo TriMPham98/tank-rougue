@@ -169,11 +169,27 @@ export const generateEnemies = (
   }
 
   const baseEnemyCount = 1;
-  const maxEnemies = 15;
-  const enemyCount = Math.min(
-    Math.floor(baseEnemyCount + Math.sqrt(level) * 2),
-    maxEnemies
-  );
+  const maxEnemies = level >= 40 ? 20 : 15;
+
+  // Calculate enemy count with the same logic as getMaxEnemies
+  let enemyCount;
+  if (level <= 10) {
+    enemyCount = Math.min(
+      baseEnemyCount + Math.floor(Math.sqrt(level) * 1.25),
+      maxEnemies
+    );
+  } else if (level < 40) {
+    enemyCount = Math.min(
+      baseEnemyCount + Math.floor(Math.sqrt(level) * 2),
+      maxEnemies
+    );
+  } else {
+    enemyCount = Math.min(
+      baseEnemyCount + Math.floor(Math.sqrt(level) * 2.3),
+      maxEnemies
+    );
+  }
+
   const gridSize = Math.min(40 + level * 2, 70);
 
   const config: LevelConfig = {
