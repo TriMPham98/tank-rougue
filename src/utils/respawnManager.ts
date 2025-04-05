@@ -61,14 +61,14 @@ export const useRespawnManager = () => {
         // Determine enemy type first
         const turretProbability = Math.min(0.1 + level * 0.02, 0.3);
         const bomberProbability =
-          level >= 5 ? Math.min(0.15 + (level - 5) * 0.03, 0.3) : 0;
+          level >= 15 ? Math.min(0.15 + (level - 15) * 0.03, 0.3) : 0;
         const random = Math.random();
         const currentTurretCount = enemies.filter(
           (e) => e.type === "turret"
         ).length;
         const maxTurrets = 3;
 
-        if (level >= 5 && random < bomberProbability) {
+        if (level >= 15 && random < bomberProbability) {
           type = "bomber";
           health = 40 + level * 3;
           speed = 4.0;
