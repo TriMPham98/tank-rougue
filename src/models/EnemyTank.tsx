@@ -12,8 +12,8 @@ interface EnemyTankProps {
 
 const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const tankRef = useRef<Group>(null);
-  const turretRef = useRef<Group>(null); // Still needed for non-bombers
-  const flashMaterialRef = useRef<MeshStandardMaterial>(null); // Ref for the flashing material
+  const turretRef = useRef<Group>(null);
+  const flashMaterialRef = useRef<MeshStandardMaterial>(null);
 
   const tankRotationRef = useRef(0);
   const turretRotationRef = useRef(0);
@@ -37,18 +37,18 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
   const isBomber = enemy.type === "bomber";
   const isTank = enemy.type === "tank";
   const isTurret = enemy.type === "turret";
-  const tankRadius = isBomber ? 1.2 : 1.25; // Adjusted bomber radius slightly for hovercraft base
+  const tankRadius = isBomber ? 1.2 : 1.25;
   const moveSpeed = enemy.speed || (isBomber ? 2.5 : 1.5);
 
   useEffect(() => {
     maxHealthRef.current = enemy.health;
-  }, []); // No dependency change needed
+  }, []);
 
   useEffect(() => {
     if (tankRef.current) {
       tankRef.current.position.set(...enemy.position);
     }
-  }, []); // No dependency change needed
+  }, []);
 
   const checkTerrainCollision = useCallback(
     (newX: number, newZ: number): boolean => {
@@ -79,71 +79,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     },
     [tankRadius, getState]
   );
-
-  // New function to detect obstacles ahead using ray-casting
-  const detectObstacleAhead = useCallback(
-    (
-      position: Vector3,
-      direction: Vector3,
-      lookAheadDistance: number = 4
-    ): boolean => {
-      const terrainObstacles = getState().terrainObstacles;
-
-      // Cast multiple rays in a small arc in front of the tank
-      const rayAngles = [-15, 0, 15]; // Degrees
-      const rayCount = rayAngles.length;
-
-      for (const angleOffset of rayAngles) {
-        // Calculate the ray direction with offset
-        const rayDirection = direction.clone();
-        const angleRad = (angleOffset * Math.PI) / 180;
-        rayDirection.applyAxisAngle(new Vector3(0, 1, 0), angleRad);
-
-        // Check each obstacle against this ray
-        for (const obstacle of terrainObstacles) {
-          if (obstacle.type === "rock") {
-            const obstaclePos = new Vector3(
-              obstacle.position[0],
-              0,
-              obstacle.position[2]
-            );
-            const obstacleRadius = obstacle.size * 0.75;
-
-            // Vector from ray origin to obstacle center
-            const originToObstacle = obstaclePos.clone().sub(position);
-
-            // Project this vector onto the ray direction
-            const projection = originToObstacle.dot(rayDirection);
-
-            // If obstacle is behind the ray origin or too far, skip
-            if (projection < 0 || projection > lookAheadDistance) continue;
-
-            // Find closest point on ray to obstacle center
-            const closestPoint = position
-              .clone()
-              .add(rayDirection.clone().multiplyScalar(projection));
-
-            // Distance from this point to obstacle center
-            const distanceToRay = obstaclePos.distanceTo(closestPoint);
-
-            // If this distance is less than obstacle radius, ray hits obstacle
-            if (distanceToRay < obstacleRadius + tankRadius * 0.5) {
-              return true;
-            }
-          }
-        }
-      }
-
-      return false;
-    },
-    [tankRadius, getState]
-  );
-
-  // Track positions to detect when tank is stuck
-  const positionHistoryRef = useRef<Vector3[]>([]);
-  const lastObstacleAvoidTimeRef = useRef(0);
-  const stuckTimeoutRef = useRef(0);
-  const avoidanceDirectionRef = useRef<Vector3 | null>(null);
 
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !tankRef.current) return;
@@ -182,18 +117,12 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         directionToPlayer.x,
         directionToPlayer.z
       );
-
-      if (isTank) {
-        const relativeRotation = targetTurretRotation - tankRotationRef.current;
-        const turretRotationDiff = relativeRotation - turretRotationRef.current;
-        const wrappedTurretDiff =
-          ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-        turretRotationRef.current += wrappedTurretDiff * delta * 3;
-        turretRef.current.rotation.y = turretRotationRef.current;
-      } else if (isTurret) {
-        turretRotationRef.current = targetTurretRotation;
-        turretRef.current.rotation.y = targetTurretRotation;
-      }
+      const relativeRotation = targetTurretRotation - tankRotationRef.current;
+      const turretRotationDiff = relativeRotation - turretRotationRef.current;
+      const wrappedTurretDiff =
+        ((turretRotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+      turretRotationRef.current += wrappedTurretDiff * delta * 3;
+      turretRef.current.rotation.y = turretRotationRef.current;
     }
 
     // --- Shooting (Non-Bombers) ---
@@ -244,122 +173,57 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
     // --- Movement and Body Rotation (Tank & Bomber) ---
     if (isTank || isBomber) {
-      const currentTime = state.clock.getElapsedTime();
-      const targetRotation = Math.atan2(
-        directionToPlayer.x,
-        directionToPlayer.z
-      );
-      const rotationDiff = targetRotation - tankRotationRef.current;
-      const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
       const turnRate = isBomber ? 2.0 : 1.0;
 
-      // Store current position for stuck detection (every ~0.5 seconds)
-      if (currentTime % 0.5 < delta) {
-        positionHistoryRef.current.push(currentPositionVec.clone());
-        if (positionHistoryRef.current.length > 5) {
-          positionHistoryRef.current.shift();
-        }
-      }
+      // Potential Field Parameters
+      const max_distance = 5;
+      const attraction_strength = 1.0;
+      const epsilon = 0.1;
 
-      // Check if tank is stuck by analyzing position history
-      let isStuck = false;
-      if (positionHistoryRef.current.length >= 5) {
-        let totalMovement = 0;
-        for (let i = 1; i < positionHistoryRef.current.length; i++) {
-          totalMovement += positionHistoryRef.current[i].distanceTo(
-            positionHistoryRef.current[i - 1]
-          );
-        }
-        // If total movement over last 5 positions is very small, consider stuck
-        isStuck = totalMovement < 0.5;
-      }
+      // Compute attractive force towards player
+      const attractiveForce = directionToPlayer
+        .clone()
+        .multiplyScalar(attraction_strength);
 
-      // Determine movement direction based on obstacle detection and stuck status
-      let moveDirection = new Vector3(
-        Math.sin(tankRotationRef.current),
-        0,
-        Math.cos(tankRotationRef.current)
-      );
-
-      let shouldChangeDirection = false;
-
-      // If tank is approaching an obstacle
-      const isObstacleAhead = detectObstacleAhead(
-        currentPositionVec,
-        moveDirection,
-        isBomber ? 3 : 2
-      );
-
-      // Logic for obstacle avoidance and unsticking
-      if (isObstacleAhead || isStuck) {
-        // If we've been stuck for a while or just detected an obstacle
-        if (isStuck || currentTime - lastObstacleAvoidTimeRef.current > 2) {
-          shouldChangeDirection = true;
-          lastObstacleAvoidTimeRef.current = currentTime;
-
-          // Generate a new avoidance direction
-          if (isStuck) {
-            // When stuck, try a more dramatic direction change
-            const playerDir = directionToPlayer.clone();
-            // Choose between going left or right of the player
-            const randomAngle =
-              (Math.random() > 0.5 ? 1 : -1) *
-              (Math.PI / 2 + (Math.random() * Math.PI) / 4);
-            playerDir.applyAxisAngle(new Vector3(0, 1, 0), randomAngle);
-            avoidanceDirectionRef.current = playerDir;
-            stuckTimeoutRef.current = currentTime + 1.5; // Longer timeout when stuck
-          } else {
-            // For simple obstacle avoidance, rotate around the obstacle
-            const avoidAngle = (Math.PI / 3) * (Math.random() > 0.5 ? 1 : -1);
-            const avoidDir = moveDirection
-              .clone()
-              .applyAxisAngle(new Vector3(0, 1, 0), avoidAngle);
-            avoidanceDirectionRef.current = avoidDir;
-            stuckTimeoutRef.current = currentTime + 0.7;
-          }
-        }
-      }
-
-      // Use avoidance direction if active
-      if (
-        avoidanceDirectionRef.current &&
-        currentTime < stuckTimeoutRef.current
-      ) {
-        // Gradually turn toward the avoidance direction
-        const avoidRotation = Math.atan2(
-          avoidanceDirectionRef.current.x,
-          avoidanceDirectionRef.current.z
+      // Compute sum of repulsive forces from obstacles
+      const sumRepulsive = new Vector3(0, 0, 0);
+      const terrainObstacles = getState().terrainObstacles;
+      for (const obstacle of terrainObstacles) {
+        const obstaclePos = new Vector3(
+          obstacle.position[0],
+          0,
+          obstacle.position[2]
         );
-        const avoidDiff = avoidRotation - tankRotationRef.current;
-        const wrappedAvoidDiff =
-          ((avoidDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-
-        // Turn faster during avoidance
-        const avoidTurnRate = (isBomber ? 3.0 : 2.0) * turnRate;
-        tankRotationRef.current += wrappedAvoidDiff * delta * avoidTurnRate;
-      } else {
-        // Clear avoidance direction when timeout expires
-        if (
-          avoidanceDirectionRef.current &&
-          currentTime >= stuckTimeoutRef.current
-        ) {
-          avoidanceDirectionRef.current = null;
+        const vectorToTank = currentPositionVec.clone().sub(obstaclePos);
+        const distance = vectorToTank.length();
+        const obstacleRadius = obstacle.size * 0.75;
+        const effectiveDistance = distance - (tankRadius + obstacleRadius);
+        if (effectiveDistance < max_distance) {
+          const repulsiveDirection = vectorToTank.normalize();
+          const repulsiveMagnitude = 1 / (effectiveDistance + epsilon);
+          const repulsiveForce =
+            repulsiveDirection.multiplyScalar(repulsiveMagnitude);
+          sumRepulsive.add(repulsiveForce);
         }
-
-        // Normal rotation toward player when not avoiding
-        tankRotationRef.current += wrappedDiff * delta * turnRate;
       }
 
-      // Update tank's visual rotation
+      // Compute net force
+      const netForce = attractiveForce.clone().add(sumRepulsive);
+
+      // Determine target direction
+      const targetDirection =
+        netForce.length() > 0 ? netForce.normalize() : directionToPlayer;
+
+      // Set target rotation
+      const targetRotation = Math.atan2(targetDirection.x, targetDirection.z);
+
+      // Smoothly turn towards target rotation
+      const rotationDiff = targetRotation - tankRotationRef.current;
+      const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+      tankRotationRef.current += wrappedDiff * delta * turnRate;
       tankRef.current.rotation.y = tankRotationRef.current;
 
-      // Update move direction based on current rotation
-      moveDirection = new Vector3(
-        Math.sin(tankRotationRef.current),
-        0,
-        Math.cos(tankRotationRef.current)
-      );
-
+      // Determine if the tank should move
       let shouldMove = false;
       if (isBomber) {
         shouldMove = true;
@@ -368,6 +232,11 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       }
 
       if (shouldMove) {
+        const moveDirection = new Vector3(
+          Math.sin(tankRotationRef.current),
+          0,
+          Math.cos(tankRotationRef.current)
+        );
         const potentialX =
           currentPositionVec.x + moveDirection.x * delta * moveSpeed;
         const potentialZ =
@@ -390,13 +259,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
             ];
             updateEnemyPosition(enemy.id, newPosition);
           }
-        } else if (!shouldChangeDirection) {
-          // Only apply random rotation if we didn't already determine a direction change
-          tankRotationRef.current +=
-            (Math.random() - 0.5) * Math.PI * 0.5 * delta * 5;
-          if (Math.random() < 0.05) {
-            debug.log(`Enemy ${enemy.id} avoiding obstacle`);
-          }
         }
       }
 
@@ -410,10 +272,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
     // --- Bomber Flashing Animation ---
     if (isBomber && flashMaterialRef.current) {
-      const maxFlashDistance = 15; // Start flashing within this range
-      const minFlashDistance = 2; // Max flash speed at this range (explosion range)
-      const baseFreq = 0.5; // Very slow base frequency (0.5 flashes per second)
-      const freqMultiplier = 1; // Minimal increase when close (up to 1.5 Hz max)
+      const maxFlashDistance = 15;
+      const minFlashDistance = 2;
+      const baseFreq = 0.5;
+      const freqMultiplier = 1;
 
       const proximity = Math.max(
         0,
@@ -430,14 +292,12 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         const sineValue = Math.sin(
           state.clock.elapsedTime * Math.PI * 2 * currentFreq
         );
-
         const flashFactor = (sineValue + 1) / 2;
 
-        // Much gentler ranges
-        const minOpacity = 0.05; // Barely visible at minimum
-        const maxOpacity = 0.3; // Subtle at maximum
-        const minIntensity = 0.1; // Very low glow
-        const maxIntensity = 0.4; // Gentle peak
+        const minOpacity = 0.05;
+        const maxOpacity = 0.3;
+        const minIntensity = 0.1;
+        const maxIntensity = 0.4;
 
         flashMaterialRef.current.opacity =
           minOpacity + flashFactor * (maxOpacity - minOpacity);
@@ -463,7 +323,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
     setProjectiles((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
-  // Updated bomber geometry constants
   const bomberBaseRadius = 1.2;
   const bomberBaseBottomRadius = 1.4;
   const bomberBaseHeight = 0.3;
@@ -476,7 +335,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       <group ref={tankRef} name={`enemy-${enemy.id}-${enemy.type}`}>
         {isBomber ? (
           <>
-            {/* Angular Hovercraft Base (Skirt) */}
             <Cylinder
               args={[
                 bomberBaseRadius,
@@ -494,8 +352,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
                 metalness={0.7}
               />
             </Cylinder>
-
-            {/* Angular Cockpit */}
             <Box
               args={[
                 bomberCockpitSize,
@@ -512,8 +368,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
                 metalness={0.5}
               />
             </Box>
-
-            {/* Rear Thruster Housing (Angular) */}
             <Cylinder
               args={[
                 bomberThrusterRadius,
@@ -535,8 +389,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
                 metalness={0.6}
               />
             </Cylinder>
-
-            {/* Side Thrusters (Fins) */}
             <Box
               args={[0.2, 0.4, bomberBaseRadius * 0.8]}
               position={[bomberBaseRadius * 0.8, bomberBaseHeight / 2 + 0.2, 0]}
@@ -565,8 +417,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
                 metalness={0.7}
               />
             </Box>
-
-            {/* Flashing Sphere Effect */}
             <Sphere
               args={[bomberBaseRadius * 1.1, 24, 24]}
               position={[0, bomberBaseHeight / 2, 0]}
