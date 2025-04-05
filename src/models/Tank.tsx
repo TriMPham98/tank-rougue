@@ -5,6 +5,7 @@ import { Group, Vector3 } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
+import { useSound, resetSoundTimer } from "../utils/sound";
 import Projectile from "./Projectile";
 import SniperRifle from "./SniperRifle";
 import Shotgun from "./Shotgun";
@@ -49,6 +50,8 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
   const { forward, backward, left, right, turretLeft, turretRight, shoot } =
     useKeyboardControls();
+
+  const sound = useSound();
 
   const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
   const playerSpeed = useGameState((state) => state.playerSpeed);
@@ -115,6 +118,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     };
   }, [position, updatePlayerPosition]);
 
+  // Reset the sound timer when fire rate changes (from upgrades)
+  useEffect(() => {
+    resetSoundTimer("playerCannon");
+  }, [playerFireRate]);
+
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
@@ -170,6 +178,9 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         ]);
         lastShootTimeRef.current =
           currentTime - (timeSinceLastShot % playerFireRate);
+
+        // Play cannon sound effect when firing
+        sound.play("playerCannon");
       }
     }
 
