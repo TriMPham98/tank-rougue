@@ -129,8 +129,8 @@ export const useGameState = create<GameState>((set, get) => ({
   playerMaxHealth: 100,
   playerSpeed: 3,
   playerDamage: 25,
-  playerTurretDamage: 50, // Set back to 50 from 100
-  playerFireRate: 2, // 1 second between shots
+  playerTurretDamage: 50, // Keep consistent at 50
+  playerFireRate: 2, // 0.5 shots per second (2 seconds between shots)
   playerCameraRange: 12, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
   playerBulletVelocity: 15, // Initial bullet velocity
@@ -260,7 +260,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerSpeed: 3,
       playerDamage: 25,
       playerTurretDamage: 50, // Keep consistent at 50
-      playerFireRate: 0.665, // Reset to our 33% increased value
+      playerFireRate: 2, // 0.5 shots per second (2 seconds between shots)
       playerCameraRange: 12,
       playerHealthRegen: 0,
       playerBulletVelocity: 15,
@@ -364,8 +364,8 @@ export const useGameState = create<GameState>((set, get) => ({
       ];
 
       // Only add fireRate if not maxed out
-      if (state.playerFireRate > 0.2) {
-        // 0.2s = 5 shots/sec
+      if (state.playerFireRate > 0.286) {
+        // 0.286s = 3.5 shots/sec
         allUpgrades.push("fireRate");
       }
 
@@ -577,12 +577,16 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerSpeed = state.playerSpeed + 0.5; // Linear increase by 0.5
           break;
         case "fireRate":
-          // Cap at 5 shots/sec (0.2s between shots)
-          const minFireRate = 0.2; // 5 shots per second
-          const newFireRate = Math.max(
-            minFireRate,
-            state.playerFireRate - 0.05
-          );
+          // Cap at 3.5 shots/sec (0.286s between shots)
+          const minFireRate = 0.286; // 3.5 shots per second
+          // Convert current fire rate to shots per second
+          const currentShotsPerSecond = 1 / state.playerFireRate;
+          // Add 0.1 shots per second
+          const newShotsPerSecond = currentShotsPerSecond + 0.1;
+          // Cap at 3.5 shots per second
+          const cappedShotsPerSecond = Math.min(3.5, newShotsPerSecond);
+          // Convert back to time between shots
+          const newFireRate = 1 / cappedShotsPerSecond;
           updates.playerFireRate = newFireRate;
           break;
         case "cameraRange":

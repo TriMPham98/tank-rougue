@@ -187,8 +187,9 @@ const GameUI = () => {
       case "tankSpeed":
         return `${(playerSpeed + 0.5).toFixed(1)}`;
       case "fireRate":
-        const newFireRate = 1 / (playerFireRate - 0.05);
-        return `${newFireRate.toFixed(1)} shots/sec`;
+        const currentShotsPerSecond = 1 / playerFireRate;
+        const newShotsPerSecond = Math.min(3.5, currentShotsPerSecond + 0.1);
+        return `${newShotsPerSecond.toFixed(1)} shots/sec`;
       case "cameraRange":
         return `${(playerCameraRange + 2).toFixed(0)} units`;
       case "maxHealth":
