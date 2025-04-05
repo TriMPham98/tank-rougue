@@ -59,13 +59,13 @@ const GameUI = () => {
   // Check for weapon selection opportunity when level changes
   useEffect(() => {
     if (
-      [5, 10, 15, 20].includes(level) &&
+      [10, 20, 30, 40].includes(level) &&
       selectedWeapons.length < 4 &&
       !isGameOver
     ) {
       useGameState.setState({ showWeaponSelection: true });
     }
-  }, [level, isGameOver]); // Added isGameOver to dependencies
+  }, [level, isGameOver]);
 
   // Monitor weapon selection state
   useEffect(() => {
