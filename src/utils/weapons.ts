@@ -26,8 +26,8 @@ export const availableWeapons: SecondaryWeapon[] = [
     name: "Shotgun",
     description:
       "Fires a spread of pellets that deal high damage at close range.",
-    damage: 150,
-    cooldown: 1.5,
+    damage: 175,
+    cooldown: 1.25,
     range: 25,
     projectileSpeed: 30,
   },
