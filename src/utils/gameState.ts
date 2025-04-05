@@ -353,24 +353,29 @@ export const useGameState = create<GameState>((set, get) => ({
         nextLevelRequirement = baseRequirement + Math.ceil(lateGameLevel * 1.5);
       }
 
-      // Generate random upgrade options (3 options)
-      const allUpgrades: UpgradeableStat[] = [
-        "tankSpeed",
-        "cameraRange",
-        "maxHealth",
-        "healthRegen",
-        "turretDamage",
-        "bulletVelocity",
-      ];
+      // Generate random upgrade options (3 options) - only needed if below level 51
+      let availableUpgrades: UpgradeableStat[] = [];
 
-      // Only add fireRate if not maxed out
-      if (state.playerFireRate > 0.286) {
-        // 0.286s = 3.5 shots/sec
-        allUpgrades.push("fireRate");
+      // Only generate upgrade options if below level 51
+      if (newLevel <= 50) {
+        const allUpgrades: UpgradeableStat[] = [
+          "tankSpeed",
+          "cameraRange",
+          "maxHealth",
+          "healthRegen",
+          "turretDamage",
+          "bulletVelocity",
+        ];
+
+        // Only add fireRate if not maxed out
+        if (state.playerFireRate > 0.286) {
+          // 0.286s = 3.5 shots/sec
+          allUpgrades.push("fireRate");
+        }
+
+        const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
+        availableUpgrades = shuffled.slice(0, 3);
       }
-
-      const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
-      const availableUpgrades = shuffled.slice(0, 3);
 
       // Calculate main turret damage increase based on a diminishing percentage of NPC health scaling
       // NPCs gain health at level * 9 rate (linear scaling)
@@ -504,7 +509,7 @@ export const useGameState = create<GameState>((set, get) => ({
         playerTurretDamage: state.playerTurretDamage + turretDamageIncrease, // Diminishing % of NPC health scaling
         enemiesDefeated: 0, // Reset counter for the new level
         enemiesRequiredForNextLevel: nextLevelRequirement,
-        showUpgradeUI: true, // Show upgrade UI after level up
+        showUpgradeUI: newLevel <= 50, // Only show upgrade UI if level is 50 or below
         availableUpgrades, // Set available upgrades
         isPreZoneChangeLevel, // Set the flag for pre-zone change level
 
@@ -567,6 +572,11 @@ export const useGameState = create<GameState>((set, get) => ({
   // New functions for the upgrade system
   upgradeStat: (stat: UpgradeableStat) =>
     set((state) => {
+      // Don't apply upgrades for levels above 50
+      if (state.level > 50) {
+        return { showUpgradeUI: false };
+      }
+
       // Apply the upgrade based on stat type
       const updates: Partial<GameState> = {
         showUpgradeUI: false, // Hide the upgrade UI after selection

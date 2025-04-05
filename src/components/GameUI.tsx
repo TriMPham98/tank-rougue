@@ -115,8 +115,10 @@ const GameUI = () => {
         ) {
           selectWeapon(availableWeapons[keyIndex]);
           closeWeaponSelection();
-          // Show upgrade UI after weapon selection
-          useGameState.setState({ showUpgradeUI: true });
+          // Show upgrade UI after weapon selection only if level <= 50
+          if (level <= 50) {
+            useGameState.setState({ showUpgradeUI: true });
+          }
         }
       }
     };
@@ -131,6 +133,7 @@ const GameUI = () => {
     availableUpgrades,
     availableWeapons,
     isUpgrading,
+    level,
   ]);
 
   const handleUpgrade = useCallback(
@@ -249,13 +252,17 @@ const GameUI = () => {
         onWeaponSelect={(weapon) => {
           selectWeapon(weapon);
           closeWeaponSelection();
-          // Show upgrade UI after weapon selection
-          useGameState.setState({ showUpgradeUI: true });
+          // Show upgrade UI after weapon selection only if level <= 50
+          if (level <= 50) {
+            useGameState.setState({ showUpgradeUI: true });
+          }
         }}
         onClose={() => {
           closeWeaponSelection();
-          // Show upgrade UI after closing weapon selection
-          useGameState.setState({ showUpgradeUI: true });
+          // Show upgrade UI after closing weapon selection only if level <= 50
+          if (level <= 50) {
+            useGameState.setState({ showUpgradeUI: true });
+          }
         }}
         state={{
           availableWeapons,
