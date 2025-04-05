@@ -214,7 +214,7 @@ export const generateEnemies = (
     // Determine enemy type first
     const turretProbability = Math.min(0.1 + level * 0.02, 0.3);
     const bomberProbability =
-      level >= 15 ? Math.min(0.15 + (level - 15) * 0.03, 0.3) : 0;
+      level >= 15 ? Math.min(0.15 + (level - 15) * 0.015, 0.3) : 0;
     const random = Math.random();
 
     if (level >= 15 && random < bomberProbability) {
