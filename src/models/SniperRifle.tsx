@@ -6,7 +6,6 @@ import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust pa
 import { debug } from "../utils/debug";
 import SniperProjectile from "./SniperProjectile";
 import { useWeaponTracking } from "../utils/weaponTracking";
-import { useSound } from "../utils/sound";
 
 // --- UPDATED PROPS INTERFACE ---
 interface SniperRifleProps {
@@ -34,7 +33,6 @@ const SniperRifle = ({
 
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
-  const sound = useSound();
 
   // Use the shared weapon tracking logic
   const { instanceId } = useWeaponTracking({
@@ -52,8 +50,6 @@ const SniperRifle = ({
         targetId: targetId,
         damage: damage,
       });
-      // Play sniper shot sound when firing
-      sound.play("sniperShot");
     },
   });
 
