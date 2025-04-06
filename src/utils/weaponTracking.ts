@@ -235,8 +235,10 @@ export const useWeaponTracking = ({
         // Play the appropriate weapon sound based on the weapon type
         const weaponType = weaponInstance.id || "";
         if (weaponType === "shotgun") {
+          sound.setVolume("shotgun", 0.10);
           sound.play("shotgun");
         } else if (weaponType === "sniper") {
+          sound.setVolume("sniper", 0.25);
           sound.play("sniper");
         }
 

@@ -180,6 +180,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           currentTime - (timeSinceLastShot % playerFireRate);
 
         // Play cannon sound effect when firing
+        sound.setVolume("playerCannon", 0.20);
         sound.play("playerCannon");
       }
     }
