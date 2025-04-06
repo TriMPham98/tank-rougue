@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { SecondaryWeapon, WeaponSelectionState } from "../types";
 
-const WEAPON_SELECTION_LEVELS = [2, 3, 4, 5];
+const WEAPON_SELECTION_LEVELS = [10, 20, 30, 40];
 const MAX_SELECTED_WEAPONS = 4;
 
 export const useWeaponSelection = (currentLevel: number) => {
