@@ -243,6 +243,9 @@ export const useWeaponTracking = ({
         } else if (weaponType === "rocket") {
           sound.setVolume("rocket", 0.35);
           sound.play("rocket");
+        } else if (weaponType === "laser") {
+          sound.setVolume("laser", 0.075);
+          sound.play("laser");
         }
 
         debug.log(
