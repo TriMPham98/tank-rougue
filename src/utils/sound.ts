@@ -23,6 +23,7 @@ class SoundManager {
   private loadSounds(): void {
     // Register sounds with their paths - correctly referencing files in the public folder
     this.registerSound("playerCannon", "./assets/sounds/playerCannon.mp3");
+    this.registerSound("sniperShot", "./assets/sounds/sniperShot.mp3");
     // Add more sounds here as needed
   }
 
