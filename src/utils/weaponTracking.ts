@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Group, Vector3 } from "three";
 import { useGameState, SecondaryWeapon, Enemy } from "./gameState";
 import { debug } from "./debug";
+import { useSound } from "./sound";
 
 // Common interface for weapon tracking props
 export interface WeaponTrackingProps {
@@ -31,6 +32,7 @@ export const useWeaponTracking = ({
 }: WeaponTrackingProps) => {
   const lastShootTimeRef = useRef(0);
   const targetEnemyRef = useRef<string | null>(null);
+  const sound = useSound();
 
   const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
   const isPaused = useGameState((state) => state.isPaused);
@@ -228,6 +230,14 @@ export const useWeaponTracking = ({
         // Call the onFire callback if provided
         if (onFire) {
           onFire(firePosition, targetEnemyRef.current, finalDamage);
+        }
+
+        // Play the appropriate weapon sound based on the weapon type
+        const weaponType = weaponInstance.id || "";
+        if (weaponType === "shotgun") {
+          sound.play("shotgun");
+        } else if (weaponType === "sniper") {
+          sound.play("sniper");
         }
 
         debug.log(
