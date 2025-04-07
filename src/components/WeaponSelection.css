@@ -35,7 +35,7 @@
   flex-direction: column;
 }
 
-/* Scan line animation for tactical display effect */
+/* Scan line animation */
 .tactical-panel:before {
   content: "";
   position: absolute;
@@ -54,7 +54,7 @@
   z-index: 2;
 }
 
-/* Header styling */
+/* Header */
 .panel-header {
   background-color: #1a2a1a;
   border-bottom: 2px solid #2f7c2f;
@@ -71,7 +71,6 @@
   background-color: #5fdc5f;
   position: relative;
 }
-
 .header-decoration:before,
 .header-decoration:after {
   content: "";
@@ -80,43 +79,36 @@
   height: 10px;
   border: 2px solid #5fdc5f;
 }
-
 .header-decoration.left {
   margin-right: 15px;
 }
-
 .header-decoration.left:before {
   left: -5px;
   top: -5px;
   border-right: none;
   border-bottom: none;
 }
-
 .header-decoration.left:after {
   right: -5px;
   bottom: -5px;
   border-left: none;
   border-top: none;
 }
-
 .header-decoration.right {
   margin-left: 15px;
 }
-
 .header-decoration.right:before {
   left: -5px;
   bottom: -5px;
   border-right: none;
   border-top: none;
 }
-
 .header-decoration.right:after {
   right: -5px;
   top: -5px;
   border-left: none;
   border-bottom: none;
 }
-
 .panel-header h2 {
   font-size: 1.8rem;
   margin: 0;
@@ -128,7 +120,7 @@
   font-family: "Courier New", monospace;
 }
 
-/* Mission directive section */
+/* Mission directive */
 .mission-directive {
   background-color: rgba(20, 30, 20, 0.7);
   border-bottom: 1px solid #2f7c2f;
@@ -137,7 +129,6 @@
   align-items: center;
   position: relative;
 }
-
 .directive-icon {
   width: 20px;
   height: 20px;
@@ -145,7 +136,6 @@
   background-color: #5fdc5f;
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
-
 .mission-directive p {
   margin: 0;
   font-size: 1.2rem;
@@ -162,7 +152,6 @@
   align-items: center;
   border-bottom: 1px solid #2f7c2f;
 }
-
 .intel-icon {
   width: 16px;
   height: 16px;
@@ -171,7 +160,6 @@
   background-color: #ffcc00;
   position: relative;
 }
-
 .intel-icon:after {
   content: "i";
   position: absolute;
@@ -182,7 +170,6 @@
   font-weight: bold;
   font-size: 12px;
 }
-
 .intel-note p {
   margin: 0;
   font-size: 0.9rem;
@@ -199,7 +186,7 @@
   background-color: rgba(25, 30, 25, 0.7);
 }
 
-/* Weapon card styling */
+/* Weapon card */
 .weapon-card {
   background-color: rgba(40, 50, 40, 0.7);
   border: 1px solid #2f7c2f;
@@ -214,8 +201,6 @@
   z-index: 1002;
   overflow: hidden;
 }
-
-/* Designation tag */
 .designation-tag {
   display: flex;
   justify-content: space-between;
@@ -223,14 +208,12 @@
   border-bottom: 1px solid #2f7c2f;
   padding: 5px 10px;
 }
-
 .designation-marker {
   font-size: 0.9rem;
   font-weight: bold;
   color: #ffcc00;
   letter-spacing: 1px;
 }
-
 .selection-indicator {
   background-color: #ffcc00;
   color: #000;
@@ -242,7 +225,6 @@
   justify-content: center;
   border-radius: 4px;
 }
-
 .weapon-designation {
   font-size: 1.4rem;
   margin: 0;
@@ -254,14 +236,12 @@
   letter-spacing: 1px;
   text-shadow: 0 0 8px rgba(95, 220, 95, 0.3);
 }
-
 .specs-container {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   padding: 10px 15px;
 }
-
 .weapon-description {
   font-size: 0.95rem;
   margin: 0 0 15px 0;
@@ -269,13 +249,11 @@
   line-height: 1.4;
   flex-grow: 1;
 }
-
 .specs-separator {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 }
-
 .separator-text {
   font-size: 0.8rem;
   font-weight: bold;
@@ -283,7 +261,6 @@
   padding-right: 10px;
   white-space: nowrap;
 }
-
 .separator-line {
   flex-grow: 1;
   height: 1px;
@@ -293,7 +270,7 @@
 .weapon-stats {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
   font-size: 0.9rem;
   margin-top: auto;
 }
@@ -303,33 +280,35 @@
   justify-content: space-between;
   align-items: center;
   background-color: rgba(20, 30, 20, 0.5);
-  padding: 5px 10px;
+  padding: 5px 8px;
   border-radius: 3px;
+  border: 1px solid rgba(47, 124, 47, 0.3);
 }
 
 .stat-label {
   color: #a0d0a0;
   font-weight: 500;
   font-size: 0.85rem;
+  padding-right: 10px;
+  white-space: nowrap;
 }
 
 .stat-value {
   color: #ffcc00;
   font-weight: 700;
   font-family: "Courier New", monospace;
+  text-align: right;
 }
 
-/* Card hover effects */
+/* Card hover/active */
 .weapon-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 15px rgba(95, 220, 95, 0.3);
   border-color: #5fdc5f;
 }
-
 .weapon-card:hover .weapon-designation {
   color: #7fff7f;
 }
-
 .weapon-card:active {
   transform: translateY(0);
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
@@ -343,7 +322,6 @@
   display: flex;
   justify-content: center;
 }
-
 .action-button {
   background-color: rgba(40, 40, 40, 0.8);
   color: #e0f0e0;
@@ -358,22 +336,19 @@
   letter-spacing: 1px;
   font-size: 0.9rem;
 }
-
 .button-icon {
   margin-right: 8px;
   font-size: 0.9rem;
 }
-
 .action-button:hover {
   background-color: rgba(60, 60, 60, 0.8);
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
 }
-
 .action-button:active {
   transform: translateY(1px);
 }
 
-/* Animation for scan lines */
+/* Scanlines animation */
 @keyframes scanlines {
   0% {
     background-position: 0 0;
@@ -383,22 +358,19 @@
   }
 }
 
-/* Media queries for responsiveness */
+/* Responsive adjustments */
 @media (max-width: 1200px) {
   .weapon-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
 @media (max-width: 768px) {
   .weapon-grid {
     grid-template-columns: 1fr;
   }
-
   .panel-header h2 {
     font-size: 1.4rem;
   }
-
   .mission-directive p {
     font-size: 1rem;
   }
