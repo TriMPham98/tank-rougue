@@ -566,7 +566,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               : isTank
               ? 1.2
               : 1.5,
-            0.01,
+            0.001,
           ]}
           renderOrder={2}>
           <meshBasicMaterial color="lime" transparent depthTest={false} />
