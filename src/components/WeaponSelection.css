@@ -1,4 +1,6 @@
 /* Military-themed Weapon Selection Component */
+
+/* --- Overlay --- */
 .weapon-selection-overlay {
   position: fixed;
   top: 0;
@@ -14,6 +16,7 @@
   backdrop-filter: blur(3px);
 }
 
+/* --- Modal Container --- */
 .weapon-selection-modal {
   background-color: rgba(30, 35, 30, 0.95);
   width: 95%;
@@ -26,6 +29,7 @@
   box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
 }
 
+/* --- Tactical Panel Base --- */
 .tactical-panel {
   border: 2px solid #2f7c2f;
   border-radius: 5px;
@@ -35,7 +39,7 @@
   flex-direction: column;
 }
 
-/* Scan line animation */
+/* Scan line animation effect */
 .tactical-panel:before {
   content: "";
   position: absolute;
@@ -51,10 +55,10 @@
   background-size: 100% 4px;
   pointer-events: none;
   animation: scanlines 2s linear infinite;
-  z-index: 2;
+  z-index: 2; /* Ensure scanlines are above background but below content */
 }
 
-/* Header */
+/* --- Header --- */
 .panel-header {
   background-color: #1a2a1a;
   border-bottom: 2px solid #2f7c2f;
@@ -62,7 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  position: relative; /* For decoration positioning */
 }
 
 .header-decoration {
@@ -109,6 +113,7 @@
   border-left: none;
   border-bottom: none;
 }
+
 .panel-header h2 {
   font-size: 1.8rem;
   margin: 0;
@@ -120,7 +125,7 @@
   font-family: "Courier New", monospace;
 }
 
-/* Mission directive */
+/* --- Mission Directive --- */
 .mission-directive {
   background-color: rgba(20, 30, 20, 0.7);
   border-bottom: 1px solid #2f7c2f;
@@ -134,7 +139,7 @@
   height: 20px;
   margin-right: 10px;
   background-color: #5fdc5f;
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Diamond shape */
 }
 .mission-directive p {
   margin: 0;
@@ -144,7 +149,7 @@
   letter-spacing: 0.5px;
 }
 
-/* Intel note */
+/* --- Intel Note --- */
 .intel-note {
   background-color: rgba(40, 45, 40, 0.7);
   padding: 10px 20px;
@@ -157,10 +162,11 @@
   height: 16px;
   margin-right: 10px;
   border-radius: 50%;
-  background-color: #ffcc00;
+  background-color: #ffcc00; /* Yellow for intel */
   position: relative;
 }
 .intel-icon:after {
+  /* 'i' icon */
   content: "i";
   position: absolute;
   top: 50%;
@@ -169,6 +175,7 @@
   color: #000;
   font-weight: bold;
   font-size: 12px;
+  font-family: sans-serif; /* Use a standard font for the 'i' */
 }
 .intel-note p {
   margin: 0;
@@ -177,16 +184,16 @@
   font-style: italic;
 }
 
-/* Weapon grid */
+/* --- Weapon Grid --- */
 .weapon-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* Default to 4 columns */
   gap: 15px;
   padding: 20px;
   background-color: rgba(25, 30, 25, 0.7);
 }
 
-/* Weapon card */
+/* --- Weapon Card --- */
 .weapon-card {
   background-color: rgba(40, 50, 40, 0.7);
   border: 1px solid #2f7c2f;
@@ -195,15 +202,18 @@
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
+  min-height: 340px; /* Adjusted minimum height */
   pointer-events: auto;
   position: relative;
-  z-index: 1002;
-  overflow: hidden;
+  z-index: 1002; /* Above scanlines */
+  overflow: hidden; /* Hide potential overflows */
 }
+
+/* Card Header: Designation Tag */
 .designation-tag {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   background-color: #1a2a1a;
   border-bottom: 1px solid #2f7c2f;
   padding: 5px 10px;
@@ -211,12 +221,12 @@
 .designation-marker {
   font-size: 0.9rem;
   font-weight: bold;
-  color: #ffcc00;
+  color: #ffcc00; /* Yellow marker text */
   letter-spacing: 1px;
 }
 .selection-indicator {
-  background-color: #ffcc00;
-  color: #000;
+  background-color: #ffcc00; /* Yellow indicator background */
+  color: #000; /* Black text on indicator */
   font-weight: bold;
   width: 24px;
   height: 24px;
@@ -224,107 +234,134 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
+  font-size: 0.9rem;
 }
+
+/* Card Title: Weapon Name */
 .weapon-designation {
   font-size: 1.4rem;
   margin: 0;
   padding: 15px;
-  color: #5fdc5f;
+  color: #5fdc5f; /* Green weapon name */
   text-align: center;
   border-bottom: 1px solid rgba(47, 124, 47, 0.5);
   font-family: "Courier New", monospace;
   letter-spacing: 1px;
   text-shadow: 0 0 8px rgba(95, 220, 95, 0.3);
 }
+
+/* Card Body: Specs Container */
 .specs-container {
   display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  flex-direction: column; /* Stack description, separator, and stats vertically */
+  flex-grow: 1; /* Allow this container to fill remaining card space */
   padding: 10px 15px;
+  min-height: 0; /* Override potential browser defaults for flex items */
 }
+
+/* Weapon Description Text */
 .weapon-description {
   font-size: 0.95rem;
-  margin: 0 0 15px 0;
-  color: #c2e8c5;
+  margin: 0 0 15px 0; /* Space below description */
+  color: #c2e8c5; /* Light green text */
   line-height: 1.4;
-  flex-grow: 1;
+  flex-grow: 1; /* Allow description to take up available space */
+  flex-shrink: 0; /* Prevent description shrinking excessively */
 }
+
+/* "SPECIFICATIONS" Separator */
 .specs-separator {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px; /* Space below separator */
 }
 .separator-text {
   font-size: 0.8rem;
   font-weight: bold;
-  color: #5fdc5f;
+  color: #5fdc5f; /* Green text */
   padding-right: 10px;
   white-space: nowrap;
 }
 .separator-line {
   flex-grow: 1;
   height: 1px;
-  background-color: #2f7c2f;
+  background-color: #2f7c2f; /* Dark green line */
 }
 
+/* --- Stats Section --- */
 .weapon-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 0.9rem;
-  margin-top: auto;
+  display: flex !important; /* ADDED !important */
+  flex-direction: column !important; /* ADDED !important - STACK CHILDREN */
+  gap: 6px; /* Vertical space between stat lines */
+  width: 100%; /* Ensure container takes full width */
+  margin-top: auto; /* Push stats block to the bottom */
+  flex-shrink: 0; /* Prevent shrinking */
+  padding: 0; /* Reset padding if any was inherited */
+  list-style: none; /* Reset list styles if somehow it's a list */
 }
 
+/* Individual Stat Line (DMG, CYCLE, RANGE) */
 .stat {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: rgba(20, 30, 20, 0.5);
-  padding: 5px 8px;
+  display: flex !important; /* ADDED !important - Ensure flex behavior */
+  justify-content: space-between !important; /* ADDED !important */
+  align-items: center !important; /* ADDED !important */
+  background-color: rgba(20, 30, 20, 0.6);
+  padding: 6px 10px;
   border-radius: 3px;
-  border: 1px solid rgba(47, 124, 47, 0.3);
+  border: 1px solid rgba(47, 124, 47, 0.4);
+  width: 100% !important; /* ADDED !important - FORCE FULL WIDTH */
+  box-sizing: border-box !important; /* ADDED !important - Include padding/border */
+  /* Reset potential conflicting inline/block styles */
+  float: none !important;
+  clear: both !important;
+  margin-bottom: 0 !important; /* Override default margins if needed */
 }
 
+/* Stat Label (e.g., "DMG RATING:") */
 .stat-label {
-  color: #a0d0a0;
+  color: #a0d0a0; /* Lighter green for label */
   font-weight: 500;
   font-size: 0.85rem;
-  padding-right: 10px;
-  white-space: nowrap;
+  padding-right: 10px; /* Space between label and value */
+  white-space: nowrap; /* Prevent label wrapping */
+  flex-shrink: 0; /* Prevent label from shrinking */
 }
 
+/* Stat Value (e.g., "75", "7s") */
 .stat-value {
-  color: #ffcc00;
+  color: #ffcc00; /* Yellow for stat values */
   font-weight: 700;
   font-family: "Courier New", monospace;
-  text-align: right;
+  text-align: right; /* Align value to the right */
 }
+/* --- End Stats Section --- */
 
-/* Card hover/active */
+/* Card Hover/Active Effects */
 .weapon-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 15px rgba(95, 220, 95, 0.3);
-  border-color: #5fdc5f;
+  border-color: #5fdc5f; /* Brighter border on hover */
 }
 .weapon-card:hover .weapon-designation {
-  color: #7fff7f;
+  color: #7fff7f; /* Brighter green name on hover */
 }
 .weapon-card:active {
-  transform: translateY(0);
+  transform: translateY(0); /* Click effect */
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
 }
 
-/* Action panel */
+/* --- Action Panel (Dismiss Button) --- */
 .action-panel {
-  background-color: #1a2a1a;
+  background-color: #1a2a1a; /* Same as card header */
   border-top: 2px solid #2f7c2f;
   padding: 15px;
   display: flex;
   justify-content: center;
 }
+
 .action-button {
-  background-color: rgba(40, 40, 40, 0.8);
-  color: #e0f0e0;
+  background-color: rgba(40, 40, 40, 0.8); /* Dark button */
+  color: #e0f0e0; /* Light text */
   border: 1px solid #2f7c2f;
   border-radius: 4px;
   padding: 8px 20px;
@@ -335,20 +372,25 @@
   font-family: "Courier New", monospace;
   letter-spacing: 1px;
   font-size: 0.9rem;
+  font-weight: bold;
 }
+
 .button-icon {
   margin-right: 8px;
   font-size: 0.9rem;
 }
+
 .action-button:hover {
-  background-color: rgba(60, 60, 60, 0.8);
+  background-color: rgba(60, 60, 60, 0.8); /* Slightly lighter on hover */
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
-}
-.action-button:active {
-  transform: translateY(1px);
+  color: #fff;
 }
 
-/* Scanlines animation */
+.action-button:active {
+  transform: translateY(1px); /* Click effect */
+}
+
+/* --- Animation --- */
 @keyframes scanlines {
   0% {
     background-position: 0 0;
@@ -358,20 +400,24 @@
   }
 }
 
-/* Responsive adjustments */
+/* --- Media Queries for Responsiveness --- */
 @media (max-width: 1200px) {
   .weapon-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
   }
 }
+
 @media (max-width: 768px) {
   .weapon-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* 1 column on small screens */
   }
   .panel-header h2 {
-    font-size: 1.4rem;
+    font-size: 1.4rem; /* Smaller header text */
   }
   .mission-directive p {
-    font-size: 1rem;
+    font-size: 1rem; /* Smaller directive text */
+  }
+  .weapon-card {
+    min-height: auto; /* Let height be determined by content on mobile */
   }
 }
