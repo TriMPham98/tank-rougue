@@ -154,7 +154,7 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
         <div className="action-panel">
           <button className="action-button close-button" onClick={handleClose}>
             <span className="button-icon">✕</span>
-            <span className="button-text">ABORT SELECTION</span>
+            <span className="button-text">DISMISS SELECTION</span>
           </button>
         </div>
       </div>
