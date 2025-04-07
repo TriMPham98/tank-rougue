@@ -328,12 +328,7 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       ))}
 
       <Ground />
-      <Sky
-        turbidity={turbidity}
-        rayleigh={rayleigh}
-        elevation={sunElevation}
-        azimuth={sunAzimuth}
-      />
+      <Sky turbidity={turbidity} rayleigh={rayleigh} azimuth={sunAzimuth} />
 
       {/* Camera that follows player */}
       <FollowCamera />
