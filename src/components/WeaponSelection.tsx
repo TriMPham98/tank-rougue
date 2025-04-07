@@ -87,21 +87,29 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
         e.stopPropagation();
       }}>
       <div
-        className="weapon-selection-modal"
+        className="weapon-selection-modal tactical-panel"
         onClick={(e) => {
           e.stopPropagation();
         }}>
-        <h2>Select Secondary Weapon (Level {level})</h2>
-        <p>Choose a secondary weapon to add to your arsenal</p>
-        <p
-          style={{
-            fontSize: "0.9em",
-            fontStyle: "italic",
-            marginBottom: "10px",
-          }}>
-          Tip: You can select the same weapon multiple times for additional
-          firepower!
-        </p>
+        <div className="panel-header">
+          <div className="header-decoration left"></div>
+          <h2>TACTICAL ARMAMENT - RANK {level}</h2>
+          <div className="header-decoration right"></div>
+        </div>
+
+        <div className="mission-directive">
+          <div className="directive-icon"></div>
+          <p>SELECT SECONDARY WEAPON SYSTEM FOR DEPLOYMENT</p>
+        </div>
+
+        <div className="intel-note">
+          <div className="intel-icon"></div>
+          <p>
+            FIELD INTEL: Multiple deployments of the same weapon system will
+            increase overall firepower capacity.
+          </p>
+        </div>
+
         <div className="weapon-grid">
           {availableWeapons.map((weapon, index) => (
             <div
@@ -109,29 +117,46 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
               className="weapon-card"
               data-weapon-id={weapon.id}
               onClick={(e) => handleWeaponSelect(weapon, e)}>
-              <div className="weapon-key">{index + 1}</div>
-              <h3>{weapon.name}</h3>
-              <p className="weapon-description">{weapon.description}</p>
-              <div className="weapon-stats">
-                <div className="stat">
-                  <span className="stat-label">Damage:</span>
-                  <span className="stat-value">{weapon.damage}</span>
+              <div className="designation-tag">
+                <div className="designation-marker">MK-{index + 1}</div>
+                <div className="selection-indicator">{index + 1}</div>
+              </div>
+
+              <h3 className="weapon-designation">{weapon.name}</h3>
+
+              <div className="specs-container">
+                <p className="weapon-description">{weapon.description}</p>
+
+                <div className="specs-separator">
+                  <div className="separator-text">SPECIFICATIONS</div>
+                  <div className="separator-line"></div>
                 </div>
-                <div className="stat">
-                  <span className="stat-label">Cooldown:</span>
-                  <span className="stat-value">{weapon.cooldown}s</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">Range:</span>
-                  <span className="stat-value">{weapon.range}</span>
+
+                <div className="weapon-stats">
+                  <div className="stat">
+                    <span className="stat-label">DMG RATING:</span>
+                    <span className="stat-value">{weapon.damage}</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-label">CYCLE TIME:</span>
+                    <span className="stat-value">{weapon.cooldown}s</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-label">EFFECTIVE RANGE:</span>
+                    <span className="stat-value">{weapon.range}</span>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <button className="close-button" onClick={handleClose}>
-          Cancel
-        </button>
+
+        <div className="action-panel">
+          <button className="action-button close-button" onClick={handleClose}>
+            <span className="button-icon">✕</span>
+            <span className="button-text">ABORT SELECTION</span>
+          </button>
+        </div>
       </div>
     </div>
   );
