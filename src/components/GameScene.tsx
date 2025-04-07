@@ -22,6 +22,81 @@ import "./GameScene.css";
 import { useRespawnManager } from "../utils/respawnManager";
 import { debug } from "../utils/debug";
 
+// Custom hook to calculate light intensity based on game level
+const useLightIntensity = () => {
+  const level = useGameState((state) => state.level);
+
+  // Calculate ambient light intensity (starts at 0.5, decreases to 0.05 by level 40)
+  const ambientIntensity = Math.max(0.05, 0.5 - (level / 40) * 0.45);
+
+  // Calculate ambient light color (gradually shifts to blue-ish night tint)
+  const nightFactor = Math.min(1, level / 40);
+  // RGB values transitioning from white (1,1,1) to night blue (0.1,0.3,0.7)
+  const ambientR = 1 - nightFactor * 0.9; // 1.0 -> 0.1
+  const ambientG = 1 - nightFactor * 0.7; // 1.0 -> 0.3
+  const ambientB = 1 - nightFactor * 0.3; // 1.0 -> 0.7
+
+  // Calculate directional light intensity (starts at 1.5, decreases to 0.3 by level 40)
+  const directionalIntensity = Math.max(0.3, 1.5 - (level / 40) * 1.2);
+
+  // Calculate spotlight intensity (starts at 1.0, increases to 1.8 by level 40)
+  // Spotlight becomes more important as ambient light decreases
+  const spotlightIntensity = Math.min(1.8, 1.0 + (level / 40) * 0.8);
+
+  // Calculate spotlight angle (starts at 0.4, increases to 0.7 by level 40)
+  const spotlightAngle = Math.min(0.7, 0.4 + (level / 40) * 0.3);
+
+  // Calculate spotlight penumbra (starts at 0.5, increases to 0.8 by level 40)
+  const spotlightPenumbra = Math.min(0.8, 0.5 + (level / 40) * 0.3);
+
+  // Calculate spotlight distance (how far it can reach)
+  const spotlightDistance = Math.min(30, 15 + (level / 40) * 15);
+
+  // Calculate background sky color (blue to dark blue/black)
+  // Start with light blue "#87CEEB" and transition to dark blue "#000033"
+  const skyFactor = Math.max(0, 1 - level / 40);
+  const r = Math.floor(135 * skyFactor); // 87 in hex
+  const g = Math.floor(206 * skyFactor); // CE in hex
+  const b = Math.min(
+    255,
+    Math.floor(235 * skyFactor) + Math.floor((1 - skyFactor) * 51)
+  ); // EB -> 33
+  const skyColor = `rgb(${r}, ${g}, ${b})`;
+
+  // Calculate fog density (increases with level)
+  const fogNear = Math.max(20, 30 - (level / 40) * 15);
+  const fogFar = Math.max(50, 100 - (level / 40) * 50);
+
+  // Calculate sky turbidity and rayleigh values for Sky component
+  // As level increases, the sky becomes more hazy (higher turbidity)
+  // and has more blue scatter (lower rayleigh)
+  const turbidity = Math.min(20, 10 + (level / 40) * 10); // 10-20, higher is hazier
+  const rayleigh = Math.max(0.2, 1 - (level / 40) * 0.8); // 1-0.2, lower makes sky darker blue
+
+  // Adjust sunPosition to set sun lower in the sky as levels progress
+  const sunElevation = Math.max(5, 20 - (level / 40) * 15); // 20-5, lower is sunset
+  const sunAzimuth = 180; // Fixed azimuth (180 = north)
+
+  return {
+    ambientIntensity,
+    ambientR,
+    ambientG,
+    ambientB,
+    directionalIntensity,
+    spotlightIntensity,
+    spotlightAngle,
+    spotlightPenumbra,
+    spotlightDistance,
+    skyColor,
+    fogNear,
+    fogFar,
+    turbidity,
+    rayleigh,
+    sunElevation,
+    sunAzimuth,
+  };
+};
+
 // Error boundary component to catch and display errors
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -118,6 +193,12 @@ const SpotlightUpdater = () => {
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
   const spotLightRef = useRef<ThreeSpotLight>(null);
+  const {
+    spotlightIntensity,
+    spotlightAngle,
+    spotlightPenumbra,
+    spotlightDistance,
+  } = useLightIntensity();
 
   // Update spotlight position on every frame
   useFrame(() => {
@@ -129,6 +210,12 @@ const SpotlightUpdater = () => {
         playerTankPosition[1] + 10,
         playerTankPosition[2]
       );
+
+      // Update spotlight intensity based on level
+      spotLightRef.current.intensity = spotlightIntensity;
+      spotLightRef.current.angle = spotlightAngle;
+      spotLightRef.current.penumbra = spotlightPenumbra;
+      spotLightRef.current.distance = spotlightDistance;
     }
   });
 
@@ -136,9 +223,10 @@ const SpotlightUpdater = () => {
     <spotLight
       ref={spotLightRef}
       position={[0, 10, 0]} // Default position, will be updated in useFrame
-      angle={0.4}
-      penumbra={0.5}
-      intensity={1.0}
+      angle={spotlightAngle}
+      penumbra={spotlightPenumbra}
+      intensity={spotlightIntensity}
+      distance={spotlightDistance}
       castShadow
       shadow-bias={-0.001}
     />
@@ -153,6 +241,17 @@ interface SceneContentProps {
 const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
+  const {
+    ambientIntensity,
+    ambientR,
+    ambientG,
+    ambientB,
+    directionalIntensity,
+    turbidity,
+    rayleigh,
+    sunElevation,
+    sunAzimuth,
+  } = useLightIntensity();
 
   // Use state to trigger re-renders when enemies or terrain obstacles change
   const [enemies, setEnemies] = useState(getState().enemies);
@@ -180,12 +279,15 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       <EnemyRespawnManager />
 
       {/* Ambient light for overall scene brightness */}
-      <ambientLight intensity={0.5} />
+      <ambientLight
+        intensity={ambientIntensity}
+        color={[ambientR, ambientG, ambientB]}
+      />
 
       {/* Main directional light (sun) */}
       <directionalLight
         position={[10, 20, 10]}
-        intensity={1.5}
+        intensity={directionalIntensity}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -226,7 +328,12 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       ))}
 
       <Ground />
-      <Sky sunPosition={[100, 100, 20]} />
+      <Sky
+        turbidity={turbidity}
+        rayleigh={rayleigh}
+        elevation={sunElevation}
+        azimuth={sunAzimuth}
+      />
 
       {/* Camera that follows player */}
       <FollowCamera />
@@ -358,6 +465,7 @@ const TerrainObstacleGenerator = () => {
 const GameScene = () => {
   // Canvas reference for handling focus
   const canvasRef = useRef<HTMLDivElement>(null);
+  const { skyColor, fogNear, fogFar } = useLightIntensity();
 
   // Effect for focusing the canvas
   useEffect(() => {
@@ -393,8 +501,8 @@ const GameScene = () => {
           camera={{ position: [0, 8, -12], fov: 60 }}
           style={{ width: "100vw", height: "100vh" }}
           onCreated={() => debug.log("Canvas created")}>
-          <color attach="background" args={["#87CEEB"]} />
-          <fog attach="fog" args={["#87CEEB", 30, 100]} />
+          <color attach="background" args={[skyColor]} />
+          <fog attach="fog" args={[skyColor, fogNear, fogFar]} />
           <Stats />
           <TerrainObstacleGenerator />
           <SceneContent playerTank={<Tank position={[0, 0.5, 0]} />} />

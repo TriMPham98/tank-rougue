@@ -14,8 +14,14 @@ function App() {
   // Add a ref to track last toggle time
   const lastToggleTime = useRef(0);
 
-  const { restartGame, togglePause, isPaused, level, showUpgradeUI } =
-    useGameState();
+  const {
+    restartGame,
+    togglePause,
+    isPaused,
+    level,
+    showUpgradeUI,
+    advanceLevel,
+  } = useGameState();
 
   // Initialize game on first render
   useEffect(() => {
@@ -48,6 +54,22 @@ function App() {
         lastToggleTime.current = now;
         togglePause();
       }
+
+      // Debug key for testing level progression (press 'L' to level up)
+      if (e.key === "l" || e.key === "L") {
+        debug.log(
+          `Advancing level from ${level} to ${level + 1} for lighting test`
+        );
+        advanceLevel();
+
+        // Generate new level enemies
+        try {
+          const playerPosition = useGameState.getState().playerTankPosition;
+          generateLevel(level + 1, playerPosition);
+        } catch (error) {
+          debug.error("Error generating level:", error);
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -55,7 +77,7 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [togglePause, showUpgradeUI, isPaused]);
+  }, [togglePause, showUpgradeUI, isPaused, level, advanceLevel]);
 
   // Only pause the game when upgrade UI is shown, but don't keep it paused after
   useEffect(() => {
