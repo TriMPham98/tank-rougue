@@ -4,7 +4,6 @@ import { useGameState } from "../utils/gameState";
 import * as THREE from "three";
 
 const SafeZone = () => {
-  // Get game state
   const {
     safeZoneRadius,
     safeZoneCenter,
@@ -17,114 +16,40 @@ const SafeZone = () => {
     isPaused,
     isGameOver,
     level,
-    isPreZoneChangeLevel, // Get pre-zone change level status
+    isPreZoneChangeLevel,
   } = useGameState();
 
-  // Add state to track progress towards next zone level
   const [zoneProgress, setZoneProgress] = useState(0);
-  // Add state for next zone preview animation
   const [previewOpacity, setPreviewOpacity] = useState(0);
 
-  // Reference to the cylinder mesh
   const cylinderRef = useRef<THREE.Mesh>(null);
-  // References to the ring borders
   const topRingRef = useRef<THREE.Mesh>(null);
   const bottomRingRef = useRef<THREE.Mesh>(null);
-
-  // References for target safe zone visualization
   const targetCylinderRef = useRef<THREE.Mesh>(null);
   const targetTopRingRef = useRef<THREE.Mesh>(null);
   const targetBottomRingRef = useRef<THREE.Mesh>(null);
-
-  // References for next zone preview (one level ahead)
   const nextZoneCylinderRef = useRef<THREE.Mesh>(null);
   const nextZoneTopRingRef = useRef<THREE.Mesh>(null);
   const nextZoneBottomRingRef = useRef<THREE.Mesh>(null);
 
-  // Reference for damage tick
   const lastDamageTime = useRef(0);
-
-  // Use refs to track current radius to avoid re-renders
   const currentRadiusRef = useRef(safeZoneRadius);
-
-  // Track if shrinking is in progress to prevent restarts
   const isShrinkingRef = useRef(false);
   const targetRadiusRef = useRef(safeZoneTargetRadius);
-
-  // Track initial and target radius for progress calculation
   const initialRadiusRef = useRef(safeZoneRadius);
-
-  // Store estimated time to completion
   const estimatedTimeToCompleteRef = useRef(0);
   const startShrinkTimeRef = useRef(0);
-
-  // Detect when player reaches a zone level (divisible by 5)
   const prevLevelRef = useRef(level);
   const isZoneCompletionEnforced = useRef(false);
-
-  // Animation timing for preview effect
   const animationTimeRef = useRef(0);
-
-  // Set the initial value
-  useEffect(() => {
-    // When we enter a level divisible by 5, enforce that we're at target radius
-    if (level % 5 === 0 && level > 0 && prevLevelRef.current !== level) {
-      currentRadiusRef.current = safeZoneTargetRadius;
-      initialRadiusRef.current = safeZoneTargetRadius;
-      isZoneCompletionEnforced.current = true;
-
-      // Force update the state to ensure the zone is at the correct radius
-      useGameState.setState({
-        safeZoneRadius: safeZoneTargetRadius,
-      });
-    } else {
-      isZoneCompletionEnforced.current = false;
-    }
-
-    // Update previous level reference
-    prevLevelRef.current = level;
-
-    // Only update the current radius if:
-    // 1. It's not actively shrinking, or
-    // 2. The new radius is smaller than the current one (level transition)
-    // 3. We're not enforcing zone completion (for levels divisible by 5)
-    if (
-      (!isShrinkingRef.current || safeZoneRadius < currentRadiusRef.current) &&
-      !isZoneCompletionEnforced.current
-    ) {
-      currentRadiusRef.current = safeZoneRadius;
-      // When starting a new shrink, record the initial radius
-      initialRadiusRef.current = safeZoneRadius;
-
-      // Record start time when beginning to shrink to a new target
-      if (safeZoneRadius > safeZoneTargetRadius) {
-        startShrinkTimeRef.current = Date.now() / 1000; // Convert to seconds
-
-        // Calculate rough estimate of time to completion based on shrink rate
-        const radiusDifference = safeZoneRadius - safeZoneTargetRadius;
-        estimatedTimeToCompleteRef.current =
-          radiusDifference / safeZoneShrinkRate;
-      }
-    }
-
-    // Always update the target radius so we know where to shrink to
-    targetRadiusRef.current = safeZoneTargetRadius;
-  }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
-
-  // Missing ref declaration
   const lastRadiusUpdateTime = useRef(0);
 
-  // Check if we're on a level where the zone changes
   const isZoneChangeLevel = level % 5 === 0 && level > 0;
-  // Calculate the current zone level (1 for levels 5-9, 2 for levels 10-14, etc.)
   const currentZoneLevel = Math.floor(level / 5);
-
-  // Calculate next zone level and progress towards it
   const nextZoneLevel = currentZoneLevel + 1;
   const nextZoneLevelNumber = nextZoneLevel * 5;
   const levelsUntilNextZone = nextZoneLevelNumber - level;
 
-  // Calculate the target radius for the next zone level
   const nextZoneTargetRadius = (() => {
     const maxRadius = 50;
     const minRadius = 5;
@@ -132,88 +57,84 @@ const SafeZone = () => {
     return Math.max(minRadius, maxRadius - nextZoneLevel * radiusDecrease);
   })();
 
-  // Calculate the percentage progress towards the next zone level target
   const getZoneCompletionPercentage = () => {
-    if (isZoneChangeLevel) return 100; // Always 100% on zone change levels
-
-    // Calculate how far we've shrunk from the initial zone radius toward the next zone target
+    if (isZoneChangeLevel) return 100;
     const initialZoneRadius = 50 - currentZoneLevel * 4;
     const totalShrinkNeeded = initialZoneRadius - nextZoneTargetRadius;
     const currentShrink = initialZoneRadius - safeZoneRadius;
-
-    // Calculate the percentage and ensure it's between 0-100
     return Math.min(
       100,
       Math.max(0, (currentShrink / totalShrinkNeeded) * 100)
     );
   };
 
-  // Effect for animating the next zone preview on pre-zone change levels
+  useEffect(() => {
+    if (level % 5 === 0 && level > 0 && prevLevelRef.current !== level) {
+      currentRadiusRef.current = safeZoneTargetRadius;
+      initialRadiusRef.current = safeZoneTargetRadius;
+      isZoneCompletionEnforced.current = true;
+      useGameState.setState({ safeZoneRadius: safeZoneTargetRadius });
+    } else {
+      isZoneCompletionEnforced.current = false;
+    }
+    prevLevelRef.current = level;
+
+    if (
+      (!isShrinkingRef.current || safeZoneRadius < currentRadiusRef.current) &&
+      !isZoneCompletionEnforced.current
+    ) {
+      currentRadiusRef.current = safeZoneRadius;
+      initialRadiusRef.current = safeZoneRadius;
+      if (safeZoneRadius > safeZoneTargetRadius) {
+        startShrinkTimeRef.current = Date.now() / 1000;
+        const radiusDifference = safeZoneRadius - safeZoneTargetRadius;
+        estimatedTimeToCompleteRef.current =
+          radiusDifference / safeZoneShrinkRate;
+      }
+    }
+    targetRadiusRef.current = safeZoneTargetRadius;
+  }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
+
   useEffect(() => {
     if (!isPreZoneChangeLevel || !safeZoneActive) {
       setPreviewOpacity(0);
       return;
     }
-
-    // Start preview animation when entering a pre-zone change level
     const interval = setInterval(() => {
-      // Oscillate opacity between 0.1 and 0.5 for pulsing effect
       setPreviewOpacity(0.1 + 0.4 * Math.abs(Math.sin(Date.now() / 800)));
     }, 50);
-
     return () => clearInterval(interval);
   }, [isPreZoneChangeLevel, safeZoneActive]);
 
-  // Update safe zone radius and apply damage outside the zone
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !safeZoneActive) return;
 
     const currentState = useGameState.getState();
     const currentTime = state.clock.getElapsedTime();
-
-    // Update animation time ref for pulsing effects
     animationTimeRef.current += delta;
 
-    // Force the radius to target on zone change levels (divisible by 5)
     if (
       isZoneChangeLevel &&
       currentRadiusRef.current !== targetRadiusRef.current
     ) {
       currentRadiusRef.current = targetRadiusRef.current;
-
-      // Update the game state to reflect this
-      useGameState.setState({
-        safeZoneRadius: targetRadiusRef.current,
-      });
-
-      // Skip the rest of the shrinking logic
+      useGameState.setState({ safeZoneRadius: targetRadiusRef.current });
       return;
     }
 
-    // Only update the state if we need to shrink
     if (currentRadiusRef.current > currentState.safeZoneTargetRadius) {
-      // Mark that shrinking is in progress
       isShrinkingRef.current = true;
-
-      // Calculate new radius with a smoother transition
       const newRadius = Math.max(
         currentState.safeZoneTargetRadius,
-        currentRadiusRef.current - currentState.safeZoneShrinkRate * delta * 1.5 // Increased from 1.2 to 1.5 for even faster shrinking
+        currentRadiusRef.current - currentState.safeZoneShrinkRate * delta * 1.5
       );
 
-      // Only update state if the difference is significant (e.g., more than 0.01)
       if (Math.abs(currentRadiusRef.current - newRadius) > 0.01) {
         currentRadiusRef.current = newRadius;
-
-        // Throttle state updates to be less frequent (e.g., every 200ms instead of 100ms)
         if (state.clock.elapsedTime - lastRadiusUpdateTime.current > 0.2) {
-          useGameState.setState({
-            safeZoneRadius: newRadius,
-          });
+          useGameState.setState({ safeZoneRadius: newRadius });
           lastRadiusUpdateTime.current = state.clock.elapsedTime;
         }
-
-        // Calculate progress percentage for visual feedback
         const totalShrinkAmount =
           initialRadiusRef.current - targetRadiusRef.current;
         const shrunkAmount =
@@ -222,37 +143,29 @@ const SafeZone = () => {
         setZoneProgress(Math.min(100, Math.max(0, progressPercentage)));
       }
 
-      // Check if shrinking is complete
       if (
         Math.abs(currentRadiusRef.current - currentState.safeZoneTargetRadius) <
         0.1
       ) {
         isShrinkingRef.current = false;
-        setZoneProgress(100); // Ensure we show 100% when complete
+        setZoneProgress(100);
       }
     } else {
-      // Reset shrinking flag when target is reached
       isShrinkingRef.current = false;
     }
 
-    // Apply damage if player is outside the safe zone
     if (currentState.safeZoneActive && playerTankPosition) {
       const playerPosition2D = [playerTankPosition[0], playerTankPosition[2]];
       const centerPosition = [
         currentState.safeZoneCenter[0],
         currentState.safeZoneCenter[1],
       ];
-
       const distance = Math.sqrt(
         Math.pow(playerPosition2D[0] - centerPosition[0], 2) +
           Math.pow(playerPosition2D[1] - centerPosition[1], 2)
       );
 
-      // If outside safe zone, apply damage periodically
       if (distance > currentRadiusRef.current) {
-        const currentTime = state.clock.getElapsedTime();
-
-        // Apply damage once per second
         if (currentTime - lastDamageTime.current >= 1) {
           takeDamage(currentState.safeZoneDamage);
           lastDamageTime.current = currentTime;
@@ -260,31 +173,24 @@ const SafeZone = () => {
       }
     }
 
-    // Update meshes with current radius
     if (cylinderRef.current) {
-      // Create a new geometry with the current radius
       if (Math.abs(cylinderRef.current.scale.x - 1) > 0.01) {
         cylinderRef.current.scale.set(1, 1, 1);
-
-        // Replace the geometry with a new one using the current radius
         cylinderRef.current.geometry.dispose();
         cylinderRef.current.geometry = new THREE.CylinderGeometry(
           currentRadiusRef.current,
           currentRadiusRef.current,
-          40, // Height of the cylinder
-          64, // Segments around the cylinder
-          1, // Height segments
-          true // Open-ended
+          40,
+          64,
+          1,
+          true
         );
       }
     }
 
-    // Update the ring borders
     if (topRingRef.current && bottomRingRef.current) {
       topRingRef.current.geometry.dispose();
       bottomRingRef.current.geometry.dispose();
-
-      // Create new ring geometries with current radius
       const ringThickness = 0.5;
       const newTopRingGeometry = new THREE.RingGeometry(
         currentRadiusRef.current - ringThickness,
@@ -296,19 +202,16 @@ const SafeZone = () => {
         currentRadiusRef.current,
         64
       );
-
       topRingRef.current.geometry = newTopRingGeometry;
       bottomRingRef.current.geometry = newBottomRingGeometry;
     }
 
-    // Update target safe zone visualization
     if (
       targetCylinderRef.current &&
       targetTopRingRef.current &&
       targetBottomRingRef.current &&
       currentState.safeZoneTargetRadius < currentRadiusRef.current
     ) {
-      // Update target cylinder
       targetCylinderRef.current.geometry.dispose();
       targetCylinderRef.current.geometry = new THREE.CylinderGeometry(
         currentState.safeZoneTargetRadius,
@@ -318,11 +221,8 @@ const SafeZone = () => {
         1,
         true
       );
-
-      // Update target rings
       targetTopRingRef.current.geometry.dispose();
       targetBottomRingRef.current.geometry.dispose();
-
       const targetRingThickness = 0.3;
       const newTargetTopRingGeometry = new THREE.RingGeometry(
         currentState.safeZoneTargetRadius - targetRingThickness,
@@ -334,12 +234,10 @@ const SafeZone = () => {
         currentState.safeZoneTargetRadius,
         64
       );
-
       targetTopRingRef.current.geometry = newTargetTopRingGeometry;
       targetBottomRingRef.current.geometry = newTargetBottomRingGeometry;
     }
 
-    // Update next zone preview visualization (on pre-zone change levels)
     if (
       isPreZoneChangeLevel &&
       nextZoneCylinderRef.current &&
@@ -347,8 +245,6 @@ const SafeZone = () => {
       nextZoneBottomRingRef.current
     ) {
       const nextRingThickness = 0.3;
-
-      // Update geometries if needed
       nextZoneCylinderRef.current.geometry.dispose();
       nextZoneCylinderRef.current.geometry = new THREE.CylinderGeometry(
         nextZoneTargetRadius,
@@ -358,14 +254,12 @@ const SafeZone = () => {
         1,
         true
       );
-
       nextZoneTopRingRef.current.geometry.dispose();
       nextZoneTopRingRef.current.geometry = new THREE.RingGeometry(
         nextZoneTargetRadius - nextRingThickness,
         nextZoneTargetRadius,
         64
       );
-
       nextZoneBottomRingRef.current.geometry.dispose();
       nextZoneBottomRingRef.current.geometry = new THREE.RingGeometry(
         nextZoneTargetRadius - nextRingThickness,
@@ -375,70 +269,34 @@ const SafeZone = () => {
     }
   });
 
-  // Define color based on the zone level
-  // Higher zone levels will have more intense colors to indicate more danger
-  const getSafeZoneColor = () => {
-    if (currentZoneLevel <= 1) return "#3399ff"; // Light blue for early zones
-    if (currentZoneLevel <= 2) return "#33ccff"; // Medium blue
-    if (currentZoneLevel <= 4) return "#3366ff"; // Darker blue
-    if (currentZoneLevel <= 6) return "#6633ff"; // Purple
-    if (currentZoneLevel <= 8) return "#9933ff"; // More purple
-    return "#cc33ff"; // Pink/purple for very high levels
-  };
+  // Define fixed colors for this map
+  const safeZoneColor = "#33ccff"; // Light cyan to complement purple and green
+  const ringColor = "#66d9ff"; // Slightly brighter cyan for the ring borders
+  const targetZoneColor = "#ff4d4d"; // Orange-red for the warning zone
+  const nextZoneColor = "#ff9500"; // Orange for next zone preview
 
-  // Get ring border color (slightly brighter than the main zone color)
-  const getRingColor = () => {
-    if (currentZoneLevel <= 1) return "#33ccff"; // Lighter blue
-    if (currentZoneLevel <= 2) return "#33eeff"; // Brighter blue
-    if (currentZoneLevel <= 4) return "#3399ff"; // Bright medium blue
-    if (currentZoneLevel <= 6) return "#9966ff"; // Brighter purple
-    if (currentZoneLevel <= 8) return "#cc66ff"; // Bright purple
-    return "#ff66ff"; // Bright pink for very high levels
-  };
-
-  // Safe zone opacity increases with zone level to make danger more visible
   const getSafeZoneOpacity = () => {
     const baseOpacity = 0.15;
     const zoneIncrease = Math.min(0.35, currentZoneLevel * 0.05);
-
-    // Increase opacity when approaching the next zone level
     const urgencyBonus = isPreZoneChangeLevel ? 0.15 : 0;
-
     return baseOpacity + zoneIncrease + urgencyBonus;
   };
 
-  // Get target zone color (red with intensity based on level)
-  const getTargetZoneColor = () => {
-    if (currentZoneLevel <= 2) return "#ff3333"; // Standard red
-    if (currentZoneLevel <= 4) return "#ff1a1a"; // Brighter red
-    if (currentZoneLevel <= 6) return "#ff0000"; // Pure red
-    return "#cc0000"; // Dark red for high levels
-  };
-
-  // Get next zone preview color (orange warning color for pre-zone levels)
-  const getNextZoneColor = () => "#ff9500"; // Consistent orange for next zone preview
-
-  // Calculate if this is a zone level with pulsing effect (every 5 levels)
   const shouldPulse = isZoneChangeLevel && isShrinkingRef.current;
-
-  // Also pulse when we're about to change zones (last level before new zone)
   const shouldUrgencyPulse = isPreZoneChangeLevel && isShrinkingRef.current;
 
-  // Use a different opacity for pulse effect on new zone levels
   const getPulseOpacity = () => {
-    // This will be higher for more noticeable pulses
     return getSafeZoneOpacity() * 1.5;
   };
 
   return safeZoneActive ? (
     <group position={[safeZoneCenter[0], 20, safeZoneCenter[1]]}>
-      {/* Current safe zone visualization - cylindrical zone */}
       <mesh ref={cylinderRef} position={[0, 0, 0]}>
         <cylinderGeometry
           args={[safeZoneRadius, safeZoneRadius, 40, 64, 1, true]}
         />
         <meshBasicMaterial
-          color={getSafeZoneColor()}
+          color={safeZoneColor}
           transparent
           opacity={
             shouldPulse || shouldUrgencyPulse
@@ -452,14 +310,13 @@ const SafeZone = () => {
         />
       </mesh>
 
-      {/* Current top circle border */}
       <mesh
         ref={topRingRef}
         position={[0, 20, 0]}
         rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
         <meshBasicMaterial
-          color={getRingColor()}
+          color={ringColor}
           transparent
           opacity={0.6}
           side={THREE.DoubleSide}
@@ -469,14 +326,13 @@ const SafeZone = () => {
         />
       </mesh>
 
-      {/* Current bottom circle border */}
       <mesh
         ref={bottomRingRef}
         position={[0, -20, 0]}
         rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
         <meshBasicMaterial
-          color={getRingColor()}
+          color={ringColor}
           transparent
           opacity={0.6}
           side={THREE.DoubleSide}
@@ -486,10 +342,8 @@ const SafeZone = () => {
         />
       </mesh>
 
-      {/* Target safe zone visualization - only show if target is smaller than current */}
       {safeZoneTargetRadius < safeZoneRadius && (
         <>
-          {/* Target cylindrical zone */}
           <mesh ref={targetCylinderRef} position={[0, 0, 0]}>
             <cylinderGeometry
               args={[
@@ -502,9 +356,9 @@ const SafeZone = () => {
               ]}
             />
             <meshBasicMaterial
-              color={getTargetZoneColor()}
+              color={targetZoneColor}
               transparent
-              opacity={isPreZoneChangeLevel ? 0.08 : 0.05} // Increase opacity when approaching next zone
+              opacity={isPreZoneChangeLevel ? 0.08 : 0.05}
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -512,7 +366,6 @@ const SafeZone = () => {
             />
           </mesh>
 
-          {/* Target top ring */}
           <mesh
             ref={targetTopRingRef}
             position={[0, 20, 0]}
@@ -521,9 +374,9 @@ const SafeZone = () => {
               args={[safeZoneTargetRadius - 0.3, safeZoneTargetRadius, 64]}
             />
             <meshBasicMaterial
-              color={getTargetZoneColor()}
+              color={targetZoneColor}
               transparent
-              opacity={isPreZoneChangeLevel ? 0.7 : 0.5} // Increase opacity when approaching next zone
+              opacity={isPreZoneChangeLevel ? 0.7 : 0.5}
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -531,7 +384,6 @@ const SafeZone = () => {
             />
           </mesh>
 
-          {/* Target bottom ring */}
           <mesh
             ref={targetBottomRingRef}
             position={[0, -20, 0]}
@@ -540,9 +392,9 @@ const SafeZone = () => {
               args={[safeZoneTargetRadius - 0.3, safeZoneTargetRadius, 64]}
             />
             <meshBasicMaterial
-              color={getTargetZoneColor()}
+              color={targetZoneColor}
               transparent
-              opacity={isPreZoneChangeLevel ? 0.7 : 0.5} // Increase opacity when approaching next zone
+              opacity={isPreZoneChangeLevel ? 0.7 : 0.5}
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -552,10 +404,8 @@ const SafeZone = () => {
         </>
       )}
 
-      {/* Next zone preview - only show on pre-zone change levels (4, 9, 14, etc.) */}
       {isPreZoneChangeLevel && (
         <>
-          {/* Next zone cylindrical preview */}
           <mesh ref={nextZoneCylinderRef} position={[0, 0, 0]}>
             <cylinderGeometry
               args={[
@@ -568,9 +418,9 @@ const SafeZone = () => {
               ]}
             />
             <meshBasicMaterial
-              color={getNextZoneColor()}
+              color={nextZoneColor}
               transparent
-              opacity={previewOpacity * 0.2} // Lighter opacity for cylinder
+              opacity={previewOpacity * 0.2}
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -578,7 +428,6 @@ const SafeZone = () => {
             />
           </mesh>
 
-          {/* Next zone top ring */}
           <mesh
             ref={nextZoneTopRingRef}
             position={[0, 20, 0]}
@@ -587,9 +436,9 @@ const SafeZone = () => {
               args={[nextZoneTargetRadius - 0.4, nextZoneTargetRadius, 64]}
             />
             <meshBasicMaterial
-              color={getNextZoneColor()}
+              color={nextZoneColor}
               transparent
-              opacity={previewOpacity * 0.8} // Higher opacity for the ring
+              opacity={previewOpacity * 0.8}
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -597,7 +446,6 @@ const SafeZone = () => {
             />
           </mesh>
 
-          {/* Next zone bottom ring */}
           <mesh
             ref={nextZoneBottomRingRef}
             position={[0, -20, 0]}
@@ -606,9 +454,9 @@ const SafeZone = () => {
               args={[nextZoneTargetRadius - 0.4, nextZoneTargetRadius, 64]}
             />
             <meshBasicMaterial
-              color={getNextZoneColor()}
+              color={nextZoneColor}
               transparent
-              opacity={previewOpacity * 0.8} // Higher opacity for the ring
+              opacity={previewOpacity * 0.8}
               side={THREE.DoubleSide}
               depthWrite={false}
               depthTest={false}
@@ -618,7 +466,6 @@ const SafeZone = () => {
         </>
       )}
 
-      {/* Add vertical lines connecting the circles */}
       {Array.from({ length: 16 }).map((_, index) => {
         const angle = (index / 16) * Math.PI * 2;
         const x = Math.sin(angle) * safeZoneRadius;
@@ -627,7 +474,7 @@ const SafeZone = () => {
           <mesh key={`line-${index}`} position={[x, 0, z]} rotation={[0, 0, 0]}>
             <boxGeometry args={[0.2, 40, 0.2]} />
             <meshBasicMaterial
-              color={getRingColor()}
+              color={ringColor}
               transparent
               opacity={0.3}
               depthWrite={false}
@@ -638,7 +485,6 @@ const SafeZone = () => {
         );
       })}
 
-      {/* Add target zone marker lines if target zone exists */}
       {safeZoneTargetRadius < safeZoneRadius &&
         Array.from({ length: 8 }).map((_, index) => {
           const angle = (index / 8) * Math.PI * 2;
@@ -651,9 +497,9 @@ const SafeZone = () => {
               rotation={[0, 0, 0]}>
               <boxGeometry args={[0.15, 40, 0.15]} />
               <meshBasicMaterial
-                color={getTargetZoneColor()}
+                color={targetZoneColor}
                 transparent
-                opacity={isPreZoneChangeLevel ? 0.4 : 0.25} // Increase opacity when approaching next zone
+                opacity={isPreZoneChangeLevel ? 0.4 : 0.25}
                 depthWrite={false}
                 depthTest={false}
                 blending={THREE.AdditiveBlending}
@@ -662,7 +508,6 @@ const SafeZone = () => {
           );
         })}
 
-      {/* Add next zone preview vertical markers */}
       {isPreZoneChangeLevel &&
         Array.from({ length: 12 }).map((_, index) => {
           const angle = (index / 12) * Math.PI * 2;
@@ -675,9 +520,9 @@ const SafeZone = () => {
               rotation={[0, 0, 0]}>
               <boxGeometry args={[0.15, 40, 0.15]} />
               <meshBasicMaterial
-                color={getNextZoneColor()}
+                color={nextZoneColor}
                 transparent
-                opacity={previewOpacity * 0.5} // Match the pulsing effect
+                opacity={previewOpacity * 0.5}
                 depthWrite={false}
                 depthTest={false}
                 blending={THREE.AdditiveBlending}
