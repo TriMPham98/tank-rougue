@@ -3,9 +3,9 @@ import { SecondaryWeapon } from "./gameState";
 export const availableWeapons: SecondaryWeapon[] = [
   {
     id: "rocket",
-    name: "MK-19",
+    name: "Mortar",
     description:
-      "Fires grenades that deal high damage and have a large explosion radius.",
+      "Fires shells that deal high damage and have a large explosion radius.",
     damage: 75,
     cooldown: 7,
     range: 20,
