@@ -10,7 +10,8 @@ export const useWeaponSelection = (currentLevel: number) => {
   const canSelectWeapon = useCallback(() => {
     return (
       WEAPON_SELECTION_LEVELS.includes(currentLevel) &&
-      selectedWeapons.length < MAX_SELECTED_WEAPONS
+      selectedWeapons.length <
+        Math.min(Math.floor(currentLevel / 10), MAX_SELECTED_WEAPONS)
     );
   }, [currentLevel, selectedWeapons.length]);
 

@@ -75,7 +75,7 @@ const GameUI = () => {
   useEffect(() => {
     if (
       [10, 20, 30, 40].includes(rank) &&
-      selectedWeapons.length < 4 &&
+      selectedWeapons.length < Math.min(Math.floor(rank / 10), 4) &&
       !isGameOver
     ) {
       useGameState.setState({ showWeaponSelection: true });
@@ -272,7 +272,8 @@ const GameUI = () => {
           availableWeapons,
           selectedWeapons,
           level: rank, // Pass rank
-          canSelect: selectedWeapons.length < 4,
+          canSelect:
+            selectedWeapons.length < Math.min(Math.floor(rank / 10), 4),
         }}
       />
     );
