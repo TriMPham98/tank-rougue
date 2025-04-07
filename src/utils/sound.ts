@@ -27,6 +27,7 @@ class SoundManager {
     this.registerSound("sniper", "./assets/sounds/sniperShot.mp3");
     this.registerSound("rocket", "./assets/sounds/rocketLauncher.mp3");
     this.registerSound("laser", "./assets/sounds/laserBurst.mp3");
+    this.registerSound("npcImpact", "./assets/sounds/npcImpact.mp3");
     // Add more sounds here as needed
   }
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { availableWeapons } from "./weapons";
+import SoundManager from "./sound";
 
 // Define the type for an enemy
 export interface Enemy {
@@ -558,6 +559,9 @@ export const useGameState = create<GameState>((set, get) => ({
       get().removeEnemy(id);
       get().increaseScore(enemy.type === "tank" ? 100 : 150);
       get().incrementEnemyDefeatCount(); // Track the enemy defeat
+      // Play enemy defeat sound at 17% volume
+      SoundManager.setVolume("npcImpact", 0.175);
+      SoundManager.play("npcImpact");
       return true;
     } else {
       set((state) => ({
