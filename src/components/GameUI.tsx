@@ -977,7 +977,7 @@ const GameUI = () => {
       {/* Controls Info */}
       {!isGameOver && ( // Hide controls on game over
         <div className="controls-info">
-          <span>[WASD] Move</span> | <span>[J/K] Turret</span> | |{" "}
+          <span>[WASD] Move</span> | <span>[J/K] Turret</span> |{" "}
           <span>[ESC] Pause</span> | <span>[1-4] Enhance</span>
         </div>
       )}
