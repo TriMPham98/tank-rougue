@@ -318,6 +318,27 @@ export const useRespawnManager = () => {
           destroyedEnemyIds.length > 0 &&
           prevEnemyCountRef.current > currentEnemyCount
         ) {
+          // For each destroyed enemy, check if we should spawn a power-up (5% chance)
+          if (destroyedEnemyIds.length > 0) {
+            const prevEnemies = prevState.enemies.filter((enemy) =>
+              destroyedEnemyIds.includes(enemy.id)
+            );
+
+            prevEnemies.forEach((enemy) => {
+              // 5% chance to drop a health power-up
+              if (Math.random() < 0.05) {
+                const { spawnPowerUp } = state;
+                spawnPowerUp({
+                  position: enemy.position,
+                  type: "health",
+                });
+                if (SPAWN_STATS_DEBUG) {
+                  debug.log(`Enemy ${enemy.id} dropped a health power-up`);
+                }
+              }
+            });
+          }
+
           const maxEnemies = getMaxEnemies(state.level);
           if (SPAWN_STATS_DEBUG) {
             console.log(

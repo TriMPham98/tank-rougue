@@ -5,7 +5,6 @@ import * as THREE from "three"; // Import THREE for Vector2
 interface LevelConfig {
   gridSize: number;
   enemyCount: number;
-  powerUpCount: number;
 }
 
 // Helper function to check if a position is clear of obstacles
@@ -159,7 +158,7 @@ export const generateEnemies = (
     const enemyCount = 1;
     const gridSize = Math.min(40 + level * 2, 70);
 
-    const config: LevelConfig = { gridSize, enemyCount, powerUpCount: 1 };
+    const config: LevelConfig = { gridSize, enemyCount };
     const enemies: Omit<Enemy, "id">[] = [];
     const existingPositions: [number, number, number][] = [playerPosition];
 
@@ -195,7 +194,6 @@ export const generateEnemies = (
   const config: LevelConfig = {
     gridSize,
     enemyCount,
-    powerUpCount: Math.min(1 + Math.floor(level / 2), 5),
   };
   const enemies: Omit<Enemy, "id">[] = [];
   const existingPositions: [number, number, number][] = [playerPosition];
@@ -313,32 +311,9 @@ export const generatePowerUps = (
   playerPosition: [number, number, number],
   enemyPositions: [number, number, number][]
 ): Omit<PowerUp, "id">[] => {
-  // ... (generatePowerUps logic remains the same)
-  const basePowerUpCount = 2;
-  const maxPowerUps = 8;
-  const powerUpGrowthFactor = 0.8;
-
-  const powerUpCount = Math.min(
-    Math.floor(
-      basePowerUpCount + powerUpGrowthFactor * Math.log10(level + 1) * 2
-    ),
-    maxPowerUps
-  );
-
-  const gridSize = Math.min(40 + level * 2, 70);
-  const config: LevelConfig = { gridSize, enemyCount: 0, powerUpCount };
-  const powerUps: Omit<PowerUp, "id">[] = [];
-  const existingPositions: [number, number, number][] = [
-    playerPosition,
-    ...enemyPositions,
-  ];
-
-  for (let i = 0; i < config.powerUpCount; i++) {
-    const position = generateRandomPosition(config.gridSize, existingPositions);
-    existingPositions.push(position);
-    powerUps.push({ position, type: "health" });
-  }
-  return powerUps;
+  // No longer spawn random power-ups at level generation
+  // Power-ups will only drop from defeated enemies with a 5% chance
+  return [];
 };
 
 // Generate a complete level
@@ -346,14 +321,14 @@ export const generateLevel = (
   level: number,
   playerPosition: [number, number, number]
 ) => {
-  // ... (generateLevel logic remains the same)
-  const { spawnEnemy, spawnPowerUp } = useGameState.getState();
+  const { spawnEnemy } = useGameState.getState();
   const enemies = generateEnemies(level, playerPosition);
   const enemyPositions = enemies.map((e) => e.position);
-  const powerUps = generatePowerUps(level, playerPosition, enemyPositions);
+  // Skip generating random power-ups
+  const powerUps: Omit<PowerUp, "id">[] = [];
 
   enemies.forEach((enemy) => spawnEnemy(enemy));
-  powerUps.forEach((powerUp) => spawnPowerUp(powerUp));
+  // No random power-ups to spawn
 
   return { enemies, powerUps };
 };
