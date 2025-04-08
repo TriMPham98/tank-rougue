@@ -49,7 +49,7 @@ const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
 
     // Destroy power-up if lifetime reaches 0
     if (lifeTimeRef.current <= 0) {
-      collectPowerUp(powerUp.id);
+      collectPowerUp(powerUp.id, false);
       return;
     }
 
@@ -71,7 +71,7 @@ const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
 
     // If player is close enough, collect the power-up
     if (distance < 2) {
-      collectPowerUp(powerUp.id);
+      collectPowerUp(powerUp.id, true);
     }
   });
 

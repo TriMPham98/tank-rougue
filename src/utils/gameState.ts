@@ -101,7 +101,7 @@ interface GameState {
   spawnEnemy: (enemy: Omit<Enemy, "id">) => void;
   removeEnemy: (id: string) => void;
   spawnPowerUp: (powerUp: Omit<PowerUp, "id">) => void;
-  collectPowerUp: (id: string) => void;
+  collectPowerUp: (id: string, byPlayer?: boolean) => void;
   restartGame: () => void;
   togglePause: () => void;
   advanceLevel: () => void;
@@ -237,7 +237,7 @@ export const useGameState = create<GameState>((set, get) => ({
       ],
     })),
 
-  collectPowerUp: (id) =>
+  collectPowerUp: (id, byPlayer = false) =>
     set((state) => {
       const powerUp = state.powerUps.find((p) => p.id === id);
       if (!powerUp) return state;
@@ -251,9 +251,11 @@ export const useGameState = create<GameState>((set, get) => ({
         playerHealth: Math.min(state.playerMaxHealth, state.playerHealth + 25),
       };
 
-      // Play health pickup sound at 35% volume
-      SoundManager.setVolume("healthPickUp", 0.35);
-      SoundManager.play("healthPickUp");
+      // Only play health pickup sound if collected by player, not when expired
+      if (byPlayer) {
+        SoundManager.setVolume("healthPickUp", 0.35);
+        SoundManager.play("healthPickUp");
+      }
 
       return updates;
     }),
