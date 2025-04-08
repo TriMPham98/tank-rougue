@@ -251,8 +251,8 @@ export const useGameState = create<GameState>((set, get) => ({
         playerHealth: Math.min(state.playerMaxHealth, state.playerHealth + 25),
       };
 
-      // Play health pickup sound at 50% volume
-      SoundManager.setVolume("healthPickUp", 0.5);
+      // Play health pickup sound at 35% volume
+      SoundManager.setVolume("healthPickUp", 0.35);
       SoundManager.play("healthPickUp");
 
       return updates;
