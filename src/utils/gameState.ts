@@ -331,6 +331,10 @@ export const useGameState = create<GameState>((set, get) => ({
 
       const newLevel = state.level + 1;
 
+      // Play level up sound at 25% volume
+      SoundManager.setVolume("levelUp", 0.25);
+      SoundManager.play("levelUp");
+
       // Check if this is a level right before a zone change (levels 4, 9, 14, etc.)
       const isPreZoneChangeLevel = newLevel % 5 === 4 && newLevel >= 4;
 
