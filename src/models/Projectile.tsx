@@ -163,7 +163,7 @@ const Projectile = ({
   });
 
   return (
-    <Sphere ref={projectileRef} args={[0.2, 8, 8]} position={position}>
+    <Sphere ref={projectileRef} args={[0.25, 8, 8]} position={position}>
       <meshStandardMaterial
         color="yellow"
         emissive="orange"
