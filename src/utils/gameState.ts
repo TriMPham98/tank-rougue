@@ -319,7 +319,16 @@ export const useGameState = create<GameState>((set, get) => ({
           // Check again to make sure UI isn't already showing before advancing
           const currentState = get();
           if (!currentState.showUpgradeUI && !currentState.isGameOver) {
+            // Fix: Only advance one level at a time, regardless of how many enemies were defeated
             get().advanceLevel();
+
+            // Reset the enemiesDefeated counter to the remainder after advancing one level
+            // This ensures we don't skip levels
+            const remainingEnemies =
+              newCount - currentState.enemiesRequiredForNextLevel;
+            if (remainingEnemies > 0) {
+              set((state) => ({ enemiesDefeated: remainingEnemies }));
+            }
           }
         }, 500); // Give a small delay before advancing level
       }
