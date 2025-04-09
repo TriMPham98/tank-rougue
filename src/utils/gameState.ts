@@ -360,8 +360,9 @@ export const useGameState = create<GameState>((set, get) => ({
         // Late game: Steeper scaling starting from 25
         const baseRequirement = 25;
         const lateGameLevel = newLevel - 50;
-        // Exponential growth for late game
-        nextLevelRequirement = baseRequirement + Math.ceil(lateGameLevel * 1.5);
+        // Fix: Use a more gradual scaling for late game to prevent level jumps
+        nextLevelRequirement =
+          baseRequirement + Math.ceil(lateGameLevel * 0.75);
       }
 
       // Generate random upgrade options (3 options) - only needed if below level 51
