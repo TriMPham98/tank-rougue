@@ -9,7 +9,6 @@ const SafeZone = () => {
     safeZoneCenter,
     safeZoneTargetRadius,
     safeZoneShrinkRate,
-    safeZoneDamage,
     safeZoneActive,
     playerTankPosition,
     takeDamage,
@@ -47,8 +46,6 @@ const SafeZone = () => {
   const isZoneChangeLevel = level % 5 === 0 && level > 0;
   const currentZoneLevel = Math.floor(level / 5);
   const nextZoneLevel = currentZoneLevel + 1;
-  const nextZoneLevelNumber = nextZoneLevel * 5;
-  const levelsUntilNextZone = nextZoneLevelNumber - level;
 
   const nextZoneTargetRadius = (() => {
     const maxRadius = 50;
@@ -56,17 +53,6 @@ const SafeZone = () => {
     const radiusDecrease = 4;
     return Math.max(minRadius, maxRadius - nextZoneLevel * radiusDecrease);
   })();
-
-  const getZoneCompletionPercentage = () => {
-    if (isZoneChangeLevel) return 100;
-    const initialZoneRadius = 50 - currentZoneLevel * 4;
-    const totalShrinkNeeded = initialZoneRadius - nextZoneTargetRadius;
-    const currentShrink = initialZoneRadius - safeZoneRadius;
-    return Math.min(
-      100,
-      Math.max(0, (currentShrink / totalShrinkNeeded) * 100)
-    );
-  };
 
   useEffect(() => {
     if (level % 5 === 0 && level > 0 && prevLevelRef.current !== level) {
