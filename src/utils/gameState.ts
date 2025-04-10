@@ -213,9 +213,6 @@ export const useGameState = create<GameState>((set, get) => ({
         }
       }
 
-      // Apply map boundary constraints to ensure enemies stay in the map
-      const constrainedPosition = enforceMapBoundaries(enemy.position);
-
       return {
         enemies: [
           ...state.enemies,
@@ -430,9 +427,6 @@ export const useGameState = create<GameState>((set, get) => ({
         maxRadius - zoneReductionLevel * radiusDecrease
       );
 
-      // Estimate average enemy count for the next few levels
-      const avgEnemiesPerLevel = Math.ceil((newLevel + 2) / 2); // Simple approximation
-
       // Estimate total enemies needed to be killed before next zone change
       // Need to sum the enemies required for each level from current to next zone change
       let totalEnemiesBeforeNextZone = 0;
@@ -629,8 +623,6 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerSpeed = state.playerSpeed + 0.5; // Linear increase by 0.5
           break;
         case "fireRate":
-          // Cap at 3.5 shots/sec (0.286s between shots)
-          const minFireRate = 0.286; // 3.5 shots per second
           // Convert current fire rate to shots per second
           const currentShotsPerSecond = 1 / state.playerFireRate;
           // Add 0.1 shots per second
