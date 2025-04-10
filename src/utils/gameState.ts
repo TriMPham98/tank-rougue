@@ -581,8 +581,24 @@ export const useGameState = create<GameState>((set, get) => ({
       get().removeEnemy(id);
       get().increaseScore(enemy.type === "tank" ? 100 : 150);
       get().incrementEnemyDefeatCount(); // Track the enemy defeat
-      // Play enemy defeat sound at 17% volume
-      SoundManager.setVolume("npcImpact", 0.175);
+
+      // Calculate distance between player and enemy
+      const playerPos = state.playerTankPosition;
+      const enemyPos = enemy.position;
+      const dx = playerPos[0] - enemyPos[0];
+      const dz = playerPos[2] - enemyPos[2];
+      const distance = Math.sqrt(dx * dx + dz * dz);
+
+      // Set volume based on distance (max volume at 0 distance, min volume at 50 distance)
+      const maxVolume = 0.175; // Maximum volume (17.5%)
+      const minVolume = 0.01; // Minimum volume (1%)
+      const maxDistance = 50; // Maximum distance for volume calculation
+      const volume = Math.max(
+        minVolume,
+        maxVolume * (1 - distance / maxDistance)
+      );
+
+      SoundManager.setVolume("npcImpact", volume);
       SoundManager.play("npcImpact");
       return true;
     } else {
