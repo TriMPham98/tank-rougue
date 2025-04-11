@@ -536,6 +536,11 @@
   pointer-events: none;
 }
 
+/* Hide tactical info completely */
+.military-theme .tactical-info {
+  display: none;
+}
+
 .military-theme .radar-bg {
   position: absolute;
   inset: 0;

@@ -592,8 +592,6 @@ const GameUI = () => {
       <div className="tactical-display">
         {/* Radar Background Elements */}
         <div className="radar-bg">
-          {/* <div className="radar-line"></div> */}{" "}
-          {/* Optional sweep animation */}
           <div className="radar-rings ring-1"></div>
           <div className="radar-rings ring-2"></div>
           <div className="radar-rings ring-3"></div>
@@ -675,103 +673,6 @@ const GameUI = () => {
             top: `${playerY}px`,
           }}
         />
-
-        {/* Tactical Info Overlay */}
-        <div className="tactical-info">
-          <div className="info-header">TACTICAL DISPLAY</div>
-          {combatZoneActive && (
-            <>
-              <div className="info-line">
-                <span>Sector Tier: {zoneTier > 0 ? zoneTier : "N/A"}</span>
-                {isZoneShiftRank && rank > 0 && (
-                  <span className="zone-status new">(NEW)</span>
-                )}
-                {isPreShiftRank && (
-                  <span className="zone-status warning">SHIFT IMMINENT</span>
-                )}
-                {zoneTier > 0 && !isZoneShiftRank && !isPreShiftRank && (
-                  <span className="zone-detail">
-                    T+{ranksUntilNextShift} Ranks
-                  </span>
-                )}
-              </div>
-
-              {/* Zone Progress (Rank based) - Only show if relevant */}
-              {zoneTier > 0 && !isZoneShiftRank && (
-                <div className="progress-bar-container small">
-                  <div
-                    className="progress-bar"
-                    style={{
-                      width: `${zoneProgress}%`,
-                      backgroundColor: "var(--color-zone-stable)",
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Zone Shrink Progress */}
-              {zoneTier > 0 && (
-                <div className="info-line small">
-                  <span>Containment:</span>
-                  {zoneShrinkProgress >= 100 ? (
-                    <span className="zone-status complete"> STABLE</span>
-                  ) : (
-                    <span
-                      className={`zone-status ${
-                        isPreShiftRank ? "warning" : ""
-                      }`}>
-                      {" "}
-                      {zoneShrinkProgress.toFixed(0)}%
-                    </span>
-                  )}
-                </div>
-              )}
-              {zoneTier > 0 && zoneShrinkProgress < 100 && (
-                <div className="progress-bar-container small">
-                  <div
-                    className="progress-bar"
-                    style={{
-                      width: `${zoneShrinkProgress}%`,
-                      backgroundColor: getUrgencyColor(),
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Next zone info - only show on pre-zone change levels */}
-              {isPreShiftRank && (
-                <div className="info-line small warning">
-                  Next Sector Radius: {nextZoneRadius.toFixed(0)}m (
-                  {combatZoneRadius.toFixed(0)}m → {nextZoneRadius.toFixed(0)}m)
-                </div>
-              )}
-
-              <div className="info-line">
-                Radius: {combatZoneRadius.toFixed(0)}m →{" "}
-                {combatZoneTargetRadius.toFixed(0)}m
-              </div>
-
-              {combatZoneTargetRadius < combatZoneRadius &&
-                combatZoneRadius - combatZoneTargetRadius > 0.1 &&
-                combatZoneTimeRemaining !== null && (
-                  <div
-                    className="info-line timer"
-                    style={{ color: getTimerColor() }}>
-                    ETA: {formatTimeRemaining()}
-                  </div>
-                )}
-              <div className="info-line damage">
-                {combatZoneDamage.toFixed(0)} DMG/s Outside
-              </div>
-            </>
-          )}
-          <div className="legend">
-            <span className="legend-item player">▲ YOU</span>
-            <span className="legend-item tank">● TANK</span>
-            <span className="legend-item turret">■ TUR</span>
-            <span className="legend-item bomber">♦ BMB</span>
-          </div>
-        </div>
       </div>
     );
   }, [
@@ -781,7 +682,7 @@ const GameUI = () => {
     combatZoneActive,
     hostiles,
     combatZoneTargetRadius,
-    combatZoneShrinkRate, // Keep shrink rate if needed elsewhere, though not directly in calculation now
+    combatZoneShrinkRate,
     combatZoneDamage,
     combatZoneTimeRemaining,
     rank,
