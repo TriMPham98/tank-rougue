@@ -489,7 +489,7 @@ const GameUI = () => {
 
   // --- Minimap / Tactical Display ---
   const renderTacticalDisplay = useCallback(() => {
-    const mapSize = 120; // Slightly larger?
+    const mapSize = 150; // Increased by 25% from 120
     const gameWorldSize = 100;
     const scale = mapSize / gameWorldSize;
 

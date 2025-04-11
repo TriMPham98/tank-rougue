@@ -526,8 +526,8 @@
   position: absolute;
   bottom: 50px; /* Position above controls */
   right: 15px;
-  width: 120px;
-  height: 120px;
+  width: 150px; /* Increased by 25% from 120px */
+  height: 150px; /* Increased by 25% from 120px */
   background-color: var(--color-radar-background);
   border: 2px solid var(--color-border-medium);
   border-radius: 4px;
