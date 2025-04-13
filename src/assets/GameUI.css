@@ -288,234 +288,210 @@
   justify-content: center;
   align-items: center;
   pointer-events: auto;
-  background-color: rgba(10, 15, 10, 0.95); /* Darker, more opaque background */
+  background-color: rgba(10, 15, 10, 0.95);
   backdrop-filter: blur(4px);
   z-index: 100;
 }
 
 .military-theme .overlay-content {
-  background-color: var(--color-background-panel);
-  padding: 25px 35px;
-  border-radius: 4px;
-  text-align: center;
-  color: var(--color-text-primary);
-  max-width: 450px;
-  border: 1px solid var(--color-border-medium);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  font-family: var(--font-secondary);
-}
-
-/* Generic Overlay Title */
-.military-theme .overlay-content h2 {
-  margin-top: 0;
-  font-size: 1.8em;
-  margin-bottom: 20px;
-  font-family: var(--font-primary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Specific Overlay Titles */
-.military-theme .game-over-title {
-  color: var(--color-text-danger);
-  font-family: var(--font-primary);
-  font-size: 2em;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-}
-.military-theme .pause-title {
-  color: #50ff50;
-  font-family: var(--font-primary);
-  font-size: 2.5em;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  text-shadow: 0 0 10px rgba(80, 255, 80, 0.5), 0 0 20px rgba(80, 255, 80, 0.3);
-  margin-bottom: 30px;
-}
-.military-theme .enhancement-title {
-  color: var(--color-text-highlight);
-}
-.military-theme .weapon-selection-title {
-  color: var(--color-text-warning);
-}
-
-.military-theme .overlay-content p {
-  font-family: var(--font-secondary);
-  font-size: 1em;
-  color: var(--color-text-primary);
-  margin-bottom: 15px;
-  line-height: 1.4;
-}
-
-/* Themed Buttons */
-.military-theme .ui-button {
-  font-family: var(--font-primary);
-  background-color: var(--color-accent);
-  color: var(--color-background-main);
-  padding: 10px 25px;
-  border: 1px solid var(--color-border-medium);
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1.1em;
-  font-weight: bold;
-  text-transform: uppercase;
-  pointer-events: all;
-  display: inline-block;
-  text-decoration: none;
-  margin: 10px 0;
-}
-
-.military-theme .ui-button:hover {
-  background-color: var(--color-accent-bright);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Apply .ui-button style to specific overlay buttons */
-.military-theme .overlay-content button {
-  /* Inherit from .ui-button */
-  font-family: var(--font-primary);
-  background-color: var(--color-accent);
-  color: var(--color-background-main);
-  padding: 10px 25px;
-  border: 1px solid var(--color-border-medium);
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1.1em;
-  font-weight: bold;
-  text-transform: uppercase;
-  pointer-events: all;
-  display: inline-block;
-  text-decoration: none;
-  margin: 10px 0;
-}
-.military-theme .overlay-content button:hover {
-  background-color: var(--color-accent-bright);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-/* Specific button adjustments */
-.military-theme .close-button {
-  /* Theme the weapon close button */
-  background-color: var(--color-text-warning); /* Keep gold/amber? */
-  color: var(--color-background-main);
-}
-.military-theme .close-button:hover {
-  background-color: #ffdd55; /* Brighter gold/amber */
-}
-
-/* --- Enhancement UI --- */
-.military-theme .enhancement-overlay {
-  background-color: rgba(10, 15, 10, 0.95);
-  backdrop-filter: blur(4px);
-  z-index: 110;
-}
-
-.military-theme .enhancement-content {
-  background-color: rgba(20, 25, 20, 0.9);
-  border: 1px solid rgba(80, 120, 80, 0.3);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-  max-width: 1200px;
-  padding: 40px;
-}
-
-.military-theme .enhancement-title {
-  color: #50ff50;
-  font-family: var(--font-primary);
-  font-size: 2em;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  text-shadow: 0 0 10px rgba(80, 255, 80, 0.5), 0 0 20px rgba(80, 255, 80, 0.3);
-  margin-bottom: 40px;
-  text-align: center;
-}
-
-.military-theme .enhancement-options {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  width: 100%;
-}
-
-.military-theme .enhancement-card {
-  flex: 1;
-  min-width: 280px;
-  max-width: 350px;
-  padding: 25px 20px;
-  background-color: rgba(30, 40, 30, 0.6);
-  border: 1px solid rgba(80, 120, 80, 0.3);
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.3s ease;
+  background-color: rgba(30, 35, 30, 0.95);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
   position: relative;
-  pointer-events: all;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  padding: 0;
+  color: #c2e8c5;
+  max-width: 1200px;
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
+}
+
+/* Scan line animation effect */
+.military-theme .overlay-content:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(60, 180, 60, 0.03) 50%,
+    rgba(0, 0, 0, 0) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  animation: scanlines 2s linear infinite;
+  z-index: 2;
+}
+
+/* Header with decorations */
+.military-theme .overlay-content h2 {
+  background-color: #1a2a1a;
+  border-bottom: 2px solid #2f7c2f;
+  padding: 15px 20px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #5fdc5f;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  font-family: "Courier New", monospace;
+  position: relative;
+}
+
+/* Header decorations */
+.military-theme .overlay-content h2:before,
+.military-theme .overlay-content h2:after {
+  content: "";
+  width: 30px;
+  height: 2px;
+  background-color: #5fdc5f;
+  position: relative;
+  margin: 0 15px;
+}
+
+.military-theme .overlay-content h2:before {
+  margin-right: 15px;
+}
+
+.military-theme .overlay-content h2:after {
+  margin-left: 15px;
+}
+
+/* Enhancement Cards Container */
+.military-theme .enhancement-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  padding: 20px;
+  background-color: rgba(25, 30, 25, 0.7);
+}
+
+/* Enhancement Card */
+.military-theme .enhancement-card {
+  background-color: rgba(40, 50, 40, 0.7);
+  border: 1px solid #2f7c2f;
+  border-radius: 4px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .military-theme .enhancement-card:hover {
-  background-color: rgba(40, 60, 40, 0.7);
-  border-color: rgba(80, 255, 80, 0.4);
-  box-shadow: 0 0 20px rgba(80, 255, 80, 0.15);
-  transform: translateY(-4px);
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(95, 220, 95, 0.3);
+  border-color: #5fdc5f;
 }
 
+/* Enhancement Keybind */
 .military-theme .enhancement-keybind {
   position: absolute;
   top: 10px;
   left: 10px;
-  width: 28px;
-  height: 28px;
-  background-color: rgba(80, 120, 80, 0.3);
-  color: #50ff50;
-  font-family: var(--font-primary);
-  font-weight: bold;
+  background-color: #1a2a1a;
+  border: 1px solid #2f7c2f;
+  color: #5fdc5f;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  font-size: 1em;
-  border: 1px solid rgba(80, 255, 80, 0.3);
-  text-shadow: 0 0 5px rgba(80, 255, 80, 0.5);
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
 }
 
+/* Enhancement Name */
 .military-theme .enhancement-name {
-  font-family: var(--font-primary);
-  font-size: 1.3em;
-  color: #50ff50;
-  margin: 15px 0 20px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 0 0 8px rgba(80, 255, 80, 0.4);
+  font-family: "Courier New", monospace;
+  font-size: 1.4rem;
+  color: #5fdc5f;
+  margin: 15px 0;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(95, 220, 95, 0.3);
+  border-bottom: 1px solid rgba(47, 124, 47, 0.5);
+  padding-bottom: 10px;
 }
 
+/* Enhancement Value */
 .military-theme .enhancement-value {
-  font-family: var(--font-secondary);
-  font-size: 1.1em;
-  color: #a0e0a0;
-  margin-bottom: 20px;
-  letter-spacing: 1px;
+  font-family: "Courier New", monospace;
+  font-size: 1.1rem;
+  color: #c2e8c5;
+  margin: 15px 0;
+  text-align: center;
 }
 
 .military-theme .value-increase {
-  color: #50ff50;
+  color: #ffcc00;
   font-weight: bold;
-  text-shadow: 0 0 5px rgba(80, 255, 80, 0.4);
 }
 
+/* Enhancement Description */
 .military-theme .enhancement-desc {
-  font-family: var(--font-secondary);
-  font-size: 0.9em;
-  color: #88aa88;
-  line-height: 1.5;
-  letter-spacing: 0.5px;
+  font-size: 0.95rem;
+  color: #a0d0a0;
+  line-height: 1.4;
+  text-align: center;
   margin-top: 15px;
+}
+
+/* Pause Menu */
+.military-theme .pause-content {
+  background-color: rgba(30, 35, 30, 0.95);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
+  min-width: 400px;
+  padding: 0;
+}
+
+.military-theme .pause-title {
+  background-color: #1a2a1a;
+  border-bottom: 2px solid #2f7c2f;
+  padding: 15px 20px;
+  margin: 0;
+  color: #5fdc5f;
+  font-family: "Courier New", monospace;
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  text-align: center;
+}
+
+.military-theme .resume-button {
+  background-color: rgba(40, 40, 40, 0.8);
+  color: #5fdc5f;
+  border: 1px solid #2f7c2f;
+  border-radius: 4px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Courier New", monospace;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin: 20px;
+}
+
+.military-theme .resume-button:hover {
+  background-color: rgba(60, 60, 60, 0.8);
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
+  border-color: #5fdc5f;
+}
+
+@keyframes scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
 }
 
 /* --- Warning Overlays --- */
