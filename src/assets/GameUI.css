@@ -148,7 +148,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  white-space: nowrap; /* Prevent labels wrapping */
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .military-theme .rank-progression .hud-label {
   justify-content: flex-end;
@@ -188,8 +190,9 @@
   font-size: 1.6em;
   font-weight: bold;
   color: var(--color-text-highlight);
-  line-height: 1; /* Adjust vertical alignment */
-  white-space: nowrap; /* Prevent score wrapping */
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Themed Progress Bars */
@@ -250,6 +253,8 @@
   font-size: 0.8em;
   pointer-events: none;
   z-index: 50;
+  font-family: var(--font-secondary);
+  color: var(--color-text-primary);
 }
 
 .military-theme .panel-header {
@@ -260,9 +265,14 @@
   margin-bottom: 8px;
   border-bottom: 1px solid var(--color-border-light);
   padding-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .military-theme .stat-line {
+  font-family: var(--font-secondary);
+  font-size: 0.8em;
+  color: var(--color-text-primary);
   margin-bottom: 4px;
   line-height: 1.3;
 }
@@ -278,8 +288,8 @@
   justify-content: center;
   align-items: center;
   pointer-events: auto;
-  background-color: var(--color-background-overlay);
-  backdrop-filter: blur(3px);
+  background-color: rgba(10, 15, 10, 0.95); /* Darker, more opaque background */
+  backdrop-filter: blur(4px);
   z-index: 100;
 }
 
@@ -292,6 +302,7 @@
   max-width: 450px;
   border: 1px solid var(--color-border-medium);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-secondary);
 }
 
 /* Generic Overlay Title */
@@ -301,14 +312,27 @@
   margin-bottom: 20px;
   font-family: var(--font-primary);
   text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Specific Overlay Titles */
 .military-theme .game-over-title {
   color: var(--color-text-danger);
+  font-family: var(--font-primary);
+  font-size: 2em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 .military-theme .pause-title {
-  color: var(--color-text-highlight);
+  color: #50ff50;
+  font-family: var(--font-primary);
+  font-size: 2.5em;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(80, 255, 80, 0.5), 0 0 20px rgba(80, 255, 80, 0.3);
+  margin-bottom: 30px;
 }
 .military-theme .enhancement-title {
   color: var(--color-text-highlight);
@@ -318,8 +342,11 @@
 }
 
 .military-theme .overlay-content p {
+  font-family: var(--font-secondary);
   font-size: 1em;
+  color: var(--color-text-primary);
   margin-bottom: 15px;
+  line-height: 1.4;
 }
 
 /* Themed Buttons */
@@ -385,80 +412,110 @@
 
 /* --- Enhancement UI --- */
 .military-theme .enhancement-overlay {
+  background-color: rgba(10, 15, 10, 0.95);
+  backdrop-filter: blur(4px);
   z-index: 110;
 }
 
 .military-theme .enhancement-content {
-  max-width: 1100px;
+  background-color: rgba(20, 25, 20, 0.9);
+  border: 1px solid rgba(80, 120, 80, 0.3);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+  max-width: 1200px;
+  padding: 40px;
+}
+
+.military-theme .enhancement-title {
+  color: #50ff50;
+  font-family: var(--font-primary);
+  font-size: 2em;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(80, 255, 80, 0.5), 0 0 20px rgba(80, 255, 80, 0.3);
+  margin-bottom: 40px;
+  text-align: center;
 }
 
 .military-theme .enhancement-options {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 30px;
   width: 100%;
 }
 
 .military-theme .enhancement-card {
-  flex: 1 1 0;
-  min-width: 220px;
-  max-width: 300px;
-  padding: 20px 15px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border-light);
-  border-radius: 3px;
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
+  padding: 25px 20px;
+  background-color: rgba(30, 40, 30, 0.6);
+  border: 1px solid rgba(80, 120, 80, 0.3);
+  border-radius: 4px;
   cursor: pointer;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
   pointer-events: all;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
 .military-theme .enhancement-card:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(40, 60, 40, 0.7);
+  border-color: rgba(80, 255, 80, 0.4);
+  box-shadow: 0 0 20px rgba(80, 255, 80, 0.15);
   transform: translateY(-4px);
-  border-color: var(--color-border-medium);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 .military-theme .enhancement-keybind {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 22px;
-  height: 22px;
-  background-color: var(--color-accent);
-  color: var(--color-background-main);
+  top: 10px;
+  left: 10px;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(80, 120, 80, 0.3);
+  color: #50ff50;
+  font-family: var(--font-primary);
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
-  font-size: 0.9em;
+  border-radius: 4px;
+  font-size: 1em;
+  border: 1px solid rgba(80, 255, 80, 0.3);
+  text-shadow: 0 0 5px rgba(80, 255, 80, 0.5);
 }
 
 .military-theme .enhancement-name {
   font-family: var(--font-primary);
-  font-size: 1.1em;
-  color: var(--color-accent-bright);
-  margin-bottom: 10px;
-  margin-top: 5px;
+  font-size: 1.3em;
+  color: #50ff50;
+  margin: 15px 0 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(80, 255, 80, 0.4);
 }
 
 .military-theme .enhancement-value {
-  font-size: 0.9em;
-  margin-bottom: 12px;
+  font-family: var(--font-secondary);
+  font-size: 1.1em;
+  color: #a0e0a0;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
 }
 
 .military-theme .value-increase {
-  color: var(--color-text-highlight);
+  color: #50ff50;
   font-weight: bold;
+  text-shadow: 0 0 5px rgba(80, 255, 80, 0.4);
 }
 
 .military-theme .enhancement-desc {
-  font-size: 0.8em;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
+  font-family: var(--font-secondary);
+  font-size: 0.9em;
+  color: #88aa88;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  margin-top: 15px;
 }
 
 /* --- Warning Overlays --- */
@@ -480,14 +537,19 @@
   pointer-events: none;
   border: 1px solid rgba(255, 255, 255, 0.3);
   opacity: var(--opacity, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .military-theme .warning-icon {
   font-size: 1.3em;
 }
 .military-theme .warning-text {
-  font-size: 0.8em;
+  font-family: var(--font-primary);
+  font-size: 0.9em;
   line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .military-theme .warning-text div:first-child {
   font-size: 1em;
@@ -738,9 +800,13 @@
   pointer-events: none;
   z-index: 50;
   white-space: nowrap;
+  font-family: var(--font-secondary);
 }
 .military-theme .controls-info span {
+  font-family: var(--font-primary);
+  color: var(--color-text-highlight);
   margin: 0 5px;
+  text-transform: uppercase;
 }
 .military-theme .controls-info span::before {
   content: "[";
@@ -856,4 +922,40 @@
   background-color: var(--color-progress-background);
   border-radius: 2px;
   border: 1px solid var(--color-border-light);
+}
+
+/* Pause Menu Specific Styling */
+.military-theme .pause-overlay {
+  background-color: rgba(10, 15, 10, 0.95);
+}
+
+.military-theme .pause-content {
+  background-color: rgba(20, 25, 20, 0.9);
+  border: 1px solid rgba(80, 120, 80, 0.3);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+  padding: 40px 60px;
+  min-width: 400px;
+}
+
+.military-theme .resume-button {
+  background-color: rgba(80, 120, 80, 0.2);
+  color: #50ff50;
+  border: 1px solid rgba(80, 255, 80, 0.3);
+  font-family: var(--font-primary);
+  font-size: 1.2em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 15px 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 5px rgba(80, 255, 80, 0.5);
+  box-shadow: 0 0 10px rgba(80, 255, 80, 0.1);
+}
+
+.military-theme .resume-button:hover {
+  background-color: rgba(80, 255, 80, 0.2);
+  border-color: rgba(80, 255, 80, 0.5);
+  box-shadow: 0 0 20px rgba(80, 255, 80, 0.2);
+  transform: translateY(-2px);
+  text-shadow: 0 0 10px rgba(80, 255, 80, 0.7);
 }
