@@ -448,6 +448,9 @@
   border-radius: 5px;
   min-width: 400px;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .military-theme .pause-title {
@@ -455,34 +458,47 @@
   border-bottom: 2px solid #2f7c2f;
   padding: 15px 20px;
   margin: 0;
+  width: 100%;
   color: #5fdc5f;
   font-family: "Courier New", monospace;
   font-size: 1.8rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   text-align: center;
+  position: relative;
+}
+
+.military-theme .pause-title:before,
+.military-theme .pause-title:after {
+  content: "—";
+  color: #5fdc5f;
+  margin: 0 15px;
 }
 
 .military-theme .resume-button {
-  background-color: rgba(40, 40, 40, 0.8);
+  background-color: transparent;
   color: #5fdc5f;
-  border: 1px solid #2f7c2f;
+  border: 2px solid #5fdc5f;
   border-radius: 4px;
-  padding: 8px 20px;
+  padding: 12px 30px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: "Courier New", monospace;
-  letter-spacing: 1px;
-  font-size: 0.9rem;
+  letter-spacing: 2px;
+  font-size: 1.1rem;
   font-weight: bold;
-  margin: 20px;
+  margin: 40px;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
 }
 
 .military-theme .resume-button:hover {
-  background-color: rgba(60, 60, 60, 0.8);
-  box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
-  border-color: #5fdc5f;
+  background-color: rgba(95, 220, 95, 0.1);
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
+  text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
+  transform: translateY(-2px);
 }
 
 @keyframes scanlines {
