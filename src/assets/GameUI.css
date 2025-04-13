@@ -447,15 +447,16 @@
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   min-width: 400px;
+  min-height: 300px; /* Set minimum height for consistent spacing */
   padding: 0;
   display: flex;
   flex-direction: column;
+  justify-content: space-evenly; /* Evenly distribute space */
   align-items: center;
 }
 
 .military-theme .pause-title {
-  background-color: #1a2a1a;
-  border-bottom: 2px solid #2f7c2f;
+  background-color: transparent; /* Remove background */
   padding: 15px 20px;
   margin: 0;
   width: 100%;
@@ -488,10 +489,10 @@
   letter-spacing: 2px;
   font-size: 1.1rem;
   font-weight: bold;
-  margin: 40px;
   text-transform: uppercase;
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  margin: 0; /* Remove margin since we're using space-evenly */
 }
 
 .military-theme .resume-button:hover {
