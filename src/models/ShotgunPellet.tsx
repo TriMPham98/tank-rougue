@@ -1,6 +1,6 @@
 // src/components/ShotgunPellet.tsx
 import { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, RootState } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
 import { useGameState } from "../utils/gameState";
@@ -39,7 +39,7 @@ const ShotgunPellet = ({
   const enemies = useGameState((state) => state.enemies);
   const playerTankPosition = useGameState((state) => state.playerTankPosition);
 
-  useFrame((state: RootState, delta: number) => {
+  useFrame((_state: RootState, delta: number) => {
     const currentPellet = pelletRef.current;
     if (!currentPellet || hasCollidedRef.current || isPaused || isGameOver) {
       return;
