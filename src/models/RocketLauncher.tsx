@@ -2,16 +2,15 @@
 import { useRef, useEffect } from "react";
 import { Box, Cylinder } from "@react-three/drei";
 import { Group } from "three";
-import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path
+import { useGameState, SecondaryWeapon } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import RocketProjectile from "./RocketProjectile";
 import { useWeaponTracking } from "../utils/weaponTracking";
 
-// --- UPDATED PROPS INTERFACE ---
 interface RocketLauncherProps {
   weaponInstance: SecondaryWeapon;
-  position: [number, number, number]; // Receive absolute position
-  rotation: number; // Receive base rotation
+  position: [number, number, number];
+  rotation: number;
 }
 
 const RocketLauncher = ({
@@ -28,12 +27,6 @@ const RocketLauncher = ({
       targetId: string | null;
     }[]
   >([]);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const isFiringRef = useRef(false);
-  const lastFireTimeRef = useRef(0);
-
-  const isPaused = useGameState((state) => state.isPaused);
-  const isGameOver = useGameState((state) => state.isGameOver);
 
   // Use the shared weapon tracking logic
   const { instanceId } = useWeaponTracking({
@@ -43,7 +36,7 @@ const RocketLauncher = ({
     weaponRef: launcherRef as React.RefObject<Group>,
     barrelLength: 1.5,
     fireOffsetY: 0.1,
-    onFire: (firePosition, targetId, damage) => {
+    onFire: (firePosition, targetId) => {
       const projectileId = Math.random().toString(36).substr(2, 9);
       projectilesRef.current.push({
         id: projectileId,
@@ -58,7 +51,6 @@ const RocketLauncher = ({
     projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
   };
 
-  // --- Lifecycle Logging ---
   useEffect(() => {
     debug.log(`Rocket launcher instance ${instanceId} mounted.`);
     return () => {
@@ -68,9 +60,7 @@ const RocketLauncher = ({
 
   return (
     <>
-      {/* Rocket launcher model - position/rotation handled by ref updates */}
       <group ref={launcherRef}>
-        {/* Model parts remain the same */}
         <Box args={[0.2, 0.25, 1.3]} position={[0, 0, 0.5]} castShadow>
           <meshStandardMaterial color="#303030" />
         </Box>
@@ -114,7 +104,6 @@ const RocketLauncher = ({
         </Box>
       </group>
 
-      {/* Render active projectiles */}
       {projectilesRef.current.map((projectile) => (
         <RocketProjectile
           key={projectile.id}
