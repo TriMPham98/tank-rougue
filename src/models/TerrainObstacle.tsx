@@ -1,18 +1,13 @@
 import { useRef } from "react";
-import { Mesh, Group } from "three";
-import { Cylinder, Cone, Box } from "@react-three/drei";
+import { Group } from "three";
+import { Box } from "@react-three/drei";
 
 interface TerrainObstacleProps {
   position: [number, number, number];
-  type: "rock";
   size?: number;
 }
 
-const TerrainObstacle = ({
-  position,
-  type,
-  size = 1,
-}: TerrainObstacleProps) => {
+const TerrainObstacle = ({ position, size = 1 }: TerrainObstacleProps) => {
   const obstacleRef = useRef<Group>(null);
 
   return (
