@@ -2,7 +2,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Box } from "@react-three/drei";
 import { Group } from "three";
-import * as THREE from "three";
 import { debug } from "../utils/debug";
 import LaserBeam from "./LaserBeam";
 import { useWeaponTracking } from "../utils/weaponTracking";
