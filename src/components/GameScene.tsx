@@ -31,7 +31,6 @@ const useLightIntensity = () => {
 
   // Calculate ambient light color (gradually shifts to blue-ish night tint)
   const nightFactor = Math.min(1, level / 40);
-  // RGB values transitioning from white (1,1,1) to night blue (0.1,0.3,0.7)
   const ambientR = 1 - nightFactor * 0.9; // 1.0 -> 0.1
   const ambientG = 1 - nightFactor * 0.7; // 1.0 -> 0.3
   const ambientB = 1 - nightFactor * 0.3; // 1.0 -> 0.7
@@ -40,7 +39,6 @@ const useLightIntensity = () => {
   const directionalIntensity = Math.max(0.3, 1.5 - (level / 40) * 1.2);
 
   // Calculate spotlight intensity (starts at 1.0, increases to 1.8 by level 40)
-  // Spotlight becomes more important as ambient light decreases
   const spotlightIntensity = Math.min(1.8, 1.0 + (level / 40) * 0.8);
 
   // Calculate spotlight angle (starts at 0.4, increases to 0.7 by level 40)
@@ -53,7 +51,6 @@ const useLightIntensity = () => {
   const spotlightDistance = Math.min(30, 15 + (level / 40) * 15);
 
   // Calculate background sky color (blue to dark blue/black)
-  // Start with light blue "#87CEEB" and transition to dark blue "#000033"
   const skyFactor = Math.max(0, 1 - level / 40);
   const r = Math.floor(135 * skyFactor); // 87 in hex
   const g = Math.floor(206 * skyFactor); // CE in hex
@@ -68,8 +65,6 @@ const useLightIntensity = () => {
   const fogFar = Math.max(50, 100 - (level / 40) * 50);
 
   // Calculate sky turbidity and rayleigh values for Sky component
-  // As level increases, the sky becomes more hazy (higher turbidity)
-  // and has more blue scatter (lower rayleigh)
   const turbidity = Math.min(20, 10 + (level / 40) * 10); // 10-20, higher is hazier
   const rayleigh = Math.max(0.2, 1 - (level / 40) * 0.8); // 1-0.2, lower makes sky darker blue
 
@@ -142,7 +137,6 @@ class ErrorBoundary extends Component<
 
 // Component to handle the respawning of enemies
 const EnemyRespawnManager = () => {
-  // Use the respawn manager hook
   useRespawnManager();
   return null;
 };
@@ -150,37 +144,25 @@ const EnemyRespawnManager = () => {
 // Component to follow the player's tank with the camera
 const FollowCamera = memo(() => {
   const { camera } = useThree();
-
-  // Get a direct reference to the store's getState function
   const getState = useRef(useGameState.getState).current;
-
-  // Create refs to store values without causing re-renders
   const offsetRef = useRef(new Vector3(0, 8, -12));
   const targetPositionRef = useRef(new Vector3());
 
   useFrame(() => {
-    // Access state directly from the store
     const playerPosition = getState().playerTankPosition;
     const cameraRange = getState().playerCameraRange;
 
     if (playerPosition) {
-      // Update offset based on camera rotation and camera range
       const distanceBehind = -cameraRange;
       offsetRef.current.x = -Math.sin(camera.rotation.y) * distanceBehind;
-      offsetRef.current.y = 8 + (cameraRange - 12) * 0.3; // Adjust height slightly based on range
+      offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
       offsetRef.current.z = -Math.cos(camera.rotation.y) * distanceBehind;
-
-      // Calculate target position
       targetPositionRef.current.set(
         playerPosition[0] + offsetRef.current.x,
         playerPosition[1] + offsetRef.current.y,
         playerPosition[2] + offsetRef.current.z
       );
-
-      // Smoothly interpolate camera position
       camera.position.lerp(targetPositionRef.current, 0.05);
-
-      // Make camera look at the player
       camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
     }
   });
@@ -190,7 +172,6 @@ const FollowCamera = memo(() => {
 
 // Separate component to handle spotlight updates inside the Canvas
 const SpotlightUpdater = () => {
-  // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
   const spotLightRef = useRef<ThreeSpotLight>(null);
   const {
@@ -200,7 +181,6 @@ const SpotlightUpdater = () => {
     spotlightDistance,
   } = useLightIntensity();
 
-  // Update spotlight position on every frame
   useFrame(() => {
     const playerTankPosition = getState().playerTankPosition;
 
@@ -210,8 +190,6 @@ const SpotlightUpdater = () => {
         playerTankPosition[1] + 10,
         playerTankPosition[2]
       );
-
-      // Update spotlight intensity based on level
       spotLightRef.current.intensity = spotlightIntensity;
       spotLightRef.current.angle = spotlightAngle;
       spotLightRef.current.penumbra = spotlightPenumbra;
@@ -222,7 +200,7 @@ const SpotlightUpdater = () => {
   return (
     <spotLight
       ref={spotLightRef}
-      position={[0, 10, 0]} // Default position, will be updated in useFrame
+      position={[0, 10, 0]}
       angle={spotlightAngle}
       penumbra={spotlightPenumbra}
       intensity={spotlightIntensity}
@@ -239,7 +217,6 @@ interface SceneContentProps {
 }
 
 const SceneContent = memo(({ playerTank }: SceneContentProps) => {
-  // Get direct access to the store state
   const getState = useRef(useGameState.getState).current;
   const {
     ambientIntensity,
@@ -251,14 +228,11 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
     rayleigh,
     sunAzimuth,
   } = useLightIntensity();
-
-  // Use state to trigger re-renders when enemies or terrain obstacles change
   const [enemies, setEnemies] = useState(getState().enemies);
   const [terrainObstacles, setTerrainObstacles] = useState(
     getState().terrainObstacles
   );
 
-  // Subscribe to changes in the enemy list and terrain obstacles
   useEffect(() => {
     const unsubscribe = useGameState.subscribe((state) => {
       if (state.enemies !== enemies) {
@@ -274,16 +248,11 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 
   return (
     <Suspense fallback={null}>
-      {/* Enemy respawn manager */}
       <EnemyRespawnManager />
-
-      {/* Ambient light for overall scene brightness */}
       <ambientLight
         intensity={ambientIntensity}
         color={[ambientR, ambientG, ambientB]}
       />
-
-      {/* Main directional light (sun) */}
       <directionalLight
         position={[10, 20, 10]}
         intensity={directionalIntensity}
@@ -296,43 +265,25 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
-
-      {/* Player spotlight with its own updater component */}
       <SpotlightUpdater />
-
-      {/* Safe Zone (PUBG-like circle) */}
       <SafeZone />
-
-      {/* Player tank - use the memoized instance */}
       {playerTank}
-
-      {/* Enemy tanks - Using component instances ensures they handle their own updates */}
       {enemies.map((enemy) => (
         <EnemyTank key={`enemy-${enemy.id}`} enemy={enemy} />
       ))}
-
-      {/* Power-ups */}
       {getState().powerUps.map((powerUp) => (
         <PowerUpItem key={`powerup-${powerUp.id}`} powerUp={powerUp} />
       ))}
-
-      {/* Terrain obstacles */}
       {terrainObstacles.map((obstacle) => (
         <TerrainObstacle
           key={`obstacle-${obstacle.id}`}
           position={obstacle.position}
-          type={obstacle.type}
           size={obstacle.size}
         />
       ))}
-
       <Ground />
       <Sky turbidity={turbidity} rayleigh={rayleigh} azimuth={sunAzimuth} />
-
-      {/* Camera that follows player */}
       <FollowCamera />
-
-      {/* Dev controls - disabled to prevent keyboard input interference */}
       <OrbitControls enabled={false} />
     </Suspense>
   );
@@ -347,11 +298,8 @@ const TerrainObstacleGenerator = () => {
   useEffect(() => {
     debug.log("TerrainObstacleGenerator: Starting obstacle generation");
     try {
-      // Generate some random terrain obstacles
-      const obstacleCount = 20; // Keep at 20 for good coverage
-      const spawnClearanceRadius = 15; // Increased from 10 to 15 for bigger clear area around spawn
-
-      // Track attempts to prevent infinite loops
+      const obstacleCount = 20;
+      const spawnClearanceRadius = 15;
       let totalAttempts = 0;
       const maxAttempts = 500;
       let successfulPlacements = 0;
@@ -361,15 +309,10 @@ const TerrainObstacleGenerator = () => {
         totalAttempts < maxAttempts
       ) {
         totalAttempts++;
-
-        // Generate random positions with wider spread
         let x = (Math.random() - 0.5) * 75;
         let z = (Math.random() - 0.5) * 75;
-
-        // Ensure obstacles are not too close to spawn point (0, 0)
         const distanceFromSpawn = Math.sqrt(x * x + z * z);
         if (distanceFromSpawn < spawnClearanceRadius) {
-          // If too close to spawn, move it outside the clearance radius
           const angle = Math.atan2(z, x);
           x = Math.cos(angle) * spawnClearanceRadius;
           z = Math.sin(angle) * spawnClearanceRadius;
@@ -378,24 +321,15 @@ const TerrainObstacleGenerator = () => {
             z,
           });
         }
-
-        // Always generate rocks
-        const obstacleType: "rock" = "rock";
-
-        // Size range for rocks - more controlled size range
-        const size = 1 + Math.random() * 1.2; // Slightly smaller max size
-
-        // Check if this position is too close to existing obstacles
+        const size = 1 + Math.random() * 1.2;
         const existingObstacles = useGameState.getState().terrainObstacles;
         let isTooClose = false;
-        const minObstacleSpacing = 8; // Increased from 3 to 8 for better spacing
+        const minObstacleSpacing = 8;
 
         for (const existing of existingObstacles) {
           const dx = existing.position[0] - x;
           const dz = existing.position[2] - z;
           const distance = Math.sqrt(dx * dx + dz * dz);
-
-          // Use a larger multiplier for better spacing
           const requiredSpace =
             (existing.size + size) * 1.2 + minObstacleSpacing;
 
@@ -407,8 +341,8 @@ const TerrainObstacleGenerator = () => {
 
         if (!isTooClose) {
           const obstacle = {
+            id: `rock-${successfulPlacements}-${Date.now()}`,
             position: [x, 0, z] as [number, number, number],
-            type: obstacleType,
             size,
           };
           debug.log(
@@ -417,16 +351,18 @@ const TerrainObstacleGenerator = () => {
             }/${obstacleCount}`,
             obstacle
           );
-          addTerrainObstacle(obstacle);
+          addTerrainObstacle({
+            position: obstacle.position,
+            type: "rock",
+            size: obstacle.size,
+          });
           successfulPlacements++;
         }
       }
 
-      // Log how many obstacles were actually placed
       debug.log(
         `TerrainObstacleGenerator: Placed ${successfulPlacements} obstacles after ${totalAttempts} attempts`
       );
-
       setIsTerrainReady(true);
       debug.log(
         "TerrainObstacleGenerator: All obstacles generated successfully"
@@ -455,27 +391,18 @@ const TerrainObstacleGenerator = () => {
 
 // Main game scene component
 const GameScene = () => {
-  // Canvas reference for handling focus
   const canvasRef = useRef<HTMLDivElement>(null);
   const { skyColor, fogNear, fogFar } = useLightIntensity();
 
-  // Effect for focusing the canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      // Set tabIndex to make canvas focusable
       canvas.tabIndex = 0;
-
-      // Add direct keyboard event listener for debugging
       const handleKeyDown = (e: KeyboardEvent) => {
         debug.log("Canvas keydown event:", e.key);
       };
-
       canvas.addEventListener("keydown", handleKeyDown);
-
-      // Focus canvas initially
       canvas.focus();
-
       return () => {
         canvas.removeEventListener("keydown", handleKeyDown);
       };
