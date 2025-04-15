@@ -2,7 +2,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Box } from "@react-three/drei";
 import { Group } from "three";
-import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path
+import * as THREE from "three";
 import { debug } from "../utils/debug";
 import LaserBeam from "./LaserBeam";
 import { useWeaponTracking } from "../utils/weaponTracking";
@@ -10,8 +10,19 @@ import { useWeaponTracking } from "../utils/weaponTracking";
 // --- UPDATED PROPS INTERFACE ---
 interface LaserWeaponProps {
   weaponInstance: SecondaryWeapon;
-  position: [number, number, number]; // Receive absolute position
-  rotation: number; // Receive base rotation
+  position: [number, number, number];
+  rotation: number;
+}
+
+interface SecondaryWeapon {
+  id: string;
+  name: string;
+  description: string;
+  range: number;
+  damage: number;
+  cooldown: number;
+  projectileSpeed: number;
+  instanceId?: string;
 }
 
 const LaserWeapon = ({
@@ -22,21 +33,13 @@ const LaserWeapon = ({
   const laserRef = useRef<Group>(null);
   const [isBeamActive, setIsBeamActive] = useState(false);
   const firingDurationRef = useRef(0);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const isFiringRef = useRef(false);
-  const lastFireTimeRef = useRef(0);
-  const firingStartTimeRef = useRef(0);
-  const beamRef = useRef<THREE.Mesh>(null);
-  const beamTargetRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
   const {
-    cooldown,
     range: weaponRange,
     damage: laserDamage,
     instanceId = "default_laser",
   } = weaponInstance;
 
-  const MAX_FIRING_DURATION = 2.5;
   const DAMAGE_TICK_RATE = 0.1;
 
   // Use the shared weapon tracking logic
@@ -46,7 +49,7 @@ const LaserWeapon = ({
     rotation,
     weaponRef: laserRef as React.RefObject<Group>,
     barrelLength: 1.5,
-    onFire: (firePosition, targetId, damage) => {
+    onFire: (_firePosition, targetId) => {
       setIsBeamActive(true);
       firingDurationRef.current = 0;
       debug.log(`Laser ${instanceId} started firing at enemy ${targetId}`);
@@ -55,15 +58,15 @@ const LaserWeapon = ({
 
   // --- Calculate Beam Start Position ---
   const beamStartPosition = (): [number, number, number] => {
-    if (!laserRef.current) return [0, 0, 0]; // Default fallback
+    if (!laserRef.current) return [0, 0, 0];
 
     const weaponPos = laserRef.current.position;
     const weaponRot = laserRef.current.rotation.y;
-    const emitterOffset = 1.5; // Distance from weapon center to emitter tip
+    const emitterOffset = 1.5;
 
     return [
       weaponPos.x + Math.sin(weaponRot) * emitterOffset,
-      weaponPos.y, // Assuming beam comes from weapon's Y level
+      weaponPos.y,
       weaponPos.z + Math.cos(weaponRot) * emitterOffset,
     ];
   };
@@ -78,9 +81,8 @@ const LaserWeapon = ({
 
   return (
     <>
-      {/* Laser weapon model - position/rotation handled by ref updates */}
+      {/* Laser weapon model */}
       <group ref={laserRef}>
-        {/* Model parts remain the same */}
         <Box args={[0.1, 0.1, 1.2]} position={[0, 0, 0.6]} castShadow>
           <meshStandardMaterial
             color="#444444"
@@ -145,13 +147,11 @@ const LaserWeapon = ({
       {/* Render laser beam when active */}
       {isBeamActive && targetEnemyRef.current && (
         <LaserBeam
-          // Calculate start position dynamically based on current weapon state
           startPosition={beamStartPosition()}
           targetId={targetEnemyRef.current}
-          damage={laserDamage * DAMAGE_TICK_RATE} // Pass damage per tick
+          damage={laserDamage * DAMAGE_TICK_RATE}
           range={weaponRange}
           color="#00FFFF"
-          // Consider adding an onEnd callback if LaserBeam needs to notify when it naturally finishes
         />
       )}
     </>
