@@ -32,9 +32,7 @@ function App() {
 
       // Generate initial enemies and power-ups based on level 1
       try {
-        const playerPosition: [number, number, number] = [0, 0.5, 0];
-        generateLevel(1, playerPosition);
-
+        generateLevel();
         initialized.current = true;
       } catch (error) {
         debug.error("Error initializing game:", error);
@@ -64,8 +62,7 @@ function App() {
 
         // Generate new level enemies
         try {
-          const playerPosition = useGameState.getState().playerTankPosition;
-          generateLevel(level + 1, playerPosition);
+          generateLevel();
         } catch (error) {
           debug.error("Error generating level:", error);
         }
