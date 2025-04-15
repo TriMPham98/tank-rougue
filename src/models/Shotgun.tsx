@@ -2,10 +2,10 @@
 import React, { useRef, useEffect, FC } from "react";
 import { Box } from "@react-three/drei";
 import { Group } from "three";
-import { useGameState, SecondaryWeapon } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import ShotgunPellet from "./ShotgunPellet";
 import { useWeaponTracking } from "../utils/weaponTracking";
+import { SecondaryWeapon } from "../utils/gameState";
 
 interface ShotgunProps {
   weaponInstance: SecondaryWeapon;
@@ -26,12 +26,8 @@ interface PelletData {
 const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   const shotgunRef = useRef<Group>(null);
   const projectilesRef = useRef<PelletData[]>([]);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const isFiringRef = useRef(false);
-  const lastFireTimeRef = useRef(0);
 
   const {
-    cooldown,
     range: weaponRange,
     projectileSpeed,
     damage: damagePerShot,
@@ -39,7 +35,7 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   } = weaponInstance;
 
   const PELLET_COUNT: number = 5;
-  const SPREAD_ANGLE: number = 0.25; // 0.5 is the spread angle for the shotgun
+  const SPREAD_ANGLE: number = 0.25;
   const damagePerPellet: number = damagePerShot / PELLET_COUNT;
   const projectileTTL: number = weaponRange / projectileSpeed;
 
@@ -49,9 +45,8 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
     rotation,
     weaponRef: shotgunRef as React.RefObject<Group>,
     barrelLength: 1.2,
-    onFire: (firePosition, targetId, damage) => {
+    onFire: (firePosition) => {
       debug.log(`Firing from position: ${firePosition}`);
-      // Get the current weapon rotation from the ref
       const currentRotation = shotgunRef.current?.rotation.y ?? rotation;
 
       for (let i = 0; i < PELLET_COUNT; i++) {
