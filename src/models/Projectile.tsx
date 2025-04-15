@@ -36,7 +36,7 @@ const Projectile = ({
   const getState = useRef(useGameState.getState).current;
 
   // Projectile movement and collision detection
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
       !projectileRef.current ||
       hasCollidedRef.current ||

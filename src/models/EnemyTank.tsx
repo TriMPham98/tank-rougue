@@ -36,7 +36,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   const isBomber = enemy.type === "bomber";
   const isTank = enemy.type === "tank";
-  const isTurret = enemy.type === "turret";
   const tankRadius = isBomber ? 1.2 : 1.25;
   const moveSpeed = enemy.speed || (isBomber ? 2.5 : 1.5);
 
