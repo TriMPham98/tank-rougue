@@ -1,5 +1,5 @@
 // Sound management utility for the game
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 
 // Class to handle sound effects
 class SoundManager {

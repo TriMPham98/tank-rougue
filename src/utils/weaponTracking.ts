@@ -184,7 +184,7 @@ export const useWeaponTracking = ({
   };
 
   // Main tracking and firing logic
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const currentWeapon = weaponRef.current;
     if (!currentWeapon || isPaused || isGameOver) return;
 
