@@ -249,7 +249,6 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
     directionalIntensity,
     turbidity,
     rayleigh,
-    sunElevation,
     sunAzimuth,
   } = useLightIntensity();
 
