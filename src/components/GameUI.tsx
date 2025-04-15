@@ -512,8 +512,6 @@ const GameUI = () => {
     const isZoneShiftRank = rank % 5 === 0 && rank > 0;
     const nextZoneShiftRankCalc = (zoneTier + 1) * 5;
     const ranksUntilNextShift = nextZoneShiftRankCalc - rank;
-    const zoneProgress =
-      zoneTier === 0 ? 0 : ((5 - ranksUntilNextShift) / 5) * 100; // Progress towards next *shift* rank
 
     const calculateZoneShrinkProgress = () => {
       // If the zone isn't shrinking in this phase, progress is 100%
