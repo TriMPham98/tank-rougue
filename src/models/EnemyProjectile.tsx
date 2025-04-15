@@ -55,7 +55,7 @@ const EnemyProjectile = ({
   const PLAYER_COLLISION_RADIUS = 1.8;
 
   // Projectile movement and collision detection
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
       !projectileRef.current ||
       hasCollidedRef.current ||
