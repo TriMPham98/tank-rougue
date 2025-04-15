@@ -82,8 +82,6 @@ export const generateRandomPosition = (
     }
 
     if (isFarEnough) {
-      // Removed debug log for cleaner output unless needed
-      // debug.log("Found clear spawn position:", { x, y, z });
       return [x, y, z];
     }
     attempts_count++;
@@ -154,7 +152,6 @@ export const generateEnemies = (
   const safeZoneActive = gameState.safeZoneActive;
 
   if (level === 1) {
-    // ... (level 1 logic remains the same, assuming no turrets in level 1)
     const enemyCount = 1;
     const gridSize = Math.min(40 + level * 2, 70);
 
@@ -170,7 +167,6 @@ export const generateEnemies = (
   const baseEnemyCount = 1;
   const maxEnemies = level >= 40 ? 20 : 15;
 
-  // Calculate enemy count with the same logic as getMaxEnemies
   let enemyCount;
   if (level <= 10) {
     enemyCount = Math.min(
@@ -227,7 +223,7 @@ export const generateEnemies = (
       const turretBaseHealth = 50;
       const linearScale = level * 9;
       health = turretBaseHealth + linearScale;
-      turretCount++; // Increment *after* deciding it's a turret
+      turretCount++;
     } else {
       type = "tank";
       const tankBaseHealth = 75;
@@ -259,15 +255,13 @@ export const generateEnemies = (
             debug.warn(
               `${type} spawn failed after ${attempts} attempts to find position in safe zone. Placing near center.`
             );
-            // Fallback: Place near the center of the safe zone, slightly offset
             const angle = Math.random() * Math.PI * 2;
-            const radiusOffset = Math.min(safeZoneRadius * 0.8, 5); // Place within 80% of radius or 5 units
+            const radiusOffset = Math.min(safeZoneRadius * 0.8, 5);
             position = [
               safeZoneCenter[0] + Math.cos(angle) * radiusOffset,
               0.5,
               safeZoneCenter[1] + Math.sin(angle) * radiusOffset,
             ];
-            // Ensure this fallback position is clear (basic check)
             if (
               !isPositionClear(
                 position[0],
@@ -276,17 +270,15 @@ export const generateEnemies = (
                 3
               )
             ) {
-              position = [safeZoneCenter[0], 0.5, safeZoneCenter[1]]; // Absolute fallback
+              position = [safeZoneCenter[0], 0.5, safeZoneCenter[1]];
               debug.warn(
                 `Fallback ${type} position near center also obstructed. Placing AT center.`
               );
             }
-            positionFound = true; // Use the fallback position
+            positionFound = true;
           }
-          // No need to push position to existingPositions here, happens after loop
         }
       } else {
-        // Not a turret/tank or safe zone inactive, position is fine
         positionFound = true;
       }
     }
@@ -306,29 +298,19 @@ export const generateEnemies = (
 };
 
 // Generate power-ups for the current level
-export const generatePowerUps = (
-  level: number,
-  playerPosition: [number, number, number],
-  enemyPositions: [number, number, number][]
-): Omit<PowerUp, "id">[] => {
+export const generatePowerUps = (): Omit<PowerUp, "id">[] => {
   // No longer spawn random power-ups at level generation
   // Power-ups will only drop from defeated enemies with a 5% chance
   return [];
 };
 
 // Generate a complete level
-export const generateLevel = (
-  level: number,
-  playerPosition: [number, number, number]
-) => {
+export const generateLevel = () => {
   const { spawnEnemy } = useGameState.getState();
-  const enemies = generateEnemies(level, playerPosition);
-  const enemyPositions = enemies.map((e) => e.position);
-  // Skip generating random power-ups
+  const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
   const powerUps: Omit<PowerUp, "id">[] = [];
 
   enemies.forEach((enemy) => spawnEnemy(enemy));
-  // No random power-ups to spawn
 
   return { enemies, powerUps };
 };
