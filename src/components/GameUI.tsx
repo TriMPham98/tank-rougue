@@ -482,41 +482,7 @@ const GameUI = () => {
     const zoneTargetRadiusPixels = combatZoneTargetRadius * scale;
 
     const zoneTier = Math.floor(rank / 5);
-    const isZoneShiftRank = rank % 5 === 0 && rank > 0;
     const isPreShiftRank = rank % 5 === 4 && rank >= 4;
-
-    const calculateZoneShrinkProgress = () => {
-      if (combatZoneTargetRadius >= combatZoneRadius) return 100;
-      if (isZoneShiftRank) return 100;
-
-      const maxRadius = 50;
-      const minRadius = 5;
-      const radiusDecrease = 4;
-
-      const initialRadiusForThisPhase = Math.max(
-        minRadius,
-        maxRadius - zoneTier * radiusDecrease
-      );
-
-      const currentTargetRadius = combatZoneTargetRadius;
-
-      const effectiveInitialRadius = Math.max(
-        initialRadiusForThisPhase,
-        currentTargetRadius
-      );
-
-      const totalShrinkThisPhase = effectiveInitialRadius - currentTargetRadius;
-      if (totalShrinkThisPhase <= 0.1) return 100;
-
-      const shrunkAmount = effectiveInitialRadius - combatZoneRadius;
-
-      return Math.min(
-        100,
-        Math.max(0, (shrunkAmount / totalShrinkThisPhase) * 100)
-      );
-    };
-
-    const zoneShrinkProgress = calculateZoneShrinkProgress();
 
     const nextZoneRadius = Math.max(5, 50 - (zoneTier + 1) * 4);
     const nextZoneRadiusPixels = nextZoneRadius * scale;
