@@ -40,7 +40,7 @@ const SniperProjectile = ({
   const getState = useRef(useGameState.getState).current;
 
   // Projectile movement with homing capability
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
       !projectileRef.current ||
       hasCollidedRef.current ||

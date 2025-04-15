@@ -2,7 +2,7 @@
 import { useRef, useEffect } from "react";
 import { Box } from "@react-three/drei";
 import { Group } from "three";
-import { useGameState, SecondaryWeapon } from "../utils/gameState"; // Adjust path
+import { SecondaryWeapon } from "../utils/gameState"; // Adjust path
 import { debug } from "../utils/debug";
 import SniperProjectile from "./SniperProjectile";
 import { useWeaponTracking } from "../utils/weaponTracking";
@@ -30,8 +30,6 @@ const SniperRifle = ({
       damage: number;
     }[]
   >([]);
-
-  const isGameOver = useGameState((state) => state.isGameOver);
 
   // Use the shared weapon tracking logic
   const { instanceId } = useWeaponTracking({

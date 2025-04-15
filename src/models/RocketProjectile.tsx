@@ -170,7 +170,7 @@ const RocketProjectile = ({
     debug.log(`Rocket ${id} explosion hit ${hitCount} enemies`);
   };
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     // If exploding, the ExplosionEffect component handles its own logic/removal
     if (isExploding || !projectileGroupRef.current || isPaused || isGameOver) {
       return;
