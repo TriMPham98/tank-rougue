@@ -120,12 +120,6 @@ const SafeZone = () => {
           useGameState.setState({ safeZoneRadius: newRadius });
           lastRadiusUpdateTime.current = state.clock.elapsedTime;
         }
-        const totalShrinkAmount =
-          initialRadiusRef.current - targetRadiusRef.current;
-        const shrunkAmount =
-          initialRadiusRef.current - currentRadiusRef.current;
-        const progressPercentage = (shrunkAmount / totalShrinkAmount) * 100;
-        setZoneProgress(Math.min(100, Math.max(0, progressPercentage)));
       }
 
       if (
@@ -133,7 +127,6 @@ const SafeZone = () => {
         0.1
       ) {
         isShrinkingRef.current = false;
-        setZoneProgress(100);
       }
     } else {
       isShrinkingRef.current = false;
