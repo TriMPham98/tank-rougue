@@ -1,6 +1,7 @@
 import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { Mesh } from "three";
-import { useTexture, Grid } from "@react-three/drei";
+import { Grid } from "@react-three/drei";
 
 const Ground = () => {
   const groundRef = useRef<Mesh>(null);

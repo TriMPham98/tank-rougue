@@ -26,9 +26,9 @@ interface PelletData {
 const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   const shotgunRef = useRef<Group>(null);
   const projectilesRef = useRef<PelletData[]>([]);
-
-  const isPaused = useGameState((state) => state.isPaused);
-  const isGameOver = useGameState((state) => state.isGameOver);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const isFiringRef = useRef(false);
+  const lastFireTimeRef = useRef(0);
 
   const {
     cooldown,

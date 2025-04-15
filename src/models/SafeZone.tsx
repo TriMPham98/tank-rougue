@@ -18,7 +18,6 @@ const SafeZone = () => {
     isPreZoneChangeLevel,
   } = useGameState();
 
-  const [zoneProgress, setZoneProgress] = useState(0);
   const [previewOpacity, setPreviewOpacity] = useState(0);
 
   const cylinderRef = useRef<THREE.Mesh>(null);

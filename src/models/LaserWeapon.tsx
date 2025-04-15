@@ -22,9 +22,12 @@ const LaserWeapon = ({
   const laserRef = useRef<Group>(null);
   const [isBeamActive, setIsBeamActive] = useState(false);
   const firingDurationRef = useRef(0);
-
-  const isPaused = useGameState((state) => state.isPaused);
-  const isGameOver = useGameState((state) => state.isGameOver);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const isFiringRef = useRef(false);
+  const lastFireTimeRef = useRef(0);
+  const firingStartTimeRef = useRef(0);
+  const beamRef = useRef<THREE.Mesh>(null);
+  const beamTargetRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
   const {
     cooldown,

@@ -1,5 +1,5 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { Sky, OrbitControls, Environment, Stats } from "@react-three/drei";
+import { Sky, OrbitControls, Stats } from "@react-three/drei";
 import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
 import PowerUpItem from "../models/PowerUpItem";
@@ -335,8 +335,6 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 
       {/* Dev controls - disabled to prevent keyboard input interference */}
       <OrbitControls enabled={false} />
-
-      {/* <Environment preset="sunset" /> */}
     </Suspense>
   );
 });

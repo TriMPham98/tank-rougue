@@ -508,22 +508,6 @@ const GameUI = () => {
     const zoneRadiusPixels = combatZoneRadius * scale;
     const zoneTargetRadiusPixels = combatZoneTargetRadius * scale;
 
-    const formatTimeRemaining = () => {
-      if (combatZoneTimeRemaining === null || combatZoneTimeRemaining <= 0)
-        return "STABLE";
-      const totalSeconds = Math.floor(combatZoneTimeRemaining);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-    };
-
-    const getTimerColor = () => {
-      if (combatZoneTimeRemaining === null || combatZoneTimeRemaining <= 0)
-        return "var(--color-zone-stable)";
-      if (combatZoneTimeRemaining > 30) return "var(--color-zone-closing)";
-      return "var(--color-zone-urgent)"; // Urgent red
-    };
-
     const zoneTier = Math.floor(rank / 5);
     const isZoneShiftRank = rank % 5 === 0 && rank > 0;
     const nextZoneShiftRankCalc = (zoneTier + 1) * 5;

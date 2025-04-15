@@ -28,6 +28,9 @@ const RocketLauncher = ({
       targetId: string | null;
     }[]
   >([]);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const isFiringRef = useRef(false);
+  const lastFireTimeRef = useRef(0);
 
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);

@@ -1,8 +1,7 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Cylinder } from "@react-three/drei";
-// Import Mesh
-import { Vector3, Object3D, MathUtils, Mesh } from "three";
+import { Vector3 } from "three";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 

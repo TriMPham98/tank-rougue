@@ -31,7 +31,6 @@ const SniperRifle = ({
     }[]
   >([]);
 
-  const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
 
   // Use the shared weapon tracking logic

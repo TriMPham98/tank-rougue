@@ -1,6 +1,6 @@
 // src/components/ShotgunPellet.tsx
-import React, { useRef, FC } from "react";
-import { useFrame, RootState } from "@react-three/fiber";
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
 import { useGameState } from "../utils/gameState";
@@ -17,7 +17,7 @@ interface ShotgunPelletProps {
   onRemove: (id: string) => void;
 }
 
-const ShotgunPellet: FC<ShotgunPelletProps> = ({
+const ShotgunPellet = ({
   id,
   position,
   rotation,
@@ -26,7 +26,7 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
   range,
   ttl,
   onRemove,
-}) => {
+}: ShotgunPelletProps) => {
   const pelletRef = useRef<Mesh>(null);
   const hasCollidedRef = useRef<boolean>(false);
   const initialPositionRef = useRef<Vector3>(new Vector3(...position));
@@ -37,8 +37,6 @@ const ShotgunPellet: FC<ShotgunPelletProps> = ({
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
   const enemies = useGameState((state) => state.enemies);
-  const safeZoneRadius = useGameState((state) => state.safeZoneRadius);
-  const safeZoneCenter = useGameState((state) => state.safeZoneCenter);
   const playerTankPosition = useGameState((state) => state.playerTankPosition);
 
   useFrame((state: RootState, delta: number) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import "./App.css";
 import GameScene from "./components/GameScene";
 import GameUI from "./components/GameUI";
