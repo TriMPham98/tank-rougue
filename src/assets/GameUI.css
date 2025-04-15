@@ -593,18 +593,18 @@
 }
 
 .military-theme .containment-warning {
-  top: 10%;
+  top: 20%;
   background-color: rgba(255, 165, 0, var(--opacity, 0.8));
   box-shadow: 0 0 15px rgba(255, 165, 0, 0.5);
 }
 
 .military-theme .outside-zone-warning {
-  top: 10%;
+  top: 20%;
   background-color: rgba(217, 83, 79, var(--opacity, 0.8)); /* Red */
   box-shadow: 0 0 15px rgba(217, 83, 79, 0.5);
 }
 .military-theme .shrinking-zone-warning {
-  top: calc(10% + 50px);
+  top: calc(20% + 50px);
   background-color: rgba(240, 173, 78, var(--opacity, 0.8)); /* Orange */
   box-shadow: 0 0 15px rgba(240, 173, 78, 0.5);
 }
@@ -612,11 +612,11 @@
 .military-theme .outside-zone-warning:only-of-type,
 .military-theme .containment-warning:only-of-type,
 .military-theme .shrinking-zone-warning:only-of-type {
-  top: 10%;
+  top: 20%;
 }
 .military-theme .outside-zone-warning ~ .shrinking-zone-warning,
 .military-theme .containment-warning ~ .shrinking-zone-warning {
-  top: calc(10% + 50px); /* Ensure space when multiple warnings show */
+  top: calc(20% + 50px); /* Ensure space when multiple warnings show */
 }
 
 /* --- Tactical Display / Minimap --- */
