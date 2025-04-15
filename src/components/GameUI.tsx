@@ -1,9 +1,9 @@
 import { useGameState } from "../utils/gameState";
-import "../assets/GameUI.css"; // We will update this CSS file
+import "../assets/GameUI.css";
 import { UpgradeableStat } from "../utils/gameState";
 import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
-import "./WeaponSelection.css"; // Ensure this is also themed if needed
+import "./WeaponSelection.css";
 
 // Define BASE_TARGETS constant for enemy count calculation
 const BASE_TARGETS = 1;
@@ -24,7 +24,7 @@ const GameUI = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isOutsideCombatZone, setIsOutsideCombatZone] = useState(false);
   const warningOpacityRef = useRef(0);
-  const warningAnimationRef = useRef<number>(0); // Ensure correct type
+  const warningAnimationRef = useRef<number>(0);
   const [isCombatZoneWarningVisible, setIsCombatZoneWarningVisible] =
     useState(false);
   const combatZoneShrinkWarningRef = useRef(0);
@@ -37,17 +37,17 @@ const GameUI = () => {
   const {
     playerHealth,
     playerMaxHealth,
-    score, // Keep as score internally, display as "Kills" or "Combat Score"
-    level: rank, // Rename level to rank conceptually
-    enemiesDefeated: targetsEliminated, // Rename
-    enemiesRequiredForNextLevel: targetsRequiredForPromotion, // Rename
+    score,
+    level: rank,
+    enemiesDefeated: targetsEliminated,
+    enemiesRequiredForNextLevel: targetsRequiredForPromotion,
     isGameOver,
     isPaused,
     restartGame,
     togglePause,
-    showUpgradeUI: showEnhancementUI, // Rename
-    availableUpgrades: availableEnhancements, // Rename
-    upgradeStat: applyEnhancement, // Rename
+    showUpgradeUI: showEnhancementUI,
+    availableUpgrades: availableEnhancements,
+    upgradeStat: applyEnhancement,
     playerSpeed,
     playerFireRate,
     playerCameraRange,
@@ -59,16 +59,15 @@ const GameUI = () => {
     selectedWeapons,
     selectWeapon,
     closeWeaponSelection,
-    // Combat zone properties (renamed from safe zone)
-    safeZoneActive: combatZoneActive, // Rename
-    safeZoneRadius: combatZoneRadius, // Rename
-    safeZoneCenter: combatZoneCenter, // Rename
+    safeZoneActive: combatZoneActive,
+    safeZoneRadius: combatZoneRadius,
+    safeZoneCenter: combatZoneCenter,
     playerTankPosition,
-    enemies: hostiles, // Rename
-    safeZoneTargetRadius: combatZoneTargetRadius, // Rename
-    safeZoneShrinkRate: combatZoneShrinkRate, // Rename
-    safeZoneDamage: combatZoneDamage, // Rename
-    isPreZoneChangeLevel: isPreContainmentShiftRank, // Rename
+    enemies: hostiles,
+    safeZoneTargetRadius: combatZoneTargetRadius,
+    safeZoneShrinkRate: combatZoneShrinkRate,
+    safeZoneDamage: combatZoneDamage,
+    isPreZoneChangeLevel: isPreContainmentShiftRank,
   } = useGameState();
 
   // Check for weapon selection opportunity when rank changes
@@ -80,19 +79,16 @@ const GameUI = () => {
     ) {
       useGameState.setState({ showWeaponSelection: true });
     }
-  }, [rank, isGameOver, selectedWeapons.length]); // Added selectedWeapons.length dependency
+  }, [rank, isGameOver, selectedWeapons.length]);
 
   // Monitor weapon selection state
-  useEffect(() => {
-    // Empty effect for monitoring weapon selection state changes
-  }, [showWeaponSelection, selectedWeapons]);
+  useEffect(() => {}, [showWeaponSelection, selectedWeapons]);
 
   // Handle keyboard shortcuts for enhancements and weapons
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (isUpgrading) return; // Still use isUpgrading flag
+      if (isUpgrading) return;
 
-      // Handle rank enhancements (1-3)
       if (showEnhancementUI) {
         const keyIndex = parseInt(event.key) - 1;
         if (
@@ -104,7 +100,6 @@ const GameUI = () => {
         }
       }
 
-      // Handle weapon acquisition (1-4)
       if (showWeaponSelection) {
         const keyIndex = parseInt(event.key) - 1;
         if (
@@ -114,9 +109,8 @@ const GameUI = () => {
         ) {
           selectWeapon(availableWeapons[keyIndex]);
           closeWeaponSelection();
-          // Show enhancement UI after weapon selection only if rank <= 50
           if (rank <= 50) {
-            useGameState.setState({ showUpgradeUI: true }); // Keep internal state name
+            useGameState.setState({ showUpgradeUI: true });
           }
         }
       }
@@ -133,28 +127,25 @@ const GameUI = () => {
     availableWeapons,
     isUpgrading,
     rank,
-    applyEnhancement, // Added missing dependencies
+    applyEnhancement,
     selectWeapon,
     closeWeaponSelection,
   ]);
 
-  // useCallback for handleEnhancementSelect with correct dependencies
   const handleEnhancementSelect = useCallback(
     (stat: UpgradeableStat) => {
       if (isUpgrading) return;
       setIsUpgrading(true);
       applyEnhancement(stat);
-      // Add a visual feedback delay or animation trigger here if desired
-      setTimeout(() => setIsUpgrading(false), 500); // Reduced delay?
+      setTimeout(() => setIsUpgrading(false), 500);
     },
     [applyEnhancement, isUpgrading]
-  ); // Removed 'rank' from here as it's not directly used
+  );
 
   const hullIntegrityPercentage = (playerHealth / playerMaxHealth) * 100;
   const promotionProgressPercentage =
     (targetsEliminated / targetsRequiredForPromotion) * 100;
 
-  // --- Theming Functions ---
   const getHullColor = () => {
     if (hullIntegrityPercentage > 60) return "var(--color-hull-high)";
     if (hullIntegrityPercentage > 30) return "var(--color-hull-medium)";
@@ -192,7 +183,7 @@ const GameUI = () => {
       case "tankSpeed":
         return `${playerSpeed.toFixed(1)} m/s`;
       case "fireRate":
-        return `${(1 / playerFireRate).toFixed(1)} rps`; // Rounds per second
+        return `${(1 / playerFireRate).toFixed(1)} rps`;
       case "cameraRange":
         return `${playerCameraRange.toFixed(0)}m`;
       case "maxHealth":
@@ -207,7 +198,6 @@ const GameUI = () => {
   };
 
   const getStatPostUpgradeValue = (stat: UpgradeableStat) => {
-    // Keep the underlying logic, just update display format if needed
     switch (stat) {
       case "tankSpeed":
         return `${(playerSpeed + 0.5).toFixed(1)} m/s`;
@@ -246,7 +236,6 @@ const GameUI = () => {
         return "Improve projectile propulsion for faster target engagement.";
     }
   };
-  // --- End Theming Functions ---
 
   const renderWeaponSelection = () => {
     if (!showWeaponSelection || isGameOver) {
@@ -259,19 +248,19 @@ const GameUI = () => {
           selectWeapon(weapon);
           closeWeaponSelection();
           if (rank <= 50) {
-            useGameState.setState({ showUpgradeUI: true }); // Internal state name
+            useGameState.setState({ showUpgradeUI: true });
           }
         }}
         onClose={() => {
           closeWeaponSelection();
           if (rank <= 50) {
-            useGameState.setState({ showUpgradeUI: true }); // Internal state name
+            useGameState.setState({ showUpgradeUI: true });
           }
         }}
         state={{
           availableWeapons,
           selectedWeapons,
-          level: rank, // Pass rank
+          level: rank,
           canSelect:
             selectedWeapons.length < Math.min(Math.floor(rank / 10), 4),
         }}
@@ -279,7 +268,6 @@ const GameUI = () => {
     );
   };
 
-  // Check if player is outside the combat zone
   useEffect(() => {
     if (!combatZoneActive || !playerTankPosition) {
       setIsOutsideCombatZone(false);
@@ -303,7 +291,6 @@ const GameUI = () => {
     isOutsideCombatZone,
   ]);
 
-  // Check if the combat zone is shrinking to show warning
   useEffect(() => {
     if (!combatZoneActive || isGameOver || isPaused) {
       setIsCombatZoneWarningVisible(false);
@@ -324,7 +311,7 @@ const GameUI = () => {
       }
       const timerId = setTimeout(() => {
         setIsCombatZoneWarningVisible(false);
-      }, 5000); // Warning duration
+      }, 5000);
       return () => clearTimeout(timerId);
     } else {
       setIsCombatZoneWarningVisible(false);
@@ -340,7 +327,6 @@ const GameUI = () => {
     combatZoneTimeRemaining,
   ]);
 
-  // Update the countdown timer continuously
   useEffect(() => {
     if (
       combatZoneTimeRemaining === null ||
@@ -351,53 +337,50 @@ const GameUI = () => {
       return;
     }
 
-    let lastUpdateTimestamp = lastZoneUpdateTimeRef.current; // Capture initial timestamp
+    let lastUpdateTimestamp = lastZoneUpdateTimeRef.current;
 
     const timer = setInterval(() => {
       const now = Date.now();
       const elapsedSeconds = (now - lastUpdateTimestamp) / 1000;
-      lastUpdateTimestamp = now; // Update timestamp for next interval
+      lastUpdateTimestamp = now;
 
       setCombatZoneTimeRemaining((prevTime) => {
         const newTime = Math.max(0, (prevTime ?? 0) - elapsedSeconds);
         if (newTime <= 0) {
-          clearInterval(timer); // Stop timer when time reaches 0
-          return null; // Set to null when done
+          clearInterval(timer);
+          return null;
         }
         return newTime;
       });
-    }, 100); // Update more frequently for smoother countdown appearance
+    }, 100);
 
     return () => clearInterval(timer);
-  }, [combatZoneTimeRemaining, isPaused, isGameOver, combatZoneActive]); // Dependencies
+  }, [combatZoneTimeRemaining, isPaused, isGameOver, combatZoneActive]);
 
-  // Animate warning opacity for outside combat zone warning
   useEffect(() => {
     let animationFrameId: number;
     if (!isOutsideCombatZone) {
       warningOpacityRef.current = 0;
-      cancelAnimationFrame(warningAnimationRef.current); // Ensure previous animation is stopped
+      cancelAnimationFrame(warningAnimationRef.current);
       return;
     }
     let startTime: number;
-    const duration = 1000; // 1 second cycle
+    const duration = 1000;
     const animateOutsideWarning = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
-      // Oscillate between 0.4 and 0.9 opacity for higher visibility
       warningOpacityRef.current =
         0.4 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 4;
       animationFrameId = requestAnimationFrame(animateOutsideWarning);
-      warningAnimationRef.current = animationFrameId; // Store the id
+      warningAnimationRef.current = animationFrameId;
     };
     animationFrameId = requestAnimationFrame(animateOutsideWarning);
-    warningAnimationRef.current = animationFrameId; // Store the id
+    warningAnimationRef.current = animationFrameId;
     return () => {
       cancelAnimationFrame(warningAnimationRef.current);
     };
   }, [isOutsideCombatZone]);
 
-  // Animate combat zone shrinking warning opacity
   useEffect(() => {
     let animationFrameId: number;
     if (!isCombatZoneWarningVisible) {
@@ -406,35 +389,32 @@ const GameUI = () => {
       return;
     }
     let startTime: number;
-    const duration = 800; // Faster pulse for urgency
+    const duration = 800;
     const animateShrinkWarning = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
-      // Oscillate between 0.5 and 1.0
       combatZoneShrinkWarningRef.current =
         0.5 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) / 4;
       animationFrameId = requestAnimationFrame(animateShrinkWarning);
-      warningAnimationRef.current = animationFrameId; // Store the id
+      warningAnimationRef.current = animationFrameId;
     };
     animationFrameId = requestAnimationFrame(animateShrinkWarning);
-    warningAnimationRef.current = animationFrameId; // Store the id
+    warningAnimationRef.current = animationFrameId;
     return () => {
       cancelAnimationFrame(warningAnimationRef.current);
     };
   }, [isCombatZoneWarningVisible]);
 
-  // Add warning for pre-containment shift ranks
   const [showContainmentWarning, setShowContainmentWarning] = useState(false);
   const containmentWarningOpacityRef = useRef(0);
 
-  // Calculate next zone values for warning
   const calculateNextZoneInfo = useCallback(() => {
     const maxRadius = 50;
     const minRadius = 5;
     const radiusDecrease = 4;
     const currentZoneTier = Math.floor(rank / 5);
     const nextZoneTier = currentZoneTier + 1;
-    const nextZoneShiftRank = nextZoneTier * 5; // Rank at which the next shift happens
+    const nextZoneShiftRank = nextZoneTier * 5;
     const nextZoneTargetRadius = Math.max(
       minRadius,
       maxRadius - nextZoneTier * radiusDecrease
@@ -444,7 +424,6 @@ const GameUI = () => {
 
   const { nextZoneTargetRadius, nextZoneShiftRank } = calculateNextZoneInfo();
 
-  // Effect to show and animate containment shift warning
   useEffect(() => {
     let animationFrameId: number;
     if (
@@ -454,30 +433,26 @@ const GameUI = () => {
       isGameOver
     ) {
       setShowContainmentWarning(false);
-      cancelAnimationFrame(warningAnimationRef.current); // Stop animation if conditions not met
+      cancelAnimationFrame(warningAnimationRef.current);
       return;
     }
     setShowContainmentWarning(true);
     let startTime: number;
-    const duration = 1200; // Slower pulse than shrink warning
+    const duration = 1200;
     const animateContainmentWarning = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
-      // Oscillate between 0.6 and 0.9
       containmentWarningOpacityRef.current =
         0.6 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) * 0.15;
-      // Check condition again inside loop to stop if necessary
       if (showContainmentWarning) {
         animationFrameId = requestAnimationFrame(animateContainmentWarning);
-        warningAnimationRef.current = animationFrameId; // Store the id
+        warningAnimationRef.current = animationFrameId;
       }
     };
     animationFrameId = requestAnimationFrame(animateContainmentWarning);
-    warningAnimationRef.current = animationFrameId; // Store the id
+    warningAnimationRef.current = animationFrameId;
     return () => {
       cancelAnimationFrame(warningAnimationRef.current);
-      // Optionally reset opacity ref here if needed when component unmounts or condition changes
-      // containmentWarningOpacityRef.current = 0;
     };
   }, [
     isPreContainmentShiftRank,
@@ -485,22 +460,20 @@ const GameUI = () => {
     isPaused,
     isGameOver,
     showContainmentWarning,
-  ]); // Added showContainmentWarning dependency
+  ]);
 
-  // --- Minimap / Tactical Display ---
   const renderTacticalDisplay = useCallback(() => {
-    const mapSize = 150; // Increased by 25% from 120
+    const mapSize = 150;
     const gameWorldSize = 100;
     const scale = mapSize / gameWorldSize;
 
-    // Clamp player position to map boundaries visually
     const playerXRaw = playerTankPosition
       ? playerTankPosition[0] * scale + mapSize / 2
       : mapSize / 2;
     const playerYRaw = playerTankPosition
       ? playerTankPosition[2] * scale + mapSize / 2
       : mapSize / 2;
-    const playerX = Math.max(3, Math.min(mapSize - 3, playerXRaw)); // Clamp within map bounds slightly
+    const playerX = Math.max(3, Math.min(mapSize - 3, playerXRaw));
     const playerY = Math.max(3, Math.min(mapSize - 3, playerYRaw));
 
     const zoneCenterX = combatZoneCenter[0] * scale + mapSize / 2;
@@ -510,40 +483,31 @@ const GameUI = () => {
 
     const zoneTier = Math.floor(rank / 5);
     const isZoneShiftRank = rank % 5 === 0 && rank > 0;
-    const nextZoneShiftRankCalc = (zoneTier + 1) * 5;
-    const ranksUntilNextShift = nextZoneShiftRankCalc - rank;
+    const isPreShiftRank = rank % 5 === 4 && rank >= 4;
 
     const calculateZoneShrinkProgress = () => {
-      // If the zone isn't shrinking in this phase, progress is 100%
       if (combatZoneTargetRadius >= combatZoneRadius) return 100;
-
-      // Zone is stable or already fully shrunk for this tier before shift rank
       if (isZoneShiftRank) return 100;
 
       const maxRadius = 50;
       const minRadius = 5;
       const radiusDecrease = 4;
 
-      // Radius at the START of the current shrink phase (usually after the last shift rank)
       const initialRadiusForThisPhase = Math.max(
         minRadius,
         maxRadius - zoneTier * radiusDecrease
       );
 
-      // The target radius FOR THIS SHRINK PHASE (not necessarily the next tier's final radius)
       const currentTargetRadius = combatZoneTargetRadius;
 
-      // Ensure initial radius is not smaller than the target radius for calculation consistency
       const effectiveInitialRadius = Math.max(
         initialRadiusForThisPhase,
         currentTargetRadius
       );
 
-      // Total shrink needed *in this phase* (from start radius to target radius)
       const totalShrinkThisPhase = effectiveInitialRadius - currentTargetRadius;
-      if (totalShrinkThisPhase <= 0.1) return 100; // No significant shrinking needed or already done
+      if (totalShrinkThisPhase <= 0.1) return 100;
 
-      // How much it has shrunk *from the initial radius of this phase* towards the target
       const shrunkAmount = effectiveInitialRadius - combatZoneRadius;
 
       return Math.min(
@@ -553,36 +517,20 @@ const GameUI = () => {
     };
 
     const zoneShrinkProgress = calculateZoneShrinkProgress();
-    const isPreShiftRank = rank % 5 === 4 && rank >= 4;
-
-    const getUrgencyColor = () => {
-      if (isZoneShiftRank || zoneShrinkProgress >= 100)
-        return "var(--color-progress-complete)"; // Green/Teal
-      if (isPreShiftRank) {
-        if (zoneShrinkProgress < 90) return "var(--color-progress-urgent)"; // Red
-        return "var(--color-progress-warning)"; // Orange/Amber
-      }
-      if (zoneShrinkProgress < 50) return "var(--color-progress-low)"; // Blue/Cyan
-      if (zoneShrinkProgress < 85) return "var(--color-progress-medium)"; // Yellow/Light Orange
-      return "var(--color-progress-high)"; // Orange/Amber approaching completion
-    };
 
     const nextZoneRadius = Math.max(5, 50 - (zoneTier + 1) * 4);
     const nextZoneRadiusPixels = nextZoneRadius * scale;
 
     return (
       <div className="tactical-display">
-        {/* Radar Background Elements */}
         <div className="radar-bg">
           <div className="radar-rings ring-1"></div>
           <div className="radar-rings ring-2"></div>
           <div className="radar-rings ring-3"></div>
         </div>
 
-        {/* Combat Zone Circles */}
         {combatZoneActive && (
           <>
-            {/* Current Zone */}
             <div
               className="zone-circle current-zone"
               style={{
@@ -593,7 +541,6 @@ const GameUI = () => {
               }}
             />
 
-            {/* Target Zone (Shrinking To) */}
             {combatZoneTargetRadius < combatZoneRadius &&
               combatZoneRadius - combatZoneTargetRadius > 0.1 && (
                 <div
@@ -607,7 +554,6 @@ const GameUI = () => {
                 />
               )}
 
-            {/* Next Zone Preview (Only on Pre-Shift Ranks) */}
             {isPreShiftRank && (
               <div
                 className="zone-circle next-zone-preview"
@@ -622,15 +568,13 @@ const GameUI = () => {
           </>
         )}
 
-        {/* Hostile Indicators */}
         {hostiles.map((hostile) => {
           const hostileXRaw = hostile.position[0] * scale + mapSize / 2;
           const hostileYRaw = hostile.position[2] * scale + mapSize / 2;
-          // Clamp hostile positions too
           const hostileX = Math.max(2, Math.min(mapSize - 2, hostileXRaw));
           const hostileY = Math.max(2, Math.min(mapSize - 2, hostileYRaw));
 
-          let hostileClass = "hostile-marker tank"; // Default
+          let hostileClass = "hostile-marker tank";
           if (hostile.type === "turret") hostileClass = "hostile-marker turret";
           else if (hostile.type === "bomber")
             hostileClass = "hostile-marker bomber";
@@ -647,7 +591,6 @@ const GameUI = () => {
           );
         })}
 
-        {/* Player Indicator */}
         <div
           className="player-marker"
           style={{
@@ -671,14 +614,11 @@ const GameUI = () => {
     isPreContainmentShiftRank,
   ]);
 
-  // --- JSX Structure ---
   return (
-    // Added military-theme class
     <div
       className={`game-ui military-theme ${
         isGameOver ? "blur-background" : ""
       }`}>
-      {/* Containment Shift Warning */}
       {showContainmentWarning && !isGameOver && !isPaused && (
         <div
           className="warning-overlay containment-warning"
@@ -687,7 +627,7 @@ const GameUI = () => {
               "--opacity": containmentWarningOpacityRef.current,
             } as React.CSSProperties
           }>
-          <div className="warning-icon">☢️</div> {/* Or other icon */}
+          <div className="warning-icon">☢️</div>
           <div className="warning-text">
             <div>IMMINENT CONTAINMENT SHIFT</div>
             <div>
@@ -697,11 +637,8 @@ const GameUI = () => {
           </div>
         </div>
       )}
-      {/* Tactical Display / Minimap */}
       {!isGameOver && !isPaused && renderTacticalDisplay()}
-      {/* Top HUD */}
       <div className="top-hud">
-        {/* Hull Integrity */}
         <div className="hud-element hull-integrity">
           <div className="hud-label">HULL INTEGRITY</div>
           <div className="progress-bar-container">
@@ -717,12 +654,10 @@ const GameUI = () => {
             </div>
           </div>
         </div>
-        {/* Combat Score - Now a flex item */}
         <div className="hud-element combat-score">
           <div className="hud-label">COMBAT SCORE</div>
           <div className="score-value">{score}</div>
         </div>
-        {/* Rank Progression */}
         <div className="hud-element rank-progression">
           <div className="hud-label">
             RANK{" "}
@@ -750,7 +685,6 @@ const GameUI = () => {
           </div>
         </div>
       </div>
-      {/* Player Stats Panel */}
       <div className="player-stats-panel">
         <div className="panel-header">UNIT STATUS</div>
         <div className="stat-line">
@@ -782,7 +716,6 @@ const GameUI = () => {
           <span>{playerCameraRange.toFixed(0)}m</span>
         </div>
       </div>
-      {/* Enhancement UI Overlay */}
       {showEnhancementUI && !isGameOver && (
         <div className="overlay enhancement-overlay">
           <div className="overlay-content enhancement-content">
@@ -811,39 +744,31 @@ const GameUI = () => {
                 </div>
               ))}
             </div>
-            {/* <div className="enhancement-prompt">Press 1, 2, or 3 to select</div> */}
           </div>
         </div>
       )}
-      {/* Outside Combat Zone Warning */}
-      {isOutsideCombatZone &&
-        !isGameOver &&
-        !isPaused && ( // Check !isGameOver and !isPaused
-          <div
-            className="warning-overlay outside-zone-warning"
-            style={
-              { "--opacity": warningOpacityRef.current } as React.CSSProperties
-            }>
-            <div className="warning-icon">⚠️</div>
-            <div className="warning-text">WARNING: OUTSIDE COMBAT ZONE</div>
-          </div>
-        )}
-      {/* Combat Zone Shrinking Warning */}
-      {isCombatZoneWarningVisible &&
-        !isGameOver &&
-        !isPaused && ( // Check !isGameOver and !isPaused
-          <div
-            className="warning-overlay shrinking-zone-warning"
-            style={
-              {
-                "--opacity": combatZoneShrinkWarningRef.current,
-              } as React.CSSProperties
-            }>
-            <div className="warning-icon">⏱️</div> {/* Or other icon */}
-            <div className="warning-text">COMBAT ZONE COLLAPSING </div>
-          </div>
-        )}
-      {/* Game Over Overlay */}
+      {isOutsideCombatZone && !isGameOver && !isPaused && (
+        <div
+          className="warning-overlay outside-zone-warning"
+          style={
+            { "--opacity": warningOpacityRef.current } as React.CSSProperties
+          }>
+          <div className="warning-icon">⚠️</div>
+          <div className="warning-text">WARNING: OUTSIDE COMBAT ZONE</div>
+        </div>
+      )}
+      {isCombatZoneWarningVisible && !isGameOver && !isPaused && (
+        <div
+          className="warning-overlay shrinking-zone-warning"
+          style={
+            {
+              "--opacity": combatZoneShrinkWarningRef.current,
+            } as React.CSSProperties
+          }>
+          <div className="warning-icon">⏱️</div>
+          <div className="warning-text">COMBAT ZONE COLLAPSING </div>
+        </div>
+      )}
       {isGameOver && (
         <div className="overlay game-over-overlay">
           <div className="overlay-content game-over-content">
@@ -856,11 +781,10 @@ const GameUI = () => {
           </div>
         </div>
       )}
-      {/* Pause Overlay */}
       {isPaused &&
         !isGameOver &&
         !showEnhancementUI &&
-        !showWeaponSelection && ( // Ensure pause doesn't overlap others
+        !showWeaponSelection && (
           <div className="overlay pause-overlay">
             <div className="overlay-content pause-content">
               <h2 className="pause-title">OPERATION PAUSED</h2>
@@ -870,11 +794,8 @@ const GameUI = () => {
             </div>
           </div>
         )}
-      {/* Weapon Selection UI */}
-      {renderWeaponSelection()}{" "}
-      {/* Assumes WeaponSelection component is also styled */}
-      {/* Controls Info */}
-      {!isGameOver && ( // Hide controls on game over
+      {renderWeaponSelection()}
+      {!isGameOver && (
         <div className="controls-info">
           <span>[WASD] Move</span> | <span>[J/K] Turret</span> |{" "}
           <span>[ESC] Pause</span>
