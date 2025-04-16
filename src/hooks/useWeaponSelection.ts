@@ -8,10 +8,13 @@ export const useWeaponSelection = (currentLevel: number) => {
   const [selectedWeapons, setSelectedWeapons] = useState<SecondaryWeapon[]>([]);
 
   const canSelectWeapon = useCallback(() => {
+    // Only allow selection at specific levels and ensure we don't exceed the maximum
     return (
       WEAPON_SELECTION_LEVELS.includes(currentLevel) &&
       selectedWeapons.length <
-        Math.min(Math.floor(currentLevel / 10), MAX_SELECTED_WEAPONS)
+        Math.min(Math.floor(currentLevel / 10), MAX_SELECTED_WEAPONS) &&
+      // Ensure we only add one weapon per level
+      selectedWeapons.length === Math.floor((currentLevel - 1) / 10)
     );
   }, [currentLevel, selectedWeapons.length]);
 
