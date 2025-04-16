@@ -132,7 +132,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerDamage: 25,
   playerTurretDamage: 50, // Keep consistent at 50
   playerFireRate: 2, // 0.5 shots per second (2 seconds between shots)
-  playerCameraRange: 12, // Default camera distance
+  playerCameraRange: 8, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
   playerBulletVelocity: 15, // Initial bullet velocity
   score: 0,
@@ -265,7 +265,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerDamage: 25,
       playerTurretDamage: 50, // Keep consistent at 50
       playerFireRate: 2, // 0.5 shots per second (2 seconds between shots)
-      playerCameraRange: 12,
+      playerCameraRange: 8,
       playerHealthRegen: 0,
       playerBulletVelocity: 15,
       score: 0,
