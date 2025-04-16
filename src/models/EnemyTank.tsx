@@ -573,16 +573,29 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       </group>
 
       {/* Enemy Projectiles */}
-      {projectiles.map((projectile) => (
-        <EnemyProjectile
-          key={projectile.id}
-          id={projectile.id}
-          position={projectile.position}
-          rotation={projectile.rotation}
-          damage={isTank ? 10 : 15}
-          onRemove={removeProjectile}
-        />
-      ))}
+      {projectiles.map((projectile) => {
+        const playerLevel = getState().playerLevel;
+        let damage = 5; // Default damage for early game
+        if (playerLevel > 15) {
+          damage = 10; // Mid game damage
+        }
+        if (playerLevel > 25) {
+          damage = 15; // Late mid game damage
+        }
+        if (playerLevel > 40) {
+          damage = 20; // Late game damage
+        }
+        return (
+          <EnemyProjectile
+            key={projectile.id}
+            id={projectile.id}
+            position={projectile.position}
+            rotation={projectile.rotation}
+            damage={damage}
+            onRemove={removeProjectile}
+          />
+        );
+      })}
     </>
   );
 };

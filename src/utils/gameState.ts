@@ -52,6 +52,7 @@ interface GameState {
   playerCameraRange: number; // Camera zoom range
   playerHealthRegen: number; // Health regenerated per second
   playerBulletVelocity: number; // Speed of bullets
+  playerLevel: number; // Player's current level
   score: number;
   level: number;
   enemiesDefeated: number;
@@ -135,6 +136,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerCameraRange: 8, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
   playerBulletVelocity: 15, // Initial bullet velocity
+  playerLevel: 1, // Initial player level
   score: 0,
   level: 1,
   enemiesDefeated: 0,
@@ -268,6 +270,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerCameraRange: 8,
       playerHealthRegen: 0,
       playerBulletVelocity: 15,
+      playerLevel: 1, // Reset player level
       score: 0,
       level: 1,
       playerTankPosition: [0, 0.5, 0],
@@ -522,6 +525,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
       return {
         level: newLevel,
+        playerLevel: newLevel, // Update player level to match game level
         playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
         playerTurretDamage: state.playerTurretDamage + turretDamageIncrease, // Diminishing % of NPC health scaling
         enemiesDefeated: 0, // Reset counter for the new level
