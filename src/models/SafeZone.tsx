@@ -85,7 +85,7 @@ const SafeZone = () => {
 
   useEffect(() => {
     // Handle sound effects
-    if (!isPreZoneChangeLevel || !safeZoneActive || isPaused) {
+    if (!isPreZoneChangeLevel || !safeZoneActive || isPaused || isGameOver) {
       if (isSoundPlaying.current) {
         stopLoop("zoneWarning");
         isSoundPlaying.current = false;
@@ -95,7 +95,14 @@ const SafeZone = () => {
       playLoop("zoneWarning", 1.25);
       isSoundPlaying.current = true;
     }
-  }, [isPreZoneChangeLevel, safeZoneActive, isPaused, playLoop, stopLoop]);
+  }, [
+    isPreZoneChangeLevel,
+    safeZoneActive,
+    isPaused,
+    isGameOver,
+    playLoop,
+    stopLoop,
+  ]);
 
   // Separate effect for visual animations
   useEffect(() => {
