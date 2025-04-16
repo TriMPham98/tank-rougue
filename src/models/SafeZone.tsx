@@ -84,19 +84,24 @@ const SafeZone = () => {
   }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
 
   useEffect(() => {
-    if (!isPreZoneChangeLevel || !safeZoneActive) {
+    // Handle sound effects
+    if (!isPreZoneChangeLevel || !safeZoneActive || isPaused) {
       if (isSoundPlaying.current) {
         stopLoop("zoneWarning");
         isSoundPlaying.current = false;
       }
-      setPreviewOpacity(0);
-      return;
-    }
-
-    if (!isSoundPlaying.current) {
+    } else if (!isSoundPlaying.current) {
       // Play warning sound at 125% volume (1.25)
       playLoop("zoneWarning", 1.25);
       isSoundPlaying.current = true;
+    }
+  }, [isPreZoneChangeLevel, safeZoneActive, isPaused, playLoop, stopLoop]);
+
+  // Separate effect for visual animations
+  useEffect(() => {
+    if (!isPreZoneChangeLevel || !safeZoneActive) {
+      setPreviewOpacity(0);
+      return;
     }
 
     const interval = setInterval(() => {
@@ -106,7 +111,7 @@ const SafeZone = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [isPreZoneChangeLevel, safeZoneActive, playLoop, stopLoop]);
+  }, [isPreZoneChangeLevel, safeZoneActive]);
 
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !safeZoneActive) return;
