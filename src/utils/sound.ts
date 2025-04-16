@@ -35,7 +35,6 @@ class SoundManager {
   }
 
   private registerSound(id: string, path: string): void {
-    console.log(`Registering sound: ${id} from path: ${path}`);
     const audio = new Audio(path);
     audio.preload = "auto";
     this.sounds.set(id, audio);
@@ -88,23 +87,16 @@ class SoundManager {
       return;
     }
 
-    console.log(`Playing loop sound: ${id} at volume: ${volume}`);
     sound.volume = Math.max(0, Math.min(1, volume));
     sound.loop = true;
-    sound
-      .play()
-      .then(() => {
-        console.log(`Successfully started playing loop sound: ${id}`);
-      })
-      .catch((error) => {
-        console.error(`Error playing sound ${id}:`, error);
-      });
+    sound.play().catch((error) => {
+      console.warn(`Error playing sound ${id}:`, error);
+    });
   }
 
   public stopLoop(id: string): void {
     const sound = this.sounds.get(id);
     if (sound) {
-      console.log(`Stopping loop sound: ${id}`);
       sound.pause();
       sound.currentTime = 0;
       sound.loop = false;

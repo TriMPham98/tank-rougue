@@ -84,15 +84,8 @@ const SafeZone = () => {
   }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
 
   useEffect(() => {
-    console.log("SafeZone effect triggered:", {
-      isPreZoneChangeLevel,
-      safeZoneActive,
-      isSoundPlaying: isSoundPlaying.current,
-    });
-
     if (!isPreZoneChangeLevel || !safeZoneActive) {
       if (isSoundPlaying.current) {
-        console.log("Stopping warning sound - conditions not met");
         stopLoop("zoneWarning");
         isSoundPlaying.current = false;
       }
@@ -101,7 +94,6 @@ const SafeZone = () => {
     }
 
     if (!isSoundPlaying.current) {
-      console.log("Starting warning sound - conditions met");
       // Play warning sound at 125% volume (1.25)
       playLoop("zoneWarning", 1.25);
       isSoundPlaying.current = true;
@@ -112,7 +104,6 @@ const SafeZone = () => {
     }, 50);
 
     return () => {
-      console.log("Cleaning up interval");
       clearInterval(interval);
     };
   }, [isPreZoneChangeLevel, safeZoneActive, playLoop, stopLoop]);
