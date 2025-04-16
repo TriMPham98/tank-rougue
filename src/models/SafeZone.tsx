@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGameState } from "../utils/gameState";
 import * as THREE from "three";
+import { useSound } from "../utils/sound";
 
 const SafeZone = () => {
   const {
@@ -18,7 +19,9 @@ const SafeZone = () => {
     isPreZoneChangeLevel,
   } = useGameState();
 
+  const { playLoop, stopLoop } = useSound();
   const [previewOpacity, setPreviewOpacity] = useState(0);
+  const isSoundPlaying = useRef(false);
 
   const cylinderRef = useRef<THREE.Mesh>(null);
   const topRingRef = useRef<THREE.Mesh>(null);
@@ -81,15 +84,38 @@ const SafeZone = () => {
   }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
 
   useEffect(() => {
+    console.log("SafeZone effect triggered:", {
+      isPreZoneChangeLevel,
+      safeZoneActive,
+      isSoundPlaying: isSoundPlaying.current,
+    });
+
     if (!isPreZoneChangeLevel || !safeZoneActive) {
+      if (isSoundPlaying.current) {
+        console.log("Stopping warning sound - conditions not met");
+        stopLoop("zoneWarning");
+        isSoundPlaying.current = false;
+      }
       setPreviewOpacity(0);
       return;
     }
+
+    if (!isSoundPlaying.current) {
+      console.log("Starting warning sound - conditions met");
+      // Play warning sound at 125% volume (1.25)
+      playLoop("zoneWarning", 1.25);
+      isSoundPlaying.current = true;
+    }
+
     const interval = setInterval(() => {
       setPreviewOpacity(0.1 + 0.4 * Math.abs(Math.sin(Date.now() / 800)));
     }, 50);
-    return () => clearInterval(interval);
-  }, [isPreZoneChangeLevel, safeZoneActive]);
+
+    return () => {
+      console.log("Cleaning up interval");
+      clearInterval(interval);
+    };
+  }, [isPreZoneChangeLevel, safeZoneActive, playLoop, stopLoop]);
 
   useFrame((state, delta) => {
     if (isPaused || isGameOver || !safeZoneActive) return;

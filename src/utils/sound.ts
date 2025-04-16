@@ -30,10 +30,12 @@ class SoundManager {
     this.registerSound("npcImpact", "./assets/sounds/npcImpact.mp3");
     this.registerSound("levelUp", "./assets/sounds/levelUpSnare.mp3");
     this.registerSound("healthPickUp", "./assets/sounds/healthPickUp.mp3");
+    this.registerSound("zoneWarning", "./assets/sounds/zoneWarning.mp3");
     // Add more sounds here as needed
   }
 
   private registerSound(id: string, path: string): void {
+    console.log(`Registering sound: ${id} from path: ${path}`);
     const audio = new Audio(path);
     audio.preload = "auto";
     this.sounds.set(id, audio);
@@ -78,6 +80,36 @@ class SoundManager {
       sound.volume = Math.max(0, Math.min(1, volume));
     }
   }
+
+  public playLoop(id: string, volume = 1): void {
+    const sound = this.sounds.get(id);
+    if (!sound) {
+      console.warn(`Sound with id ${id} not found`);
+      return;
+    }
+
+    console.log(`Playing loop sound: ${id} at volume: ${volume}`);
+    sound.volume = Math.max(0, Math.min(1, volume));
+    sound.loop = true;
+    sound
+      .play()
+      .then(() => {
+        console.log(`Successfully started playing loop sound: ${id}`);
+      })
+      .catch((error) => {
+        console.error(`Error playing sound ${id}:`, error);
+      });
+  }
+
+  public stopLoop(id: string): void {
+    const sound = this.sounds.get(id);
+    if (sound) {
+      console.log(`Stopping loop sound: ${id}`);
+      sound.pause();
+      sound.currentTime = 0;
+      sound.loop = false;
+    }
+  }
 }
 
 // Hook for components to access the sound manager
@@ -89,6 +121,9 @@ export const useSound = () => {
     stop: (id: string) => soundManager.current.stop(id),
     setVolume: (id: string, volume: number) =>
       soundManager.current.setVolume(id, volume),
+    playLoop: (id: string, volume = 1) =>
+      soundManager.current.playLoop(id, volume),
+    stopLoop: (id: string) => soundManager.current.stopLoop(id),
   };
 };
 
