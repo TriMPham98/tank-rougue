@@ -1,9 +1,9 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Group, Vector3 } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
-import { useGameState } from "../utils/gameState";
+import { useGameState, SecondaryWeapon } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import { useSound, resetSoundTimer } from "../utils/sound";
 import Projectile from "./Projectile";
@@ -58,25 +58,27 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     shoot: keyShoot,
   } = useKeyboardControls();
 
-  const touchForward = useGameState((state) => state.forward);
-  const touchStrafe = useGameState((state) => state.strafe);
-  const touchTurretRotation = useGameState((state) => state.turretRotation);
-  const touchIsFiring = useGameState((state) => state.isFiring);
+  // Select the entire state object
+  const {
+    moveX, // Absolute X from joystick
+    moveZ, // Absolute Z from joystick
+    forward, // Relative forward/backward (for potential fallback/other uses)
+    strafe, // Relative strafe (for potential fallback/other uses)
+    turretRotation: touchTurretRotation,
+    isFiring: touchIsFiring,
+    playerTurretDamage,
+    playerSpeed,
+    playerFireRate,
+    playerHealthRegen,
+    isPaused,
+    isGameOver,
+    updatePlayerPosition,
+    healPlayer,
+    selectedWeapons,
+    terrainObstacles,
+  } = useGameState(); // Still select entire state for simplicity
 
   const sound = useSound();
-
-  const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
-  const playerSpeed = useGameState((state) => state.playerSpeed);
-  const playerFireRate = useGameState((state) => state.playerFireRate);
-  const playerHealthRegen = useGameState((state) => state.playerHealthRegen);
-  const isPaused = useGameState((state) => state.isPaused);
-  const isGameOver = useGameState((state) => state.isGameOver);
-  const updatePlayerPosition = useGameState(
-    (state) => state.updatePlayerPosition
-  );
-  const healPlayer = useGameState((state) => state.healPlayer);
-  const selectedWeapons = useGameState((state) => state.selectedWeapons);
-  const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
   const sideWeapons = selectedWeapons.slice(0, MAX_SIDE_WEAPONS);
 
@@ -137,74 +139,44 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
-    if (keyLeft || (touchStrafe < 0 && touchForward === 0))
-      tankRotationRef.current += delta * 3.5;
-    if (keyRight || (touchStrafe > 0 && touchForward === 0))
-      tankRotationRef.current -= delta * 3.5;
-
-    if (touchStrafe !== 0 && touchForward !== 0) {
-      const joystickAngle = Math.atan2(touchStrafe, touchForward);
-      const targetRotation = tankRotationRef.current - joystickAngle;
-      const rotationDiff = targetRotation % (Math.PI * 2);
-      const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      tankRotationRef.current -= wrappedDiff * delta * 3;
-    }
-
-    tankRef.current.rotation.y = tankRotationRef.current;
-
     let moved = false;
     const moveSpeed = playerSpeed;
 
-    const isMovingForward = keyForward || touchForward > 0;
-    const isMovingBackward = keyBackward || touchForward < 0;
-    const moveMagnitude = touchForward !== 0 ? Math.abs(touchForward) : 1;
+    // --- Tank Rotation (Keyboard A/D Only) ---
+    if (keyLeft) tankRotationRef.current += delta * 3.5;
+    if (keyRight) tankRotationRef.current -= delta * 3.5;
+    tankRef.current.rotation.y = tankRotationRef.current;
 
-    if (isMovingForward || isMovingBackward) {
-      const moveDirection = isMovingForward ? 1 : -1;
-      const potentialX =
-        tankRef.current.position.x +
-        Math.sin(tankRotationRef.current) *
-          delta *
-          moveSpeed *
-          moveDirection *
-          moveMagnitude;
-      const potentialZ =
-        tankRef.current.position.z +
-        Math.cos(tankRotationRef.current) *
-          delta *
-          moveSpeed *
-          moveDirection *
-          moveMagnitude;
-      if (!checkTerrainCollision(potentialX, potentialZ)) {
-        tankRef.current.position.x = potentialX;
-        tankRef.current.position.z = potentialZ;
-        moved = true;
+    // --- Tank Movement (Prioritize Keyboard W/S, fallback to Absolute Joystick) ---
+    let potentialX = tankRef.current.position.x;
+    let potentialZ = tankRef.current.position.z;
+
+    if (keyForward || keyBackward) {
+      // Keyboard movement (Relative Forward/Backward)
+      const moveDirection = keyForward ? 1 : -1;
+      potentialX +=
+        Math.sin(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+      potentialZ +=
+        Math.cos(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+    } else if (moveX !== 0 || moveZ !== 0) {
+      // Absolute Joystick movement (if no W/S keys pressed)
+      const moveVector = new Vector3(moveX, 0, moveZ);
+      if (moveVector.length() > 1) {
+        moveVector.normalize(); // Normalize diagonal joystick input
       }
+      potentialX += moveVector.x * delta * moveSpeed;
+      potentialZ += moveVector.z * delta * moveSpeed;
     }
 
-    if (touchStrafe !== 0 && touchForward !== 0) {
-      const strafeDirection = touchStrafe > 0 ? 1 : -1;
-      const potentialX =
-        tankRef.current.position.x +
-        Math.cos(tankRotationRef.current) *
-          delta *
-          moveSpeed *
-          strafeDirection *
-          Math.abs(touchStrafe) *
-          0.5;
-      const potentialZ =
-        tankRef.current.position.z -
-        Math.sin(tankRotationRef.current) *
-          delta *
-          moveSpeed *
-          strafeDirection *
-          Math.abs(touchStrafe) *
-          0.5;
-      if (!checkTerrainCollision(potentialX, potentialZ)) {
-        tankRef.current.position.x = potentialX;
-        tankRef.current.position.z = potentialZ;
-        moved = true;
-      }
+    // Apply movement if no collision and position changed
+    if (
+      (potentialX !== tankRef.current.position.x ||
+        potentialZ !== tankRef.current.position.z) &&
+      !checkTerrainCollision(potentialX, potentialZ)
+    ) {
+      tankRef.current.position.x = potentialX;
+      tankRef.current.position.z = potentialZ;
+      moved = true;
     }
 
     if (turretRef.current) {
@@ -223,7 +195,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     const timeSinceLastShot = currentTime - lastShootTimeRef.current;
     const isShootingRequested = keyShoot || touchIsFiring;
 
-    // Auto-shooting logic
     if (timeSinceLastShot >= playerFireRate) {
       const shotsMissed = Math.floor(timeSinceLastShot / playerFireRate);
       if (shotsMissed > 0) {
@@ -247,13 +218,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         lastShootTimeRef.current =
           currentTime - (timeSinceLastShot % playerFireRate);
 
-        // Play cannon sound effect when firing
         sound.setVolume("playerCannon", 0.2);
         sound.play("playerCannon");
       }
     }
 
-    // Manual shooting for fire button on mobile
     if (isShootingRequested) {
       debug.log(`Shoot button pressed (main turret auto-fires)`);
     }
@@ -464,7 +433,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ))}
 
       {/* Side Weapons */}
-      {sideWeapons.map((weapon, index) => {
+      {sideWeapons.map((weapon: SecondaryWeapon, index: number) => {
         const WeaponComponent = WeaponComponents[weapon.id];
         if (!WeaponComponent) {
           console.warn(`No component found for weapon ID: ${weapon.id}`);

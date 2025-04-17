@@ -98,6 +98,8 @@ interface GameState {
   // Input state
   forward: number; // -1 to 1 (backward to forward)
   strafe: number; // -1 to 1 (left to right)
+  moveX: number; // -1 to 1 (absolute world X movement)
+  moveZ: number; // -1 to 1 (absolute world Z movement)
   turretRotation: number | null; // Angle in radians
   isFiring: boolean;
 
@@ -131,6 +133,8 @@ interface GameState {
   setInput: (input: {
     forward?: number | null;
     strafe?: number | null;
+    moveX?: number | null;
+    moveZ?: number | null;
     turretRotation?: number | null;
     isFiring?: boolean;
   }) => void;
@@ -189,6 +193,8 @@ export const useGameState = create<GameState>((set, get) => ({
   // Input state
   forward: 0,
   strafe: 0,
+  moveX: 0,
+  moveZ: 0,
   turretRotation: null,
   isFiring: false,
 
@@ -801,6 +807,14 @@ export const useGameState = create<GameState>((set, get) => ({
 
       if (input.strafe !== undefined && input.strafe !== null) {
         newState.strafe = input.strafe;
+      }
+
+      // Handle moveX and moveZ
+      if (input.moveX !== undefined && input.moveX !== null) {
+        newState.moveX = input.moveX;
+      }
+      if (input.moveZ !== undefined && input.moveZ !== null) {
+        newState.moveZ = input.moveZ;
       }
 
       if (input.turretRotation !== undefined) {
