@@ -84,7 +84,6 @@ const MobileJoysticks = () => {
     setInput({
       moveX,
       moveZ,
-      turretRotation: null, // Don't modify turret with left stick
     });
   };
 
@@ -153,10 +152,8 @@ const MobileJoysticks = () => {
 
     // Send absolute turret rotation input to game state
     setInput({
-      moveX: null, // Don't modify movement with right stick
-      moveZ: null, // Don't modify movement with right stick
-      turretRotation: correctedAngle, // Set inverted and adjusted turret rotation angle
-      isFiring: true, // Fire when aiming
+      turretRotation: correctedAngle,
+      isFiring: true,
     });
   };
 
