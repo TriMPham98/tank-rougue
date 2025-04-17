@@ -60,24 +60,24 @@
   --font-primary: "Orbitron", "Arial", sans-serif; /* Example Sci-fi/Blocky font */
   --font-secondary: "Roboto Mono", "Courier New", monospace; /* Monospace for data */
 
-  /* Import fonts (place this at the very top if possible, or ensure loaded elsewhere) */
+  /* Import fonts */
   @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono&display=swap");
 }
 
 /* --- Base Game UI Container --- */
 .game-ui.military-theme {
-  position: fixed; /* Changed from absolute */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* Allow clicks to pass through UI elements unless specified */
-  z-index: 1000; /* Keep original z-index */
-  font-family: var(--font-secondary); /* Default to monospace theme font */
+  pointer-events: none;
+  z-index: 1000;
+  font-family: var(--font-secondary);
   color: var(--color-text-primary);
-  overflow: hidden; /* Prevent scrollbars */
+  overflow: hidden;
 }
-/* Optional: Add blur effect to background when game over */
+
 .game-ui.military-theme.blur-background::before {
   content: "";
   position: absolute;
@@ -86,7 +86,7 @@
   right: 0;
   bottom: 0;
   backdrop-filter: blur(5px);
-  z-index: 99; /* Below overlays */
+  z-index: 99;
   pointer-events: none;
 }
 
@@ -101,8 +101,8 @@
   left: 10px;
   right: 10px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: space-between; /* Adjusted to ensure rank-progression aligns right */
+  align-items: center; /* Center vertically */
   gap: 15px;
   padding: 15px 20px;
   color: #5fdc5f;
@@ -114,7 +114,6 @@
   font-family: "Courier New", monospace;
 }
 
-/* Add scanline effect */
 .military-theme .top-hud:before {
   content: "";
   position: absolute;
@@ -217,16 +216,36 @@
 
 /* Combat Score specific */
 .military-theme .combat-score {
-  flex: 0 1 auto;
+  flex: 1 1 auto; /* Allow it to take available space */
   text-align: center;
   padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
 }
 
 /* Rank Progression specific */
 .military-theme .rank-progression {
-  flex: 1 1 250px;
+  flex: 0 1 200px; /* Reduced width from 250px */
   text-align: right;
-  min-width: 200px;
+  min-width: 180px; /* Reduced from 200px */
+}
+
+.military-theme .rank-progression .progress-bar-container {
+  height: 10px; /* Reduced from 12px */
+}
+
+.military-theme .rank-progression .progress-bar {
+  height: 100%;
+}
+
+.military-theme .rank-progression .progress-text {
+  font-size: 0.6rem; /* Reduced from 0.7rem */
+}
+
+.military-theme .rank-progression .progress-label {
+  font-size: 0.65rem; /* Reduced from 0.7rem */
 }
 
 .military-theme .rank-indicator {
@@ -236,29 +255,29 @@
   font-family: "Courier New", monospace;
   font-weight: bold;
   color: #5fdc5f;
-  width: 28px;
-  height: 24px;
+  width: 24px; /* Reduced from 28px */
+  height: 20px; /* Reduced from 24px */
   border: 1px solid #2f7c2f;
   border-radius: 3px;
-  font-size: 0.9rem;
+  font-size: 0.8rem; /* Reduced from 0.9rem */
   margin: 0 5px;
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.5);
   background-color: rgba(20, 30, 20, 0.7);
 }
 
 .military-theme .target-count-info {
-  font-size: 0.8rem;
+  font-size: 0.7rem; /* Reduced from 0.8rem */
   color: #a0d0a0;
   margin-left: 5px;
   font-family: "Courier New", monospace;
   letter-spacing: 0.5px;
 }
 
-/* --- Player Stats Panel (Position Adjusted) --- */
+/* --- Player Stats Panel --- */
 .military-theme .player-stats-panel {
   position: absolute;
   right: 10px;
-  top: 120px; /* Increased to avoid overlap with top HUD */
+  top: 120px;
   width: 200px;
   background-color: rgba(30, 35, 30, 0.95);
   border: 2px solid #2f7c2f;
@@ -271,7 +290,6 @@
   color: #5fdc5f;
 }
 
-/* Add scanline effect */
 .military-theme .player-stats-panel:before {
   content: "";
   position: absolute;
@@ -320,7 +338,7 @@
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.5);
 }
 
-/* --- Overlays (Themed) --- */
+/* --- Overlays --- */
 .military-theme .overlay {
   position: absolute;
   top: 0;
@@ -347,7 +365,6 @@
   box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
 }
 
-/* Scan line animation effect */
 .military-theme .overlay-content:before {
   content: "";
   position: absolute;
@@ -366,7 +383,6 @@
   z-index: 2;
 }
 
-/* Header with decorations */
 .military-theme .overlay-content h2 {
   background-color: #1a2a1a;
   border-bottom: 2px solid #2f7c2f;
@@ -385,7 +401,6 @@
   position: relative;
 }
 
-/* Header decorations */
 .military-theme .overlay-content h2:before,
 .military-theme .overlay-content h2:after {
   content: "";
@@ -404,7 +419,6 @@
   margin-left: 15px;
 }
 
-/* Enhancement Cards Container */
 .military-theme .enhancement-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -413,7 +427,6 @@
   background-color: rgba(25, 30, 25, 0.7);
 }
 
-/* Enhancement Card */
 .military-theme .enhancement-card {
   background-color: rgba(40, 50, 40, 0.7);
   border: 1px solid #2f7c2f;
@@ -430,7 +443,6 @@
   border-color: #5fdc5f;
 }
 
-/* Enhancement Keybind */
 .military-theme .enhancement-keybind {
   position: absolute;
   top: 10px;
@@ -449,7 +461,6 @@
   font-size: 0.9rem;
 }
 
-/* Enhancement Name */
 .military-theme .enhancement-name {
   font-family: "Courier New", monospace;
   font-size: 1.4rem;
@@ -461,7 +472,6 @@
   padding-bottom: 10px;
 }
 
-/* Enhancement Value */
 .military-theme .enhancement-value {
   font-family: "Courier New", monospace;
   font-size: 1.1rem;
@@ -475,7 +485,6 @@
   font-weight: bold;
 }
 
-/* Enhancement Description */
 .military-theme .enhancement-desc {
   font-size: 0.95rem;
   color: #a0d0a0;
@@ -490,16 +499,16 @@
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   min-width: 400px;
-  min-height: 300px; /* Set minimum height for consistent spacing */
+  min-height: 300px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly; /* Evenly distribute space */
+  justify-content: space-evenly;
   align-items: center;
 }
 
 .military-theme .pause-title {
-  background-color: transparent; /* Remove background */
+  background-color: transparent;
   padding: 15px 20px;
   margin: 0;
   width: 100%;
@@ -535,7 +544,7 @@
   text-transform: uppercase;
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
-  margin: 0; /* Remove margin since we're using space-evenly */
+  margin: 0;
 }
 
 .military-theme .resume-button:hover {
@@ -580,6 +589,7 @@
 .military-theme .warning-icon {
   font-size: 1.3em;
 }
+
 .military-theme .warning-text {
   font-family: var(--font-primary);
   font-size: 0.9em;
@@ -587,6 +597,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+
 .military-theme .warning-text div:first-child {
   font-size: 1em;
   text-transform: uppercase;
@@ -600,32 +611,34 @@
 
 .military-theme .outside-zone-warning {
   top: 20%;
-  background-color: rgba(217, 83, 79, var(--opacity, 0.8)); /* Red */
+  background-color: rgba(217, 83, 79, var(--opacity, 0.8));
   box-shadow: 0 0 15px rgba(217, 83, 79, 0.5);
 }
+
 .military-theme .shrinking-zone-warning {
   top: calc(20% + 50px);
-  background-color: rgba(240, 173, 78, var(--opacity, 0.8)); /* Orange */
+  background-color: rgba(240, 173, 78, var(--opacity, 0.8));
   box-shadow: 0 0 15px rgba(240, 173, 78, 0.5);
 }
-/* Adjust top position */
+
 .military-theme .outside-zone-warning:only-of-type,
 .military-theme .containment-warning:only-of-type,
 .military-theme .shrinking-zone-warning:only-of-type {
   top: 20%;
 }
+
 .military-theme .outside-zone-warning ~ .shrinking-zone-warning,
 .military-theme .containment-warning ~ .shrinking-zone-warning {
-  top: calc(20% + 50px); /* Ensure space when multiple warnings show */
+  top: calc(20% + 50px);
 }
 
 /* --- Tactical Display / Minimap --- */
 .military-theme .tactical-display {
   position: absolute;
-  bottom: 50px; /* Position above controls */
+  bottom: 50px;
   right: 15px;
-  width: 150px; /* Increased by 25% from 120px */
-  height: 150px; /* Increased by 25% from 120px */
+  width: 150px;
+  height: 150px;
   background-color: var(--color-radar-background);
   border: 2px solid var(--color-border-medium);
   border-radius: 4px;
@@ -634,7 +647,6 @@
   pointer-events: none;
 }
 
-/* Hide tactical info completely */
 .military-theme .tactical-info {
   display: none;
 }
@@ -643,6 +655,7 @@
   position: absolute;
   inset: 0;
 }
+
 .military-theme .radar-rings {
   position: absolute;
   border: 1px solid var(--color-radar-lines);
@@ -651,14 +664,17 @@
   top: 50%;
   transform: translate(-50%, -50%);
 }
+
 .military-theme .radar-rings.ring-1 {
   width: 33%;
   height: 33%;
 }
+
 .military-theme .radar-rings.ring-2 {
   width: 66%;
   height: 66%;
 }
+
 .military-theme .radar-rings.ring-3 {
   width: 99%;
   height: 99%;
@@ -669,14 +685,17 @@
   border-radius: 50%;
   pointer-events: none;
 }
+
 .military-theme .zone-circle.current-zone {
   border: 2px solid var(--color-zone-current);
   background-color: var(--color-zone-current-bg);
 }
+
 .military-theme .zone-circle.target-zone {
   border: 1px dashed var(--color-zone-target);
   background-color: var(--color-zone-target-bg);
 }
+
 .military-theme .zone-circle.next-zone-preview {
   border: 2px dashed var(--color-zone-preview);
   background-color: var(--color-zone-preview-bg);
@@ -710,17 +729,20 @@
   transform: translate(-50%, -50%);
   z-index: 102;
 }
+
 .military-theme .hostile-marker.tank {
   width: 6px;
   height: 6px;
   background-color: var(--color-radar-hostile-tank);
 }
+
 .military-theme .hostile-marker.turret {
   width: 5px;
   height: 5px;
   background-color: var(--color-radar-hostile-turret);
   border-radius: 0;
 }
+
 .military-theme .hostile-marker.bomber {
   width: 7px;
   height: 7px;
@@ -731,7 +753,7 @@
 
 .military-theme .tactical-info {
   position: absolute;
-  bottom: -60px; /* Below map */
+  bottom: -60px;
   left: 0;
   width: 100%;
   font-size: 8px;
@@ -741,12 +763,14 @@
   padding: 3px 0;
   border-top: 1px solid var(--color-border-light);
 }
+
 .military-theme .info-header {
   font-family: var(--font-primary);
   font-size: 9px;
   margin-bottom: 2px;
   color: var(--color-accent-bright);
 }
+
 .military-theme .info-line {
   line-height: 1.3;
   margin-bottom: 1px;
@@ -755,38 +779,48 @@
   align-items: center;
   gap: 4px;
 }
+
 .military-theme .info-line.small {
   font-size: 7px;
 }
+
 .military-theme .info-line.timer {
   font-weight: bold;
   font-size: 10px;
 }
+
 .military-theme .info-line.damage {
   color: var(--color-zone-damage-text);
   font-weight: bold;
 }
+
 .military-theme .info-line.warning {
   color: var(--color-text-warning);
   font-weight: bold;
 }
+
 .military-theme .zone-status {
   font-weight: bold;
   text-transform: uppercase;
   margin-left: 4px;
 }
+
 .military-theme .zone-status.new {
   color: var(--color-accent-bright);
 }
+
 .military-theme .zone-status.warning {
   color: var(--color-text-warning);
 }
+
 .military-theme .zone-status.complete {
   color: var(--color-progress-complete);
 }
+
 .military-theme .zone-detail {
   opacity: 0.8;
 }
+
 .military-theme .legend {
   margin-top: 3px;
   padding-top: 2px;
@@ -796,32 +830,37 @@
   gap: 6px;
   font-size: 7px;
 }
+
 .military-theme .legend-item {
   display: inline-flex;
   align-items: center;
 }
+
 .military-theme .legend-item.player::before {
   content: "▲";
   color: var(--color-radar-player);
   margin-right: 2px;
 }
+
 .military-theme .legend-item.tank::before {
   content: "●";
   color: var(--color-radar-hostile-tank);
   margin-right: 2px;
 }
+
 .military-theme .legend-item.turret::before {
   content: "■";
   color: var(--color-radar-hostile-turret);
   margin-right: 2px;
 }
+
 .military-theme .legend-item.bomber::before {
   content: "♦";
   color: var(--color-radar-hostile-bomber);
   margin-right: 2px;
 }
 
-/* --- Controls Info (Themed) --- */
+/* --- Controls Info --- */
 .military-theme .controls-info {
   position: absolute;
   bottom: 10px;
@@ -838,24 +877,27 @@
   white-space: nowrap;
   font-family: var(--font-secondary);
 }
+
 .military-theme .controls-info span {
   font-family: var(--font-primary);
   color: var(--color-text-highlight);
   margin: 0 5px;
   text-transform: uppercase;
 }
+
 .military-theme .controls-info span::before {
   content: "[";
   opacity: 0.7;
   margin-right: 2px;
 }
+
 .military-theme .controls-info span::after {
   content: "]";
   opacity: 0.7;
   margin-left: 2px;
 }
 
-/* --- Weapon Selection (Themed) --- */
+/* --- Weapon Selection --- */
 .military-theme .weapon-selection-overlay {
   position: fixed;
   top: 0;
@@ -880,8 +922,6 @@
   width: 90%;
   color: var(--color-text-primary);
 }
-
-/* Weapon selection title handled by generic .overlay-content h2 + .weapon-selection-title */
 
 .military-theme .weapon-grid {
   display: grid;
@@ -1010,7 +1050,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center children horizontally */
+  align-items: center;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
 }
 
@@ -1043,7 +1083,7 @@
   margin: 15px 30px;
   letter-spacing: 1px;
   text-align: left;
-  align-self: stretch; /* Make paragraphs full width */
+  align-self: stretch;
 }
 
 .military-theme .restart-button {
@@ -1058,7 +1098,7 @@
   letter-spacing: 2px;
   font-size: 1.1rem;
   font-weight: bold;
-  margin: 20px 0 30px; /* Remove horizontal margin since we're centering */
+  margin: 20px 0 30px;
   text-transform: uppercase;
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
