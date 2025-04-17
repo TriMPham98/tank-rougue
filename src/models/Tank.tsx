@@ -63,8 +63,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const {
     moveX,
     moveZ,
-    forward,
-    strafe,
     turretRotation: touchTurretRotation,
     isFiring: touchIsFiring,
     playerTurretDamage,

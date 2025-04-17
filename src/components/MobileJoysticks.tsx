@@ -9,16 +9,11 @@ interface JoystickPosition {
 
 const MobileJoysticks = () => {
   const { setInput } = useGameState();
+  // State for joystick positions (commented out as unused)
+  // const [leftPosition, setLeftPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
   const [leftActive, setLeftActive] = useState(false);
-  const [leftPosition, setLeftPosition] = useState<JoystickPosition>({
-    x: 0,
-    y: 0,
-  });
+  // const [rightPosition, setRightPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
   const [rightActive, setRightActive] = useState(false);
-  const [rightPosition, setRightPosition] = useState<JoystickPosition>({
-    x: 0,
-    y: 0,
-  });
 
   const leftJoystickRef = useRef<HTMLDivElement>(null);
   const leftStickRef = useRef<HTMLDivElement>(null);
@@ -47,11 +42,11 @@ const MobileJoysticks = () => {
   if (!isMobile) return null;
 
   // Left joystick handlers (movement)
-  const handleLeftStart = (e: React.TouchEvent) => {
+  const handleLeftStart = (_e: React.TouchEvent) => {
     setLeftActive(true);
 
     if (leftJoystickRef.current && leftStickRef.current) {
-      setLeftPosition({ x: 0, y: 0 });
+      // setLeftPosition({ x: 0, y: 0 }); // Commented out as unused
       leftStickRef.current.style.transform = `translate(0px, 0px)`;
     }
   };
@@ -81,7 +76,7 @@ const MobileJoysticks = () => {
     }
 
     // Update joystick position
-    setLeftPosition({ x: deltaX, y: deltaY });
+    // setLeftPosition({ x: deltaX, y: deltaY }); // Commented out as unused
     leftStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
     // Calculate absolute movement values based on joystick position
@@ -103,7 +98,7 @@ const MobileJoysticks = () => {
 
     if (leftStickRef.current) {
       leftStickRef.current.style.transform = `translate(0px, 0px)`;
-      setLeftPosition({ x: 0, y: 0 });
+      // setLeftPosition({ x: 0, y: 0 }); // Commented out as unused
 
       // Stop absolute movement when joystick is released
       setInput({
@@ -114,11 +109,11 @@ const MobileJoysticks = () => {
   };
 
   // Right joystick handlers (turret rotation)
-  const handleRightStart = (e: React.TouchEvent) => {
+  const handleRightStart = (_e: React.TouchEvent) => {
     setRightActive(true);
 
     if (rightJoystickRef.current && rightStickRef.current) {
-      setRightPosition({ x: 0, y: 0 });
+      // setRightPosition({ x: 0, y: 0 }); // Commented out as unused
       rightStickRef.current.style.transform = `translate(0px, 0px)`;
     }
   };
@@ -148,7 +143,7 @@ const MobileJoysticks = () => {
     }
 
     // Update joystick position
-    setRightPosition({ x: deltaX, y: deltaY });
+    // setRightPosition({ x: deltaX, y: deltaY }); // Commented out as unused
     rightStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
     // Calculate absolute angle based on joystick position
@@ -170,12 +165,12 @@ const MobileJoysticks = () => {
     });
   };
 
-  const handleRightEnd = (e: React.TouchEvent) => {
+  const handleRightEnd = (_e: React.TouchEvent) => {
     setRightActive(false);
 
     if (rightStickRef.current) {
       rightStickRef.current.style.transform = `translate(0px, 0px)`;
-      setRightPosition({ x: 0, y: 0 });
+      // setRightPosition({ x: 0, y: 0 }); // Commented out as unused
 
       // Stop firing when joystick is released
       setInput({
