@@ -143,11 +143,12 @@
 
 .military-theme .hud-label {
   font-family: "Courier New", monospace;
-  font-size: 1.35rem; /* Increased from 0.9rem by 50% */
+  font-size: 1.35rem;
   color: #a0d0a0;
   margin-bottom: 6px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   white-space: nowrap;
   text-transform: uppercase;
@@ -199,9 +200,9 @@
 }
 
 .military-theme .progress-label {
-  font-size: 0.975rem; /* Increased from 0.65rem by 50% */
+  font-size: 0.975rem;
   color: #a0d0a0;
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   letter-spacing: 0.5px;
 }
@@ -209,7 +210,7 @@
 /* Hull Integrity specific */
 .military-theme .hull-integrity {
   flex: 0 1 300px;
-  text-align: left;
+  text-align: center;
   min-width: 250px;
 }
 
@@ -232,7 +233,7 @@
 /* Rank Progression specific */
 .military-theme .rank-progression {
   flex: 0 1 350px;
-  text-align: right;
+  text-align: center;
   min-width: 300px;
 }
 
