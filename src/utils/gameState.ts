@@ -95,6 +95,12 @@ interface GameState {
   availableWeapons: SecondaryWeapon[];
   selectedWeapons: SecondaryWeapon[];
 
+  // Input state
+  forward: number; // -1 to 1 (backward to forward)
+  strafe: number; // -1 to 1 (left to right)
+  turretRotation: number | null; // Angle in radians
+  isFiring: boolean;
+
   // Actions
   takeDamage: (amount: number) => void;
   healPlayer: (amount: number) => void;
@@ -122,6 +128,12 @@ interface GameState {
   updateEnemyPositions: (
     enemyMoves: { id: string; newPosition: [number, number, number] }[]
   ) => void;
+  setInput: (input: {
+    forward?: number | null;
+    strafe?: number | null;
+    turretRotation?: number | null;
+    isFiring?: boolean;
+  }) => void;
 }
 
 // Create the game state store
@@ -173,6 +185,12 @@ export const useGameState = create<GameState>((set, get) => ({
   showWeaponSelection: false,
   availableWeapons,
   selectedWeapons: [],
+
+  // Input state
+  forward: 0,
+  strafe: 0,
+  turretRotation: null,
+  isFiring: false,
 
   // Actions
   takeDamage: (amount) =>
@@ -770,6 +788,30 @@ export const useGameState = create<GameState>((set, get) => ({
       });
 
       return { enemies: updatedEnemies };
+    });
+  },
+
+  setInput: (input) => {
+    set((state) => {
+      const newState: Partial<GameState> = {};
+
+      if (input.forward !== undefined && input.forward !== null) {
+        newState.forward = input.forward;
+      }
+
+      if (input.strafe !== undefined && input.strafe !== null) {
+        newState.strafe = input.strafe;
+      }
+
+      if (input.turretRotation !== undefined) {
+        newState.turretRotation = input.turretRotation;
+      }
+
+      if (input.isFiring !== undefined) {
+        newState.isFiring = input.isFiring;
+      }
+
+      return newState;
     });
   },
 }));

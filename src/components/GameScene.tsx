@@ -21,6 +21,7 @@ import { Vector3, SpotLight as ThreeSpotLight } from "three";
 import "./GameScene.css";
 import { useRespawnManager } from "../utils/respawnManager";
 import { debug } from "../utils/debug";
+import MobileJoysticks from "../components/MobileJoysticks";
 
 // Custom hook to calculate light intensity based on game level
 const useLightIntensity = () => {
@@ -425,6 +426,7 @@ const GameScene = () => {
           <TerrainObstacleGenerator />
           <SceneContent playerTank={<Tank position={[0, 0.5, 0]} />} />
         </Canvas>
+        <MobileJoysticks />
       </div>
     </ErrorBoundary>
   );

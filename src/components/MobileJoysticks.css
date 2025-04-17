@@ -1,0 +1,128 @@
+.mobile-joysticks {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 180px;
+  z-index: 100;
+  pointer-events: none;
+  user-select: none;
+}
+
+.joystick-container {
+  position: absolute;
+  bottom: 20px;
+  width: 120px;
+  height: 120px;
+  pointer-events: auto;
+}
+
+.left-joystick {
+  left: 20px;
+}
+
+.right-joystick {
+  right: 20px;
+}
+
+.joystick-base {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(10, 15, 10, 0.7);
+  border: 2px solid #2f7c2f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.15);
+  position: relative;
+}
+
+.joystick-base:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(60, 180, 60, 0.1) 0%,
+    rgba(10, 15, 10, 0.2) 70%
+  );
+  pointer-events: none;
+}
+
+.joystick-stick {
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background-color: rgba(60, 180, 60, 0.6);
+  border: 2px solid #5fdc5f;
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  position: relative;
+  transition: transform 0.05s ease-out;
+}
+
+.joystick-label {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #5fdc5f;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.fire-button {
+  position: absolute;
+  bottom: 85px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: rgba(180, 30, 30, 0.7);
+  border: 2px solid #aa3333;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 1px;
+  pointer-events: auto;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+  user-select: none;
+  text-shadow: 0 0 10px rgba(255, 100, 100, 0.8);
+}
+
+.fire-button:active {
+  background-color: rgba(220, 30, 30, 0.9);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+/* Hide on desktop */
+@media (min-width: 1024px) {
+  .mobile-joysticks {
+    display: none;
+  }
+}
+
+/* Only show in landscape on mobile */
+@media screen and (orientation: portrait) {
+  .mobile-joysticks {
+    display: none;
+  }
+}
+
+/* Show in landscape on mobile */
+@media screen and (orientation: landscape) and (max-width: 1023px) {
+  .mobile-joysticks {
+    display: block;
+  }
+}

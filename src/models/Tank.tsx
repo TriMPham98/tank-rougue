@@ -48,8 +48,20 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     { id: string; position: [number, number, number]; rotation: number }[]
   >([]);
 
-  const { forward, backward, left, right, turretLeft, turretRight, shoot } =
-    useKeyboardControls();
+  const {
+    forward: keyForward,
+    backward: keyBackward,
+    left: keyLeft,
+    right: keyRight,
+    turretLeft: keyTurretLeft,
+    turretRight: keyTurretRight,
+    shoot: keyShoot,
+  } = useKeyboardControls();
+
+  const touchForward = useGameState((state) => state.forward);
+  const touchStrafe = useGameState((state) => state.strafe);
+  const touchTurretRotation = useGameState((state) => state.turretRotation);
+  const touchIsFiring = useGameState((state) => state.isFiring);
 
   const sound = useSound();
 
@@ -118,7 +130,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     };
   }, [position, updatePlayerPosition]);
 
-  // Reset the sound timer when fire rate changes (from upgrades)
   useEffect(() => {
     resetSoundTimer("playerCannon");
   }, [playerFireRate]);
@@ -126,20 +137,69 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   useFrame((state, delta) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
-    if (left) tankRotationRef.current += delta * 3.5;
-    if (right) tankRotationRef.current -= delta * 3.5;
+    if (keyLeft || (touchStrafe < 0 && touchForward === 0))
+      tankRotationRef.current += delta * 3.5;
+    if (keyRight || (touchStrafe > 0 && touchForward === 0))
+      tankRotationRef.current -= delta * 3.5;
+
+    if (touchStrafe !== 0 && touchForward !== 0) {
+      const joystickAngle = Math.atan2(touchStrafe, touchForward);
+      const targetRotation = tankRotationRef.current - joystickAngle;
+      const rotationDiff = targetRotation % (Math.PI * 2);
+      const wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+      tankRotationRef.current -= wrappedDiff * delta * 3;
+    }
+
     tankRef.current.rotation.y = tankRotationRef.current;
 
     let moved = false;
     const moveSpeed = playerSpeed;
-    if (forward || backward) {
-      const moveDirection = forward ? 1 : -1;
+
+    const isMovingForward = keyForward || touchForward > 0;
+    const isMovingBackward = keyBackward || touchForward < 0;
+    const moveMagnitude = touchForward !== 0 ? Math.abs(touchForward) : 1;
+
+    if (isMovingForward || isMovingBackward) {
+      const moveDirection = isMovingForward ? 1 : -1;
       const potentialX =
         tankRef.current.position.x +
-        Math.sin(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+        Math.sin(tankRotationRef.current) *
+          delta *
+          moveSpeed *
+          moveDirection *
+          moveMagnitude;
       const potentialZ =
         tankRef.current.position.z +
-        Math.cos(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+        Math.cos(tankRotationRef.current) *
+          delta *
+          moveSpeed *
+          moveDirection *
+          moveMagnitude;
+      if (!checkTerrainCollision(potentialX, potentialZ)) {
+        tankRef.current.position.x = potentialX;
+        tankRef.current.position.z = potentialZ;
+        moved = true;
+      }
+    }
+
+    if (touchStrafe !== 0 && touchForward !== 0) {
+      const strafeDirection = touchStrafe > 0 ? 1 : -1;
+      const potentialX =
+        tankRef.current.position.x +
+        Math.cos(tankRotationRef.current) *
+          delta *
+          moveSpeed *
+          strafeDirection *
+          Math.abs(touchStrafe) *
+          0.5;
+      const potentialZ =
+        tankRef.current.position.z -
+        Math.sin(tankRotationRef.current) *
+          delta *
+          moveSpeed *
+          strafeDirection *
+          Math.abs(touchStrafe) *
+          0.5;
       if (!checkTerrainCollision(potentialX, potentialZ)) {
         tankRef.current.position.x = potentialX;
         tankRef.current.position.z = potentialZ;
@@ -148,14 +208,22 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     }
 
     if (turretRef.current) {
-      if (turretLeft) turretRotationRef.current += delta * 2.5;
-      if (turretRight) turretRotationRef.current -= delta * 2.5;
+      if (keyTurretLeft) turretRotationRef.current += delta * 2.5;
+      if (keyTurretRight) turretRotationRef.current -= delta * 2.5;
+
+      if (touchTurretRotation !== null) {
+        turretRotationRef.current =
+          touchTurretRotation - tankRotationRef.current;
+      }
+
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
     const currentTime = state.clock.getElapsedTime();
     const timeSinceLastShot = currentTime - lastShootTimeRef.current;
+    const isShootingRequested = keyShoot || touchIsFiring;
 
+    // Auto-shooting logic
     if (timeSinceLastShot >= playerFireRate) {
       const shotsMissed = Math.floor(timeSinceLastShot / playerFireRate);
       if (shotsMissed > 0) {
@@ -180,12 +248,13 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           currentTime - (timeSinceLastShot % playerFireRate);
 
         // Play cannon sound effect when firing
-        sound.setVolume("playerCannon", 0.20);
+        sound.setVolume("playerCannon", 0.2);
         sound.play("playerCannon");
       }
     }
 
-    if (shoot) {
+    // Manual shooting for fire button on mobile
+    if (isShootingRequested) {
       debug.log(`Shoot button pressed (main turret auto-fires)`);
     }
 
