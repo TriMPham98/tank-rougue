@@ -46,7 +46,6 @@ const MobileJoysticks = () => {
     setLeftActive(true);
 
     if (leftJoystickRef.current && leftStickRef.current) {
-      const joystickRect = leftJoystickRef.current.getBoundingClientRect();
       setLeftPosition({ x: 0, y: 0 });
       leftStickRef.current.style.transform = `translate(0px, 0px)`;
     }
@@ -116,7 +115,6 @@ const MobileJoysticks = () => {
     setRightActive(true);
 
     if (rightJoystickRef.current && rightStickRef.current) {
-      const joystickRect = rightJoystickRef.current.getBoundingClientRect();
       setRightPosition({ x: 0, y: 0 });
       rightStickRef.current.style.transform = `translate(0px, 0px)`;
     }
