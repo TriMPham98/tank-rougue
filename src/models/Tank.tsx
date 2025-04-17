@@ -141,35 +141,89 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     let moved = false;
     const moveSpeed = playerSpeed;
+    const turnSpeed = 3.5; // Rotation speed factor
 
-    // --- Tank Rotation (Keyboard A/D Only) ---
-    if (keyLeft) tankRotationRef.current += delta * 3.5;
-    if (keyRight) tankRotationRef.current -= delta * 3.5;
+    // --- Tank Rotation ---
+    let targetRotation = tankRotationRef.current; // Initialize with current rotation
+    let applyRotationSmoothing = false;
+
+    if (keyLeft) {
+      // Keyboard rotation takes precedence
+      tankRotationRef.current += delta * turnSpeed;
+    } else if (keyRight) {
+      // Keyboard rotation takes precedence
+      tankRotationRef.current -= delta * turnSpeed;
+    } else if ((moveX !== 0 || moveZ !== 0) && !keyForward && !keyBackward) {
+      // Joystick Rotation (if no keyboard movement/rotation)
+      // Target direction based on absolute joystick input
+      targetRotation = Math.atan2(moveX, moveZ);
+      applyRotationSmoothing = true;
+    }
+
+    // Apply smoothed rotation towards target if needed
+    if (applyRotationSmoothing) {
+      const rotationDiff = targetRotation - tankRotationRef.current;
+      // Wrap the angle difference to the range [-PI, PI]
+      let wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+      const tolerance = 0.05; // Tolerance to snap near target
+      const maxTurnThisFrame = turnSpeed * 1.5 * delta; // Max rotation this frame
+
+      if (Math.abs(wrappedDiff) < tolerance) {
+        // Snap to target if very close
+        tankRotationRef.current = targetRotation;
+      } else if (Math.abs(wrappedDiff) < maxTurnThisFrame) {
+        // If the remaining difference is smaller than max turn, snap to target
+        // This prevents overshooting when close but outside tolerance
+        tankRotationRef.current = targetRotation;
+      } else {
+        // Apply limited rotation step
+        tankRotationRef.current += Math.sign(wrappedDiff) * maxTurnThisFrame;
+      }
+    }
+
+    // Normalize the final tank rotation
+    tankRotationRef.current =
+      (tankRotationRef.current + Math.PI * 2) % (Math.PI * 2);
     tankRef.current.rotation.y = tankRotationRef.current;
 
-    // --- Tank Movement (Prioritize Keyboard W/S, fallback to Absolute Joystick) ---
+    // --- Tank Movement ---
     let potentialX = tankRef.current.position.x;
     let potentialZ = tankRef.current.position.z;
+    let movementMagnitude = 0;
 
     if (keyForward || keyBackward) {
       // Keyboard movement (Relative Forward/Backward)
-      const moveDirection = keyForward ? 1 : -1;
+      movementMagnitude = keyForward ? 1 : -1;
       potentialX +=
-        Math.sin(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+        Math.sin(tankRotationRef.current) *
+        delta *
+        moveSpeed *
+        movementMagnitude;
       potentialZ +=
-        Math.cos(tankRotationRef.current) * delta * moveSpeed * moveDirection;
+        Math.cos(tankRotationRef.current) *
+        delta *
+        moveSpeed *
+        movementMagnitude;
     } else if (moveX !== 0 || moveZ !== 0) {
-      // Absolute Joystick movement (if no W/S keys pressed)
-      const moveVector = new Vector3(moveX, 0, moveZ);
-      if (moveVector.length() > 1) {
-        moveVector.normalize(); // Normalize diagonal joystick input
-      }
-      potentialX += moveVector.x * delta * moveSpeed;
-      potentialZ += moveVector.z * delta * moveSpeed;
+      // Joystick movement (Move forward in the direction tank is facing)
+      // Calculate magnitude from joystick vector length, clamp to 1
+      movementMagnitude = Math.min(1, Math.sqrt(moveX * moveX + moveZ * moveZ));
+      potentialX +=
+        Math.sin(tankRotationRef.current) *
+        delta *
+        moveSpeed *
+        movementMagnitude;
+      potentialZ +=
+        Math.cos(tankRotationRef.current) *
+        delta *
+        moveSpeed *
+        movementMagnitude;
     }
 
-    // Apply movement if no collision and position changed
+    // Apply movement if magnitude > 0, no collision, and position changed
     if (
+      movementMagnitude !== 0 &&
       (potentialX !== tankRef.current.position.x ||
         potentialZ !== tankRef.current.position.z) &&
       !checkTerrainCollision(potentialX, potentialZ)
