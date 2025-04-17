@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useGameState } from "../utils/gameState";
 import "./MobileJoysticks.css";
 
+// Store touch identifiers
+let leftTouchId: number | null = null;
+let rightTouchId: number | null = null;
+
 const MobileJoysticks = () => {
   const { setInput } = useGameState();
   // State for joystick positions (commented out as unused)
@@ -31,36 +35,69 @@ const MobileJoysticks = () => {
     if ("ontouchstart" in window) {
       setIsMobile(true);
     }
+
+    // Cleanup touch identifiers on unmount
+    return () => {
+      leftTouchId = null;
+      rightTouchId = null;
+    };
   }, []);
 
   // If not mobile, don't render joysticks
   if (!isMobile) return null;
 
   // Left joystick handlers (movement)
-  const handleLeftStart = (_e: React.TouchEvent) => {
-    setLeftActive(true);
+  const handleLeftStart = (e: React.TouchEvent) => {
+    // Prevent default behavior like scrolling
+    e.preventDefault();
 
-    if (leftJoystickRef.current && leftStickRef.current) {
-      // setLeftPosition({ x: 0, y: 0 }); // Commented out as unused
-      leftStickRef.current.style.transform = `translate(0px, 0px)`;
+    // Only handle the first touch on the left joystick
+    if (leftTouchId !== null) return;
+
+    const touch = e.changedTouches[0];
+    if (touch) {
+      leftTouchId = touch.identifier;
+      setLeftActive(true);
+
+      if (leftJoystickRef.current && leftStickRef.current) {
+        // setLeftPosition({ x: 0, y: 0 }); // Commented out as unused
+        leftStickRef.current.style.transform = `translate(0px, 0px)`;
+      }
+      // Start movement immediately if needed (optional, based on desired feel)
+      // handleLeftMove(e);
     }
   };
 
   const handleLeftMove = (e: React.TouchEvent) => {
-    if (!leftActive || !leftJoystickRef.current || !leftStickRef.current)
+    e.preventDefault();
+    if (
+      !leftActive ||
+      leftTouchId === null ||
+      !leftJoystickRef.current ||
+      !leftStickRef.current
+    )
       return;
 
-    const touch = e.touches[0];
-    const joystickRect = leftJoystickRef.current.getBoundingClientRect();
+    // Find the correct touch
+    let touch = null;
+    for (let i = 0; i < e.touches.length; i++) {
+      if (e.touches[i].identifier === leftTouchId) {
+        touch = e.touches[i];
+        break;
+      }
+    }
 
-    // Calculate position relative to joystick center
+    // If the touch is not found (e.g., lifted unexpectedly), end the movement
+    if (!touch) {
+      handleLeftEnd(e);
+      return;
+    }
+
+    const joystickRect = leftJoystickRef.current.getBoundingClientRect();
     const centerX = joystickRect.width / 2;
     const centerY = joystickRect.height / 2;
-
     let deltaX = touch.clientX - (joystickRect.left + centerX);
     let deltaY = touch.clientY - (joystickRect.top + centerY);
-
-    // Limit distance to joystick radius
     const maxRadius = joystickRect.width / 2 - 10;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
@@ -87,7 +124,19 @@ const MobileJoysticks = () => {
     });
   };
 
-  const handleLeftEnd = () => {
+  const handleLeftEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    let touchEnded = false;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === leftTouchId) {
+        touchEnded = true;
+        break;
+      }
+    }
+
+    if (!touchEnded) return; // Only process if the tracked touch ended
+
+    leftTouchId = null; // Clear the touch ID
     setLeftActive(false);
 
     if (leftStickRef.current) {
@@ -103,30 +152,51 @@ const MobileJoysticks = () => {
   };
 
   // Right joystick handlers (turret rotation)
-  const handleRightStart = (_e: React.TouchEvent) => {
-    setRightActive(true);
+  const handleRightStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (rightTouchId !== null) return;
 
-    if (rightJoystickRef.current && rightStickRef.current) {
-      // setRightPosition({ x: 0, y: 0 }); // Commented out as unused
-      rightStickRef.current.style.transform = `translate(0px, 0px)`;
+    const touch = e.changedTouches[0];
+    if (touch) {
+      rightTouchId = touch.identifier;
+      setRightActive(true);
+
+      if (rightJoystickRef.current && rightStickRef.current) {
+        rightStickRef.current.style.transform = `translate(0px, 0px)`;
+      }
+      // Start aiming/firing immediately if needed
+      // handleRightMove(e);
     }
   };
 
   const handleRightMove = (e: React.TouchEvent) => {
-    if (!rightActive || !rightJoystickRef.current || !rightStickRef.current)
+    e.preventDefault();
+    if (
+      !rightActive ||
+      rightTouchId === null ||
+      !rightJoystickRef.current ||
+      !rightStickRef.current
+    )
       return;
 
-    const touch = e.touches[0];
-    const joystickRect = rightJoystickRef.current.getBoundingClientRect();
+    let touch = null;
+    for (let i = 0; i < e.touches.length; i++) {
+      if (e.touches[i].identifier === rightTouchId) {
+        touch = e.touches[i];
+        break;
+      }
+    }
 
-    // Calculate position relative to joystick center
+    if (!touch) {
+      handleRightEnd(e);
+      return;
+    }
+
+    const joystickRect = rightJoystickRef.current.getBoundingClientRect();
     const centerX = joystickRect.width / 2;
     const centerY = joystickRect.height / 2;
-
     let deltaX = touch.clientX - (joystickRect.left + centerX);
     let deltaY = touch.clientY - (joystickRect.top + centerY);
-
-    // Limit distance to joystick radius
     const maxRadius = joystickRect.width / 2 - 10;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
@@ -157,7 +227,19 @@ const MobileJoysticks = () => {
     });
   };
 
-  const handleRightEnd = (_e: React.TouchEvent) => {
+  const handleRightEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    let touchEnded = false;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === rightTouchId) {
+        touchEnded = true;
+        break;
+      }
+    }
+
+    if (!touchEnded) return;
+
+    rightTouchId = null; // Clear the touch ID
     setRightActive(false);
 
     if (rightStickRef.current) {
