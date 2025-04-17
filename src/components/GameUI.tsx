@@ -23,6 +23,7 @@ const getMaxTargets = (rank: number): number => {
 const GameUI = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isOutsideCombatZone, setIsOutsideCombatZone] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const warningOpacityRef = useRef(0);
   const warningAnimationRef = useRef<number>(0);
   const [isCombatZoneWarningVisible, setIsCombatZoneWarningVisible] =
@@ -580,6 +581,26 @@ const GameUI = () => {
     isPreContainmentShiftRank,
   ]);
 
+  // Add timer effect
+  useEffect(() => {
+    if (isGameOver || isPaused) return;
+
+    const timer = setInterval(() => {
+      setElapsedTime((prevTime) => prevTime + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isGameOver, isPaused]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   return (
     <div
       className={`game-ui military-theme ${
@@ -623,6 +644,7 @@ const GameUI = () => {
         <div className="hud-element combat-score">
           <div className="hud-label">COMBAT SCORE</div>
           <div className="score-value">{score}</div>
+          <div className="elapsed-time">{formatTime(elapsedTime)}</div>
         </div>
         <div className="hud-element rank-progression">
           <div className="hud-label">
