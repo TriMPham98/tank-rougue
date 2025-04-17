@@ -260,11 +260,11 @@
   font-family: "Courier New", monospace;
   font-weight: bold;
   color: #5fdc5f;
-  width: 24px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   border: 1px solid #2f7c2f;
   border-radius: 3px;
-  font-size: 1.2rem; /* Increased from 0.8rem by 50% */
+  font-size: 1.0rem;
   margin: 0 5px;
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.5);
   background-color: rgba(20, 30, 20, 0.7);
