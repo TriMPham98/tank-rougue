@@ -651,15 +651,14 @@
 /* --- Tactical Display / Minimap --- */
 .military-theme .tactical-display {
   position: absolute;
-  bottom: 15px;
-  right: 15px;
+  bottom: 20px;
+  right: 20px;
   width: 150px;
   height: 150px;
-  background-color: var(--color-radar-background);
-  border: 2px solid var(--color-border-medium);
-  border-radius: 4px;
+  background-color: rgba(30, 35, 30, 0.95);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
   overflow: hidden;
-  z-index: 60;
   pointer-events: none;
 }
 
@@ -1125,4 +1124,23 @@
   box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
   text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
   transform: translateY(-2px);
+}
+
+.military-theme .elapsed-time-display {
+  position: absolute;
+  right: 20px;
+  bottom: 190px;
+  width: 150px;
+  text-align: center;
+  font-family: "Courier New", monospace;
+  font-size: 1.2rem;
+  color: #a0d0a0;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
+  z-index: 102;
+  pointer-events: none;
+  background-color: rgba(20, 30, 20, 0.7);
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid #2f7c2f;
 }

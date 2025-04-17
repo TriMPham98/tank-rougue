@@ -425,6 +425,15 @@ const GameUI = () => {
 
   const { nextZoneTargetRadius, nextZoneShiftRank } = calculateNextZoneInfo();
 
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   useEffect(() => {
     let animationFrameId: number;
     if (
@@ -489,83 +498,87 @@ const GameUI = () => {
     const nextZoneRadiusPixels = nextZoneRadius * scale;
 
     return (
-      <div className="tactical-display">
-        <div className="radar-bg">
-          <div className="radar-rings ring-1"></div>
-          <div className="radar-rings ring-2"></div>
-          <div className="radar-rings ring-3"></div>
-        </div>
+      <>
+        <div className="elapsed-time-display">{formatTime(elapsedTime)}</div>
+        <div className="tactical-display">
+          <div className="radar-bg">
+            <div className="radar-rings ring-1"></div>
+            <div className="radar-rings ring-2"></div>
+            <div className="radar-rings ring-3"></div>
+          </div>
 
-        {combatZoneActive && (
-          <>
-            <div
-              className="zone-circle current-zone"
-              style={{
-                left: `${zoneCenterX - zoneRadiusPixels}px`,
-                top: `${zoneCenterY - zoneRadiusPixels}px`,
-                width: `${zoneRadiusPixels * 2}px`,
-                height: `${zoneRadiusPixels * 2}px`,
-              }}
-            />
+          {combatZoneActive && (
+            <>
+              <div
+                className="zone-circle current-zone"
+                style={{
+                  left: `${zoneCenterX - zoneRadiusPixels}px`,
+                  top: `${zoneCenterY - zoneRadiusPixels}px`,
+                  width: `${zoneRadiusPixels * 2}px`,
+                  height: `${zoneRadiusPixels * 2}px`,
+                }}
+              />
 
-            {combatZoneTargetRadius < combatZoneRadius &&
-              combatZoneRadius - combatZoneTargetRadius > 0.1 && (
+              {combatZoneTargetRadius < combatZoneRadius &&
+                combatZoneRadius - combatZoneTargetRadius > 0.1 && (
+                  <div
+                    className="zone-circle target-zone"
+                    style={{
+                      left: `${zoneCenterX - zoneTargetRadiusPixels}px`,
+                      top: `${zoneCenterY - zoneTargetRadiusPixels}px`,
+                      width: `${zoneTargetRadiusPixels * 2}px`,
+                      height: `${zoneTargetRadiusPixels * 2}px`,
+                    }}
+                  />
+                )}
+
+              {isPreShiftRank && (
                 <div
-                  className="zone-circle target-zone"
+                  className="zone-circle next-zone-preview"
                   style={{
-                    left: `${zoneCenterX - zoneTargetRadiusPixels}px`,
-                    top: `${zoneCenterY - zoneTargetRadiusPixels}px`,
-                    width: `${zoneTargetRadiusPixels * 2}px`,
-                    height: `${zoneTargetRadiusPixels * 2}px`,
+                    left: `${zoneCenterX - nextZoneRadiusPixels}px`,
+                    top: `${zoneCenterY - nextZoneRadiusPixels}px`,
+                    width: `${nextZoneRadiusPixels * 2}px`,
+                    height: `${nextZoneRadiusPixels * 2}px`,
                   }}
                 />
               )}
+            </>
+          )}
 
-            {isPreShiftRank && (
+          {hostiles.map((hostile) => {
+            const hostileXRaw = hostile.position[0] * scale + mapSize / 2;
+            const hostileYRaw = hostile.position[2] * scale + mapSize / 2;
+            const hostileX = Math.max(2, Math.min(mapSize - 2, hostileXRaw));
+            const hostileY = Math.max(2, Math.min(mapSize - 2, hostileYRaw));
+
+            let hostileClass = "hostile-marker tank";
+            if (hostile.type === "turret")
+              hostileClass = "hostile-marker turret";
+            else if (hostile.type === "bomber")
+              hostileClass = "hostile-marker bomber";
+
+            return (
               <div
-                className="zone-circle next-zone-preview"
+                key={`tacmap-hostile-${hostile.id}`}
+                className={hostileClass}
                 style={{
-                  left: `${zoneCenterX - nextZoneRadiusPixels}px`,
-                  top: `${zoneCenterY - nextZoneRadiusPixels}px`,
-                  width: `${nextZoneRadiusPixels * 2}px`,
-                  height: `${nextZoneRadiusPixels * 2}px`,
+                  left: `${hostileX}px`,
+                  top: `${hostileY}px`,
                 }}
               />
-            )}
-          </>
-        )}
+            );
+          })}
 
-        {hostiles.map((hostile) => {
-          const hostileXRaw = hostile.position[0] * scale + mapSize / 2;
-          const hostileYRaw = hostile.position[2] * scale + mapSize / 2;
-          const hostileX = Math.max(2, Math.min(mapSize - 2, hostileXRaw));
-          const hostileY = Math.max(2, Math.min(mapSize - 2, hostileYRaw));
-
-          let hostileClass = "hostile-marker tank";
-          if (hostile.type === "turret") hostileClass = "hostile-marker turret";
-          else if (hostile.type === "bomber")
-            hostileClass = "hostile-marker bomber";
-
-          return (
-            <div
-              key={`tacmap-hostile-${hostile.id}`}
-              className={hostileClass}
-              style={{
-                left: `${hostileX}px`,
-                top: `${hostileY}px`,
-              }}
-            />
-          );
-        })}
-
-        <div
-          className="player-marker"
-          style={{
-            left: `${playerX}px`,
-            top: `${playerY}px`,
-          }}
-        />
-      </div>
+          <div
+            className="player-marker"
+            style={{
+              left: `${playerX}px`,
+              top: `${playerY}px`,
+            }}
+          />
+        </div>
+      </>
     );
   }, [
     playerTankPosition,
@@ -579,6 +592,8 @@ const GameUI = () => {
     combatZoneTimeRemaining,
     rank,
     isPreContainmentShiftRank,
+    elapsedTime,
+    formatTime,
   ]);
 
   // Add timer effect
@@ -591,15 +606,6 @@ const GameUI = () => {
 
     return () => clearInterval(timer);
   }, [isGameOver, isPaused]);
-
-  // Format time as MM:SS
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
 
   return (
     <div
@@ -644,7 +650,6 @@ const GameUI = () => {
         <div className="hud-element combat-score">
           <div className="hud-label">COMBAT SCORE</div>
           <div className="score-value">{score}</div>
-          <div className="elapsed-time">{formatTime(elapsedTime)}</div>
         </div>
         <div className="hud-element rank-progression">
           <div className="hud-label">
