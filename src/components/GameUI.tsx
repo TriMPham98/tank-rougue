@@ -77,6 +77,17 @@ const GameUI = () => {
     }
   }, [rank, score]);
 
+  // Timer effect - only handles incrementing time
+  useEffect(() => {
+    if (isGameOver || isPaused) return;
+
+    const timer = setInterval(() => {
+      setElapsedTime((prevTime) => prevTime + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isGameOver, isPaused]);
+
   // Check for weapon selection opportunity when rank changes
   useEffect(() => {
     if (
@@ -598,17 +609,6 @@ const GameUI = () => {
     elapsedTime,
     formatTime,
   ]);
-
-  // Add timer effect
-  useEffect(() => {
-    if (isGameOver || isPaused) return;
-
-    const timer = setInterval(() => {
-      setElapsedTime((prevTime) => prevTime + 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isGameOver, isPaused]);
 
   return (
     <div
