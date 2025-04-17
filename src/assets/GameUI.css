@@ -101,8 +101,8 @@
   left: 10px;
   right: 10px;
   display: flex;
-  justify-content: space-between; /* Adjusted to ensure rank-progression aligns right */
-  align-items: center; /* Center vertically */
+  justify-content: space-between;
+  align-items: center;
   gap: 15px;
   padding: 15px 20px;
   color: #5fdc5f;
@@ -141,7 +141,7 @@
 
 .military-theme .hud-label {
   font-family: "Courier New", monospace;
-  font-size: 0.9rem;
+  font-size: 1.35rem; /* Increased from 0.9rem by 50% */
   color: #a0d0a0;
   margin-bottom: 6px;
   display: flex;
@@ -189,7 +189,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 1.05rem; /* Increased from 0.7rem by 50% */
   font-weight: bold;
   color: #5fdc5f;
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.5);
@@ -197,7 +197,7 @@
 }
 
 .military-theme .progress-label {
-  font-size: 0.7rem;
+  font-size: 0.975rem; /* Increased from 0.65rem by 50% */
   color: #a0d0a0;
   text-align: right;
   white-space: nowrap;
@@ -216,24 +216,24 @@
 
 /* Combat Score specific */
 .military-theme .combat-score {
-  flex: 1 1 auto; /* Allow it to take available space */
+  flex: 1 1 auto;
   text-align: center;
   padding: 0 20px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center horizontally */
-  justify-content: center; /* Center vertically */
+  align-items: center;
+  justify-content: center;
 }
 
 /* Rank Progression specific */
 .military-theme .rank-progression {
-  flex: 0 1 200px; /* Reduced width from 250px */
+  flex: 0 1 200px;
   text-align: right;
-  min-width: 180px; /* Reduced from 200px */
+  min-width: 180px;
 }
 
 .military-theme .rank-progression .progress-bar-container {
-  height: 10px; /* Reduced from 12px */
+  height: 10px;
 }
 
 .military-theme .rank-progression .progress-bar {
@@ -241,11 +241,11 @@
 }
 
 .military-theme .rank-progression .progress-text {
-  font-size: 0.6rem; /* Reduced from 0.7rem */
+  font-size: 0.9rem; /* Increased from 0.6rem by 50% */
 }
 
 .military-theme .rank-progression .progress-label {
-  font-size: 0.65rem; /* Reduced from 0.7rem */
+  font-size: 0.975rem; /* Increased from 0.65rem by 50% */
 }
 
 .military-theme .rank-indicator {
@@ -255,18 +255,18 @@
   font-family: "Courier New", monospace;
   font-weight: bold;
   color: #5fdc5f;
-  width: 24px; /* Reduced from 28px */
-  height: 20px; /* Reduced from 24px */
+  width: 24px;
+  height: 20px;
   border: 1px solid #2f7c2f;
   border-radius: 3px;
-  font-size: 0.8rem; /* Reduced from 0.9rem */
+  font-size: 1.2rem; /* Increased from 0.8rem by 50% */
   margin: 0 5px;
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.5);
   background-color: rgba(20, 30, 20, 0.7);
 }
 
 .military-theme .target-count-info {
-  font-size: 0.7rem; /* Reduced from 0.8rem */
+  font-size: 1.05rem; /* Increased from 0.7rem by 50% */
   color: #a0d0a0;
   margin-left: 5px;
   font-family: "Courier New", monospace;
