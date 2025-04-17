@@ -34,6 +34,23 @@ const GameUI = () => {
   >(null);
   const lastZoneUpdateTimeRef = useRef(0);
   const lastZoneRadiusRef = useRef(0);
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    };
+
+    setIsMobile(checkMobile());
+
+    // Also detect if touch is supported
+    if ("ontouchstart" in window) {
+      setIsMobile(true);
+    }
+  }, []);
 
   const {
     playerHealth,
@@ -675,37 +692,39 @@ const GameUI = () => {
           </div>
         </div>
       </div>
-      <div className="player-stats-panel">
-        <div className="panel-header">UNIT STATUS</div>
-        <div className="stat-line">
-          <span>Armor:</span>
-          <span>{playerMaxHealth} HP</span>
+      {!isMobile && (
+        <div className="player-stats-panel">
+          <div className="panel-header">UNIT STATUS</div>
+          <div className="stat-line">
+            <span>Armor:</span>
+            <span>{playerMaxHealth} HP</span>
+          </div>
+          <div className="stat-line">
+            <span>Repairs:</span>
+            <span>{playerHealthRegen.toFixed(1)} HP/s</span>
+          </div>
+          <div className="stat-line">
+            <span>Firepower:</span>
+            <span>{playerTurretDamage} DMG</span>
+          </div>
+          <div className="stat-line">
+            <span>RoF:</span>
+            <span>{(1 / playerFireRate).toFixed(1)} rps</span>
+          </div>
+          <div className="stat-line">
+            <span>Muzzle Vel:</span>
+            <span>{playerBulletVelocity} m/s</span>
+          </div>
+          <div className="stat-line">
+            <span>Mobility:</span>
+            <span>{playerSpeed.toFixed(1)} m/s</span>
+          </div>
+          <div className="stat-line">
+            <span>Sensors:</span>
+            <span>{playerCameraRange.toFixed(0)}m</span>
+          </div>
         </div>
-        <div className="stat-line">
-          <span>Repairs:</span>
-          <span>{playerHealthRegen.toFixed(1)} HP/s</span>
-        </div>
-        <div className="stat-line">
-          <span>Firepower:</span>
-          <span>{playerTurretDamage} DMG</span>
-        </div>
-        <div className="stat-line">
-          <span>RoF:</span>
-          <span>{(1 / playerFireRate).toFixed(1)} rps</span>
-        </div>
-        <div className="stat-line">
-          <span>Muzzle Vel:</span>
-          <span>{playerBulletVelocity} m/s</span>
-        </div>
-        <div className="stat-line">
-          <span>Mobility:</span>
-          <span>{playerSpeed.toFixed(1)} m/s</span>
-        </div>
-        <div className="stat-line">
-          <span>Sensors:</span>
-          <span>{playerCameraRange.toFixed(0)}m</span>
-        </div>
-      </div>
+      )}
       {showEnhancementUI && !isGameOver && (
         <div className="overlay enhancement-overlay">
           <div className="overlay-content enhancement-content">
@@ -798,8 +817,12 @@ const GameUI = () => {
       {renderWeaponSelection()}
       {!isGameOver && (
         <div className="controls-info">
-          <span>[WASD] Move</span> | <span>[J/K] Turret</span> |{" "}
-          <span>[ESC] Pause</span>
+          {!isMobile && (
+            <>
+              <span>[WASD] Move</span> | <span>[J/K] Turret</span> |{" "}
+              <span>[ESC] Pause</span>
+            </>
+          )}
         </div>
       )}
     </div>

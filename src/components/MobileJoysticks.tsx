@@ -157,6 +157,7 @@ const MobileJoysticks = () => {
       forward: null, // Don't modify movement with right stick
       strafe: null, // Don't modify strafe with right stick
       turretRotation: angle, // Set turret rotation angle
+      isFiring: true, // Fire when aiming
     });
   };
 
@@ -167,6 +168,11 @@ const MobileJoysticks = () => {
     if (rightStickRef.current) {
       rightStickRef.current.style.transform = `translate(0px, 0px)`;
       setRightPosition({ x: 0, y: 0 });
+
+      // Stop firing when joystick is released
+      setInput({
+        isFiring: false,
+      });
 
       // Don't reset turret rotation when joystick is released
       // This allows the turret to stay in its current position
@@ -198,21 +204,7 @@ const MobileJoysticks = () => {
         <div className="joystick-base">
           <div className="joystick-stick" ref={rightStickRef}></div>
         </div>
-        <div className="joystick-label">AIM</div>
-      </div>
-
-      {/* Fire Button */}
-      <div
-        className="fire-button"
-        onTouchStart={(e) => {
-          e.preventDefault();
-          setInput({ isFiring: true });
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          setInput({ isFiring: false });
-        }}>
-        FIRE
+        <div className="joystick-label">AIM & FIRE</div>
       </div>
     </div>
   );
