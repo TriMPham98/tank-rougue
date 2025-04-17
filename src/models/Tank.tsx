@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
-import { Group, Vector3 } from "three";
+import { Group, Vector3, Quaternion, Euler } from "three";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { useGameState, SecondaryWeapon } from "../utils/gameState";
 import { debug } from "../utils/debug";
@@ -43,6 +43,8 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const lastShootTimeRef = useRef(0);
   const positionRef = useRef<[number, number, number]>([...position]);
   const isInitializedRef = useRef(false);
+  const _quat = useRef(new Quaternion()).current;
+  const _euler = useRef(new Euler()).current;
 
   const [projectiles, setProjectiles] = useState<
     { id: string; position: [number, number, number]; rotation: number }[]
@@ -58,12 +60,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     shoot: keyShoot,
   } = useKeyboardControls();
 
-  // Select the entire state object
   const {
-    moveX, // Absolute X from joystick
-    moveZ, // Absolute Z from joystick
-    forward, // Relative forward/backward (for potential fallback/other uses)
-    strafe, // Relative strafe (for potential fallback/other uses)
+    moveX,
+    moveZ,
+    forward,
+    strafe,
     turretRotation: touchTurretRotation,
     isFiring: touchIsFiring,
     playerTurretDamage,
@@ -76,7 +77,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     healPlayer,
     selectedWeapons,
     terrainObstacles,
-  } = useGameState(); // Still select entire state for simplicity
+  } = useGameState();
 
   const sound = useSound();
 
@@ -118,6 +119,10 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     if (tankRef.current && !isInitializedRef.current) {
       isInitializedRef.current = true;
       tankRef.current.position.fromArray(position);
+      tankRef.current.quaternion.setFromAxisAngle(
+        new Vector3(0, 1, 0),
+        tankRotationRef.current
+      );
       const initialPos: [number, number, number] = [
         tankRef.current.position.x,
         tankRef.current.position.y,
@@ -141,62 +146,35 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     let moved = false;
     const moveSpeed = playerSpeed;
-    const turnSpeed = 3.5; // Rotation speed factor
+    const turnSpeed = 3.5;
 
-    // --- Tank Rotation ---
-    let targetRotation = tankRotationRef.current; // Initialize with current rotation
-    // let applyRotationSmoothing = false; // Smoothing disabled for diagnostics
+    const currentQuat = tankRef.current.quaternion;
 
     if (keyLeft) {
-      // Keyboard rotation takes precedence
-      tankRotationRef.current += delta * turnSpeed;
+      _quat.setFromAxisAngle(new Vector3(0, 1, 0), delta * turnSpeed);
+      currentQuat.multiply(_quat);
     } else if (keyRight) {
-      // Keyboard rotation takes precedence
-      tankRotationRef.current -= delta * turnSpeed;
+      _quat.setFromAxisAngle(new Vector3(0, 1, 0), -delta * turnSpeed);
+      currentQuat.multiply(_quat);
     } else if ((moveX !== 0 || moveZ !== 0) && !keyForward && !keyBackward) {
-      // Joystick Rotation (if no keyboard movement/rotation)
-      // Target direction based on absolute joystick input
-      targetRotation = Math.atan2(moveX, moveZ);
-      // applyRotationSmoothing = true; // Smoothing disabled
+      const targetAngleY = Math.atan2(moveX, moveZ);
+      const targetQuat = _quat.setFromAxisAngle(
+        new Vector3(0, 1, 0),
+        targetAngleY
+      );
 
-      // --- DIAGNOSTIC: Set rotation directly ---
-      tankRotationRef.current = targetRotation;
-      // --- END DIAGNOSTIC ---
+      const slerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 2.5);
+      currentQuat.slerp(targetQuat, slerpFactor);
     }
 
-    // Apply smoothed rotation towards target if needed
-    /* --- SMOOTHING DISABLED FOR DIAGNOSTICS --- 
-    if (applyRotationSmoothing) {
-      const rotationDiff = targetRotation - tankRotationRef.current;
-      // Wrap the angle difference to the range [-PI, PI] to find shortest path
-      let wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+    _euler.setFromQuaternion(currentQuat, "YXZ");
+    tankRotationRef.current = _euler.y;
 
-      // Use linear interpolation (lerp) towards the target along the shortest path
-      const lerpFactor = Math.min(1, delta * turnSpeed * 2.0); // Adjust multiplier as needed, cap at 1
-      const snapThreshold = 0.01; // Small threshold to prevent micro-oscillations
-
-      if (Math.abs(wrappedDiff) < snapThreshold) {
-          // Snap if very close
-          tankRotationRef.current = targetRotation;
-      } else {
-          // Lerp towards the target angle
-          tankRotationRef.current += wrappedDiff * lerpFactor;
-      }
-    }
-    */ // --- END SMOOTHING DISABLED ---
-
-    // Normalize the final tank rotation to be within [0, 2*PI)
-    tankRotationRef.current =
-      (tankRotationRef.current + Math.PI * 2) % (Math.PI * 2);
-    tankRef.current.rotation.y = tankRotationRef.current;
-
-    // --- Tank Movement ---
     let potentialX = tankRef.current.position.x;
     let potentialZ = tankRef.current.position.z;
     let movementMagnitude = 0;
 
     if (keyForward || keyBackward) {
-      // Keyboard movement (Relative Forward/Backward)
       movementMagnitude = keyForward ? 1 : -1;
       potentialX +=
         Math.sin(tankRotationRef.current) *
@@ -209,8 +187,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         moveSpeed *
         movementMagnitude;
     } else if (moveX !== 0 || moveZ !== 0) {
-      // Joystick movement (Move forward in the direction tank is facing)
-      // Calculate magnitude from joystick vector length, clamp to 1
       movementMagnitude = Math.min(1, Math.sqrt(moveX * moveX + moveZ * moveZ));
       potentialX +=
         Math.sin(tankRotationRef.current) *
@@ -224,7 +200,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         movementMagnitude;
     }
 
-    // Apply movement if magnitude > 0, no collision, and position changed
     if (
       movementMagnitude !== 0 &&
       (potentialX !== tankRef.current.position.x ||
@@ -241,10 +216,19 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       if (keyTurretRight) turretRotationRef.current -= delta * 2.5;
 
       if (touchTurretRotation !== null) {
-        turretRotationRef.current =
-          touchTurretRotation - tankRotationRef.current;
+        const targetTurretWorldAngle = touchTurretRotation;
+        const currentTankWorldAngle = tankRotationRef.current;
+        const relativeTurretAngle =
+          targetTurretWorldAngle - currentTankWorldAngle;
+        const turretLerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 3.0);
+        const turretDiff = relativeTurretAngle - turretRotationRef.current;
+        const wrappedTurretDiff =
+          ((turretDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+        turretRotationRef.current += wrappedTurretDiff * turretLerpFactor;
       }
 
+      turretRotationRef.current =
+        (turretRotationRef.current + Math.PI * 2) % (Math.PI * 2);
       turretRef.current.rotation.y = turretRotationRef.current;
     }
 
@@ -317,7 +301,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   return (
     <>
       <group ref={tankRef}>
-        {/* Tank Body - Slightly larger with angled armor */}
         <Box
           args={[1.8, 0.6, 2.2]}
           position={[0, 0, 0]}
@@ -329,7 +312,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             roughness={0.7}
           />
         </Box>
-        {/* Sloped Rear Armor */}
         <Box
           args={[1.2, 0.4, 0.5]}
           position={[0, 0.2, -1.35]}
@@ -342,7 +324,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             roughness={0.7}
           />
         </Box>
-        {/* Tracks with detail */}
         <Box
           args={[0.4, 0.25, 2.4]}
           position={[-0.8, -0.3, 0]}
@@ -357,7 +338,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           receiveShadow>
           <meshStandardMaterial color="#333333" roughness={0.9} />
         </Box>
-        {/* Track Guards */}
         <Box
           args={[0.2, 0.1, 2.2]}
           position={[-0.8, 0.05, 0]}
@@ -381,9 +361,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           />
         </Box>
 
-        {/* Turret Group */}
         <group position={[0, 0.5, 0]} ref={turretRef}>
-          {/* Turret Base - Larger and more detailed */}
           <Cylinder
             args={[0.7, 0.8, 0.5, 20]}
             position={[0, 0.25, 0]}
@@ -394,7 +372,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.6}
             />
           </Cylinder>
-          {/* Turret Hatch */}
           <Cylinder
             args={[0.35, 0.35, 0.15, 16]}
             position={[0, 0.55, -0.3]}
@@ -405,7 +382,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.6}
             />
           </Cylinder>
-          {/* Main Barrel */}
           <Cylinder
             args={[0.12, 0.12, 1.8, 16]}
             position={[0, 0.25, 1.1]}
@@ -417,7 +393,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.5}
             />
           </Cylinder>
-          {/* Barrel Muzzle Brake */}
           <Cylinder
             args={[0.18, 0.18, 0.3, 16]}
             position={[0, 0.25, 2]}
@@ -429,7 +404,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.4}
             />
           </Cylinder>
-          {/* Side Armor Plates */}
           <Box args={[0.25, 0.35, 1]} position={[0.65, 0.25, 0]} castShadow>
             <meshStandardMaterial
               color="darkolivegreen"
@@ -444,7 +418,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.6}
             />
           </Box>
-          {/* Antenna */}
           <Cylinder
             args={[0.03, 0.03, 1.2, 8]}
             position={[0.4, 0.75, -0.4]}
@@ -456,7 +429,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.2}
             />
           </Cylinder>
-          {/* Vision Port */}
           <Box args={[0.25, 0.15, 0.15]} position={[0, 0.4, 0.5]} castShadow>
             <meshStandardMaterial
               color="black"
@@ -464,7 +436,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               emissiveIntensity={0.2}
             />
           </Box>
-          {/* Heroic Accent - Glowing Crystal */}
           <Sphere args={[0.2, 16, 16]} position={[0, 0.75, 0]} castShadow>
             <meshStandardMaterial
               color="cyan"
@@ -477,7 +448,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         </group>
       </group>
 
-      {/* Main Turret Projectiles */}
       {projectiles.map((projectile) => (
         <Projectile
           key={projectile.id}
@@ -489,7 +459,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         />
       ))}
 
-      {/* Side Weapons */}
       {sideWeapons.map((weapon: SecondaryWeapon, index: number) => {
         const WeaponComponent = WeaponComponents[weapon.id];
         if (!WeaponComponent) {
@@ -503,19 +472,19 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         const dist = SIDE_WEAPON_DISTANCE;
 
         switch (index) {
-          case 0: // Front
+          case 0:
             offsetX = dist * Math.sin(angle);
             offsetZ = dist * Math.cos(angle);
             break;
-          case 1: // Back
+          case 1:
             offsetX = -dist * Math.sin(angle);
             offsetZ = -dist * Math.cos(angle);
             break;
-          case 2: // Left
+          case 2:
             offsetX = -dist * Math.cos(angle);
             offsetZ = dist * Math.sin(angle);
             break;
-          case 3: // Right
+          case 3:
             offsetX = dist * Math.cos(angle);
             offsetZ = -dist * Math.sin(angle);
             break;
