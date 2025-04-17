@@ -9,14 +9,16 @@ interface JoystickPosition {
 
 const MobileJoysticks = () => {
   const { setInput } = useGameState();
-  const [leftActive, setLeftActive] = useState(false);
   const [rightActive, setRightActive] = useState(false);
-  const [, setLeftPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
   const [, setRightPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
+  const [dpadDirection, setDpadDirection] = useState<{
+    up: boolean;
+    down: boolean;
+    left: boolean;
+    right: boolean;
+  }>({ up: false, down: false, left: false, right: false });
 
-  const leftJoystickRef = useRef<HTMLDivElement>(null);
   const rightJoystickRef = useRef<HTMLDivElement>(null);
-  const leftStickRef = useRef<HTMLDivElement>(null);
   const rightStickRef = useRef<HTMLDivElement>(null);
 
   // Handle mobile detection
@@ -40,73 +42,38 @@ const MobileJoysticks = () => {
   // If not mobile, don't render joysticks
   if (!isMobile) return null;
 
-  // Left joystick handlers (movement)
-  const handleLeftStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    setLeftActive(true);
+  // D-pad handlers
+  const handleDpadPress = (
+    direction: "up" | "down" | "left" | "right",
+    isPressed: boolean
+  ) => {
+    // Update the D-pad state
+    setDpadDirection((prev) => ({
+      ...prev,
+      [direction]: isPressed,
+    }));
 
-    if (leftJoystickRef.current && leftStickRef.current) {
-      setLeftPosition({ x: 0, y: 0 });
-      leftStickRef.current.style.transform = `translate(0px, 0px)`;
-    }
-  };
+    // Calculate the movement values based on active directions
+    const newDpadState = {
+      ...dpadDirection,
+      [direction]: isPressed,
+    };
 
-  const handleLeftMove = (e: React.TouchEvent) => {
-    if (!leftActive || !leftJoystickRef.current || !leftStickRef.current)
-      return;
-    e.preventDefault();
+    // Convert D-pad state to movement values
+    let forward = 0;
+    let strafe = 0;
 
-    const touch = e.touches[0];
-    const joystickRect = leftJoystickRef.current.getBoundingClientRect();
-
-    // Calculate position relative to joystick center
-    const centerX = joystickRect.width / 2;
-    const centerY = joystickRect.height / 2;
-
-    let deltaX = touch.clientX - (joystickRect.left + centerX);
-    let deltaY = touch.clientY - (joystickRect.top + centerY);
-
-    // Limit distance to joystick radius
-    const maxRadius = joystickRect.width / 2 - 10;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-    if (distance > maxRadius) {
-      const ratio = maxRadius / distance;
-      deltaX *= ratio;
-      deltaY *= ratio;
-    }
-
-    // Update joystick position
-    setLeftPosition({ x: deltaX, y: deltaY });
-    leftStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-
-    // Calculate normalized values for input (-1 to 1)
-    const normalizedX = deltaX / maxRadius;
-    const normalizedY = deltaY / maxRadius;
+    if (newDpadState.up) forward = 1;
+    if (newDpadState.down) forward = -1;
+    if (newDpadState.left) strafe = -1;
+    if (newDpadState.right) strafe = 1;
 
     // Send movement input to game state
     setInput({
-      forward: -normalizedY, // Forward is negative Y (up)
-      strafe: normalizedX, // Strafe is X
-      turretRotation: null, // Don't modify turret with left stick
+      forward,
+      strafe,
+      turretRotation: null, // Don't modify turret with D-pad
     });
-  };
-
-  const handleLeftEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    setLeftActive(false);
-
-    if (leftStickRef.current) {
-      leftStickRef.current.style.transform = `translate(0px, 0px)`;
-      setLeftPosition({ x: 0, y: 0 });
-
-      // Reset movement when joystick is released
-      setInput({
-        forward: 0,
-        strafe: 0,
-        turretRotation: null,
-      });
-    }
   };
 
   // Right joystick handlers (turret rotation)
@@ -181,17 +148,36 @@ const MobileJoysticks = () => {
 
   return (
     <div className="mobile-joysticks">
-      {/* Left Joystick - Movement */}
-      <div
-        className="joystick-container left-joystick"
-        ref={leftJoystickRef}
-        onTouchStart={handleLeftStart}
-        onTouchMove={handleLeftMove}
-        onTouchEnd={handleLeftEnd}>
-        <div className="joystick-base">
-          <div className="joystick-stick" ref={leftStickRef}></div>
+      {/* D-pad for Movement */}
+      <div className="dpad-container">
+        <div className="dpad">
+          <button
+            className="dpad-button dpad-up"
+            onTouchStart={() => handleDpadPress("up", true)}
+            onTouchEnd={() => handleDpadPress("up", false)}>
+            ▲
+          </button>
+          <button
+            className="dpad-button dpad-down"
+            onTouchStart={() => handleDpadPress("down", true)}
+            onTouchEnd={() => handleDpadPress("down", false)}>
+            ▼
+          </button>
+          <button
+            className="dpad-button dpad-left"
+            onTouchStart={() => handleDpadPress("left", true)}
+            onTouchEnd={() => handleDpadPress("left", false)}>
+            ◀
+          </button>
+          <button
+            className="dpad-button dpad-right"
+            onTouchStart={() => handleDpadPress("right", true)}
+            onTouchEnd={() => handleDpadPress("right", false)}>
+            ▶
+          </button>
+          <div className="dpad-center"></div>
         </div>
-        <div className="joystick-label">MOVE</div>
+        <div className="dpad-label">MOVE</div>
       </div>
 
       {/* Right Joystick - Turret */}
