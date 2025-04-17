@@ -116,14 +116,21 @@ const MobileJoysticks = () => {
     setRightPosition({ x: deltaX, y: deltaY });
     rightStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
-    // Calculate rotation angle based on joystick position
+    // Calculate absolute angle based on joystick position
     const angle = Math.atan2(deltaY, deltaX);
 
-    // Send turret rotation input to game state
+    // Invert rotation, adjust by -90 degrees, and offset by 180 degrees
+    // Inverting rotation: -angle
+    // 180 degree offset: + Math.PI
+    // -90 degree adjustment: - Math.PI/2
+    // Combined: -angle - Math.PI/2 + Math.PI = -angle + Math.PI/2
+    const correctedAngle = -angle + Math.PI / 2;
+
+    // Send absolute turret rotation input to game state
     setInput({
       forward: null, // Don't modify movement with right stick
       strafe: null, // Don't modify strafe with right stick
-      turretRotation: angle, // Set turret rotation angle
+      turretRotation: correctedAngle, // Set inverted and adjusted turret rotation angle
       isFiring: true, // Fire when aiming
     });
   };
