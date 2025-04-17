@@ -145,7 +145,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     // --- Tank Rotation ---
     let targetRotation = tankRotationRef.current; // Initialize with current rotation
-    let applyRotationSmoothing = false;
+    // let applyRotationSmoothing = false; // Smoothing disabled for diagnostics
 
     if (keyLeft) {
       // Keyboard rotation takes precedence
@@ -157,32 +157,35 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       // Joystick Rotation (if no keyboard movement/rotation)
       // Target direction based on absolute joystick input
       targetRotation = Math.atan2(moveX, moveZ);
-      applyRotationSmoothing = true;
+      // applyRotationSmoothing = true; // Smoothing disabled
+
+      // --- DIAGNOSTIC: Set rotation directly ---
+      tankRotationRef.current = targetRotation;
+      // --- END DIAGNOSTIC ---
     }
 
     // Apply smoothed rotation towards target if needed
+    /* --- SMOOTHING DISABLED FOR DIAGNOSTICS --- 
     if (applyRotationSmoothing) {
       const rotationDiff = targetRotation - tankRotationRef.current;
-      // Wrap the angle difference to the range [-PI, PI]
+      // Wrap the angle difference to the range [-PI, PI] to find shortest path
       let wrappedDiff = ((rotationDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
 
-      const tolerance = 0.05; // Tolerance to snap near target
-      const maxTurnThisFrame = turnSpeed * 1.5 * delta; // Max rotation this frame
+      // Use linear interpolation (lerp) towards the target along the shortest path
+      const lerpFactor = Math.min(1, delta * turnSpeed * 2.0); // Adjust multiplier as needed, cap at 1
+      const snapThreshold = 0.01; // Small threshold to prevent micro-oscillations
 
-      if (Math.abs(wrappedDiff) < tolerance) {
-        // Snap to target if very close
-        tankRotationRef.current = targetRotation;
-      } else if (Math.abs(wrappedDiff) < maxTurnThisFrame) {
-        // If the remaining difference is smaller than max turn, snap to target
-        // This prevents overshooting when close but outside tolerance
-        tankRotationRef.current = targetRotation;
+      if (Math.abs(wrappedDiff) < snapThreshold) {
+          // Snap if very close
+          tankRotationRef.current = targetRotation;
       } else {
-        // Apply limited rotation step
-        tankRotationRef.current += Math.sign(wrappedDiff) * maxTurnThisFrame;
+          // Lerp towards the target angle
+          tankRotationRef.current += wrappedDiff * lerpFactor;
       }
     }
+    */ // --- END SMOOTHING DISABLED ---
 
-    // Normalize the final tank rotation
+    // Normalize the final tank rotation to be within [0, 2*PI)
     tankRotationRef.current =
       (tankRotationRef.current + Math.PI * 2) % (Math.PI * 2);
     tankRef.current.rotation.y = tankRotationRef.current;
