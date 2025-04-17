@@ -650,7 +650,7 @@ const GameUI = () => {
           </div>
         </div>
       )}
-      {!isGameOver && !isPaused && renderTacticalDisplay()}
+      {!isGameOver && !isPaused && !isMobile && renderTacticalDisplay()}
       <div className="top-hud">
         <div className="hud-element hull-integrity">
           <div className="hud-label">HULL INTEGRITY</div>
