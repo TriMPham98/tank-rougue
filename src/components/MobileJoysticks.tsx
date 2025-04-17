@@ -78,7 +78,6 @@ const MobileJoysticks = () => {
 
   // Right joystick handlers (turret rotation)
   const handleRightStart = (e: React.TouchEvent) => {
-    e.preventDefault();
     setRightActive(true);
 
     if (rightJoystickRef.current && rightStickRef.current) {
@@ -90,7 +89,6 @@ const MobileJoysticks = () => {
   const handleRightMove = (e: React.TouchEvent) => {
     if (!rightActive || !rightJoystickRef.current || !rightStickRef.current)
       return;
-    e.preventDefault();
 
     const touch = e.touches[0];
     const joystickRect = rightJoystickRef.current.getBoundingClientRect();
@@ -136,7 +134,6 @@ const MobileJoysticks = () => {
   };
 
   const handleRightEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
     setRightActive(false);
 
     if (rightStickRef.current) {
@@ -193,7 +190,8 @@ const MobileJoysticks = () => {
         ref={rightJoystickRef}
         onTouchStart={handleRightStart}
         onTouchMove={handleRightMove}
-        onTouchEnd={handleRightEnd}>
+        onTouchEnd={handleRightEnd}
+        style={{ touchAction: "none" }}>
         <div className="joystick-base">
           <div className="joystick-stick" ref={rightStickRef}></div>
         </div>
