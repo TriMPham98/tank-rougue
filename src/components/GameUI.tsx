@@ -70,10 +70,12 @@ const GameUI = () => {
     isPreZoneChangeLevel: isPreContainmentShiftRank,
   } = useGameState();
 
-  // Reset elapsed time when game is restarted
+  // Reset elapsed time when game is restarted (level and score reset to initial values)
   useEffect(() => {
-    setElapsedTime(0);
-  }, [isGameOver]);
+    if (rank === 1 && score === 0) {
+      setElapsedTime(0);
+    }
+  }, [rank, score]);
 
   // Check for weapon selection opportunity when rank changes
   useEffect(() => {
