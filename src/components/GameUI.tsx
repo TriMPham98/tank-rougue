@@ -67,7 +67,6 @@ const GameUI = () => {
     enemies: hostiles,
     safeZoneTargetRadius: combatZoneTargetRadius,
     safeZoneShrinkRate: combatZoneShrinkRate,
-    safeZoneDamage: combatZoneDamage,
     isPreZoneChangeLevel: isPreContainmentShiftRank,
   } = useGameState();
 
