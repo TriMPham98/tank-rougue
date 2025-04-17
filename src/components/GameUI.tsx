@@ -153,10 +153,10 @@ const GameUI = () => {
   };
 
   const getRankColor = () => {
-    if (rank <= 3) return "var(--color-rank-low)";
-    if (rank <= 7) return "var(--color-rank-medium)";
-    if (rank <= 12) return "var(--color-rank-high)";
-    return "var(--color-rank-elite)";
+    if (rank <= 15) return "var(--color-rank-low)"; // Early game - 5 damage
+    if (rank <= 25) return "var(--color-rank-medium)"; // Mid game - 10 damage
+    if (rank <= 40) return "var(--color-rank-high)"; // Late mid game - 15 damage
+    return "var(--color-rank-elite)"; // Late game - 20 damage
   };
 
   const getStatDisplayName = (stat: UpgradeableStat) => {
