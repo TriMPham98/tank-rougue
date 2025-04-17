@@ -1,5 +1,5 @@
 import { useGameState } from "../utils/gameState";
-import "../assets/GameUI.css";
+import "./GameUI.css";
 import { UpgradeableStat } from "../utils/gameState";
 import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
