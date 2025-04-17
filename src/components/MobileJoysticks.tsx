@@ -2,11 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useGameState } from "../utils/gameState";
 import "./MobileJoysticks.css";
 
-interface JoystickPosition {
-  x: number;
-  y: number;
-}
-
 const MobileJoysticks = () => {
   const { setInput } = useGameState();
   // State for joystick positions (commented out as unused)
