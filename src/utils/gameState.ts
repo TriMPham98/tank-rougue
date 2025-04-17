@@ -792,7 +792,7 @@ export const useGameState = create<GameState>((set, get) => ({
   },
 
   setInput: (input) => {
-    set((state) => {
+    set(() => {
       const newState: Partial<GameState> = {};
 
       if (input.forward !== undefined && input.forward !== null) {

@@ -11,14 +11,8 @@ const MobileJoysticks = () => {
   const { setInput } = useGameState();
   const [leftActive, setLeftActive] = useState(false);
   const [rightActive, setRightActive] = useState(false);
-  const [leftPosition, setLeftPosition] = useState<JoystickPosition>({
-    x: 0,
-    y: 0,
-  });
-  const [rightPosition, setRightPosition] = useState<JoystickPosition>({
-    x: 0,
-    y: 0,
-  });
+  const [, setLeftPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
+  const [, setRightPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
 
   const leftJoystickRef = useRef<HTMLDivElement>(null);
   const rightJoystickRef = useRef<HTMLDivElement>(null);
@@ -53,8 +47,6 @@ const MobileJoysticks = () => {
 
     if (leftJoystickRef.current && leftStickRef.current) {
       const joystickRect = leftJoystickRef.current.getBoundingClientRect();
-      const centerX = joystickRect.width / 2;
-      const centerY = joystickRect.height / 2;
       setLeftPosition({ x: 0, y: 0 });
       leftStickRef.current.style.transform = `translate(0px, 0px)`;
     }
@@ -125,8 +117,6 @@ const MobileJoysticks = () => {
 
     if (rightJoystickRef.current && rightStickRef.current) {
       const joystickRect = rightJoystickRef.current.getBoundingClientRect();
-      const centerX = joystickRect.width / 2;
-      const centerY = joystickRect.height / 2;
       setRightPosition({ x: 0, y: 0 });
       rightStickRef.current.style.transform = `translate(0px, 0px)`;
     }
