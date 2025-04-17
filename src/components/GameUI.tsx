@@ -649,12 +649,7 @@ const GameUI = () => {
         </div>
         <div className="hud-element rank-progression">
           <div className="hud-label">
-            RANK{" "}
-            <span
-              className="rank-indicator"
-              style={{ backgroundColor: getRankColor() }}>
-              {rank}
-            </span>
+            RANK <span className="rank-indicator">{rank}</span>
             <span className="target-count-info">
               (Targets: {getMaxTargets(rank)})
             </span>
