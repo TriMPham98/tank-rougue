@@ -102,15 +102,17 @@
   right: 10px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  padding: 15px 20px;
+  align-items: flex-start;
+  padding: 10px;
+  gap: 20px;
+  width: 100%;
+  position: relative;
+  z-index: 100;
   color: #5fdc5f;
   background-color: rgba(30, 35, 30, 0.95);
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   pointer-events: none;
-  z-index: 50;
   font-family: "Courier New", monospace;
 }
 
@@ -206,8 +208,9 @@
 
 /* Hull Integrity specific */
 .military-theme .hull-integrity {
-  flex: 0 1 220px;
+  flex: 0 1 300px;
   text-align: left;
+  min-width: 250px;
 }
 
 .military-theme .hull-integrity .progress-bar {
@@ -223,13 +226,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-width: 200px;
 }
 
 /* Rank Progression specific */
 .military-theme .rank-progression {
-  flex: 0 1 200px;
+  flex: 0 1 350px;
   text-align: right;
-  min-width: 180px;
+  min-width: 300px;
 }
 
 .military-theme .rank-progression .progress-bar-container {
@@ -266,24 +270,25 @@
 }
 
 .military-theme .target-count-info {
-  font-size: 1.05rem; /* Increased from 0.7rem by 50% */
+  font-size: 0.9rem;
   color: #a0d0a0;
   margin-left: 5px;
   font-family: "Courier New", monospace;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 /* --- Player Stats Panel --- */
 .military-theme .player-stats-panel {
   position: absolute;
   right: 10px;
-  top: 120px;
-  width: 200px;
+  top: 180px;
+  width: 220px;
   background-color: rgba(30, 35, 30, 0.95);
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   padding: 12px;
-  font-size: 0.8em;
+  font-size: 0.9em;
   pointer-events: none;
   z-index: 50;
   font-family: "Courier New", monospace;
@@ -323,13 +328,14 @@
 
 .military-theme .stat-line {
   font-family: "Courier New", monospace;
-  font-size: 0.8em;
+  font-size: 0.9em;
   color: #a0d0a0;
   margin-bottom: 6px;
   line-height: 1.4;
   display: flex;
   justify-content: space-between;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .military-theme .stat-line span:last-child {

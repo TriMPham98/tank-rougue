@@ -646,8 +646,7 @@ const GameUI = () => {
             />
           </div>
           <div className="progress-label">
-            {targetsEliminated} / {targetsRequiredForPromotion} Eliminated for
-            Promotion
+            Next Promotion: {targetsEliminated} / {targetsRequiredForPromotion}
           </div>
         </div>
       </div>
