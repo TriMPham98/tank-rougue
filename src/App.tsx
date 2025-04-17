@@ -54,7 +54,7 @@ function App() {
       }
 
       // Debug key for testing level progression (press 'L' to level up)
-      if (e.key === "l" || e.key === "L") {
+      if ((e.key === "l" || e.key === "L") && e.shiftKey) {
         debug.log(
           `Advancing level from ${level} to ${level + 1} for lighting test`
         );
