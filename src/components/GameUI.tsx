@@ -28,7 +28,7 @@ const GameUI = () => {
   const warningAnimationRef = useRef<number>(0);
   const [isCombatZoneWarningVisible, setIsCombatZoneWarningVisible] =
     useState(false);
-  const combatZoneShrinkWarningRef = useRef(0);
+  const combatZoneShrinkWarningRef = useRef<number>(0);
   const [combatZoneTimeRemaining, setCombatZoneTimeRemaining] = useState<
     number | null
   >(null);
@@ -587,9 +587,6 @@ const GameUI = () => {
     combatZoneActive,
     hostiles,
     combatZoneTargetRadius,
-    combatZoneShrinkRate,
-    combatZoneDamage,
-    combatZoneTimeRemaining,
     rank,
     isPreContainmentShiftRank,
     elapsedTime,
@@ -749,16 +746,27 @@ const GameUI = () => {
           <div className="warning-text">WARNING: OUTSIDE COMBAT ZONE</div>
         </div>
       )}
+      {/* Combat Zone Warning */}
       {isCombatZoneWarningVisible && !isGameOver && !isPaused && (
         <div
-          className="warning-overlay shrinking-zone-warning"
-          style={
-            {
-              "--opacity": combatZoneShrinkWarningRef.current,
-            } as React.CSSProperties
-          }>
-          <div className="warning-icon">⏱️</div>
-          <div className="warning-text">COMBAT ZONE COLLAPSING </div>
+          style={{
+            position: "fixed",
+            bottom: "120px", // Position above controls
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            backgroundColor: "rgba(240, 173, 78, 0.8)",
+            color: "#fff",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            boxShadow: "0 0 15px rgba(240, 173, 78, 0.5)",
+            textAlign: "center",
+            fontWeight: "bold",
+            pointerEvents: "none",
+            opacity: 1,
+            transition: "opacity 0.3s ease-in-out",
+          }}>
+          Combat zone is shrinking!
         </div>
       )}
       {isGameOver && (
