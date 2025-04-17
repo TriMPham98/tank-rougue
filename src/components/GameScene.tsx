@@ -1,5 +1,5 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { Sky, OrbitControls, Stats } from "@react-three/drei";
+import { Sky, OrbitControls } from "@react-three/drei";
 import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
 import PowerUpItem from "../models/PowerUpItem";
@@ -422,7 +422,6 @@ const GameScene = () => {
           onCreated={() => debug.log("Canvas created")}>
           <color attach="background" args={[skyColor]} />
           <fog attach="fog" args={[skyColor, fogNear, fogFar]} />
-          <Stats />
           <TerrainObstacleGenerator />
           <SceneContent playerTank={<Tank position={[0, 0.5, 0]} />} />
         </Canvas>
