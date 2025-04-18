@@ -5,6 +5,7 @@ import GameUI from "./components/GameUI";
 import { useGameState } from "./utils/gameState";
 import { generateLevel } from "./utils/levelGenerator";
 import { debug } from "./utils/debug";
+import AudioUnlock from "./components/AudioUnlock";
 
 function App() {
   // Use a ref to ensure initialization only happens once
@@ -97,6 +98,7 @@ function App() {
     <div
       className="app"
       style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
+      <AudioUnlock />
       <GameScene />
       <GameUI />
     </div>

@@ -4,6 +4,7 @@ import { UpgradeableStat } from "../utils/gameState";
 import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
 import "./WeaponSelection.css";
+import { useSound } from "../utils/sound";
 
 // Define BASE_TARGETS constant for enemy count calculation
 const BASE_TARGETS = 1;
@@ -36,6 +37,7 @@ const GameUI = () => {
   const lastZoneRadiusRef = useRef(0);
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
+  const sound = useSound();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -508,6 +510,18 @@ const GameUI = () => {
     isGameOver,
     showContainmentWarning,
   ]);
+
+  const handleUnlockAudio = () => {
+    // Play and immediately stop a sound to unlock audio
+    sound.setVolume("playerCannon", 0.01);
+    sound.play("playerCannon");
+  };
+
+  // Add background audio unlock on first render
+  useEffect(() => {
+    // Try to unlock audio automatically on first render
+    handleUnlockAudio();
+  }, []);
 
   const renderTacticalDisplay = useCallback(() => {
     const mapSize = 150;
