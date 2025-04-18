@@ -8,10 +8,8 @@ let rightTouchId: number | null = null;
 
 const MobileJoysticks = () => {
   const { setInput } = useGameState();
-  // State for joystick positions (commented out as unused)
-  // const [leftPosition, setLeftPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
+  // State for joystick positions
   const [leftActive, setLeftActive] = useState(false);
-  // const [rightPosition, setRightPosition] = useState<JoystickPosition>({ x: 0, y: 0 });
   const [rightActive, setRightActive] = useState(false);
 
   const leftJoystickRef = useRef<HTMLDivElement>(null);
@@ -31,27 +29,38 @@ const MobileJoysticks = () => {
 
     setIsMobile(checkMobile());
 
-    // Also show joysticks if touch is supported
     if ("ontouchstart" in window) {
       setIsMobile(true);
     }
 
-    // Cleanup touch identifiers on unmount
+    // Handle passive event listeners for mobile browsers
+    if (leftJoystickRef.current) {
+      document.addEventListener("touchmove", preventDefaultForTouch, {
+        passive: false,
+      });
+    }
+
     return () => {
       leftTouchId = null;
       rightTouchId = null;
+      document.removeEventListener("touchmove", preventDefaultForTouch);
     };
   }, []);
 
-  // If not mobile, don't render joysticks
+  // Function to prevent default touch behavior globally
+  const preventDefaultForTouch = (e: TouchEvent) => {
+    if (
+      leftJoystickRef.current?.contains(e.target as Node) ||
+      rightJoystickRef.current?.contains(e.target as Node)
+    ) {
+      e.preventDefault();
+    }
+  };
+
   if (!isMobile) return null;
 
   // Left joystick handlers (movement)
   const handleLeftStart = (e: React.TouchEvent) => {
-    // Prevent default behavior like scrolling
-    e.preventDefault();
-
-    // Only handle the first touch on the left joystick
     if (leftTouchId !== null) return;
 
     const touch = e.changedTouches[0];
@@ -60,16 +69,12 @@ const MobileJoysticks = () => {
       setLeftActive(true);
 
       if (leftJoystickRef.current && leftStickRef.current) {
-        // setLeftPosition({ x: 0, y: 0 }); // Commented out as unused
         leftStickRef.current.style.transform = `translate(0px, 0px)`;
       }
-      // Start movement immediately if needed (optional, based on desired feel)
-      // handleLeftMove(e);
     }
   };
 
   const handleLeftMove = (e: React.TouchEvent) => {
-    e.preventDefault();
     if (
       !leftActive ||
       leftTouchId === null ||
@@ -78,7 +83,6 @@ const MobileJoysticks = () => {
     )
       return;
 
-    // Find the correct touch
     let touch = null;
     for (let i = 0; i < e.touches.length; i++) {
       if (e.touches[i].identifier === leftTouchId) {
@@ -87,7 +91,6 @@ const MobileJoysticks = () => {
       }
     }
 
-    // If the touch is not found (e.g., lifted unexpectedly), end the movement
     if (!touch) {
       handleLeftEnd(e);
       return;
@@ -107,17 +110,11 @@ const MobileJoysticks = () => {
       deltaY *= ratio;
     }
 
-    // Update joystick position
-    // setLeftPosition({ x: deltaX, y: deltaY }); // Commented out as unused
     leftStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
-    // Calculate absolute movement values based on joystick position
-    // Right = +X (East)
-    // Up = -Z (North) - Inverted Z calculation
     const moveX = deltaX / maxRadius;
-    const moveZ = deltaY / maxRadius; // Changed from -deltaY to deltaY
+    const moveZ = deltaY / maxRadius;
 
-    // Send absolute movement input to game state
     setInput({
       moveX,
       moveZ,
@@ -125,7 +122,6 @@ const MobileJoysticks = () => {
   };
 
   const handleLeftEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
     let touchEnded = false;
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === leftTouchId) {
@@ -134,16 +130,13 @@ const MobileJoysticks = () => {
       }
     }
 
-    if (!touchEnded) return; // Only process if the tracked touch ended
+    if (!touchEnded) return;
 
-    leftTouchId = null; // Clear the touch ID
+    leftTouchId = null;
     setLeftActive(false);
 
     if (leftStickRef.current) {
       leftStickRef.current.style.transform = `translate(0px, 0px)`;
-      // setLeftPosition({ x: 0, y: 0 }); // Commented out as unused
-
-      // Stop absolute movement when joystick is released
       setInput({
         moveX: 0,
         moveZ: 0,
@@ -153,7 +146,6 @@ const MobileJoysticks = () => {
 
   // Right joystick handlers (turret rotation)
   const handleRightStart = (e: React.TouchEvent) => {
-    e.preventDefault();
     if (rightTouchId !== null) return;
 
     const touch = e.changedTouches[0];
@@ -164,13 +156,10 @@ const MobileJoysticks = () => {
       if (rightJoystickRef.current && rightStickRef.current) {
         rightStickRef.current.style.transform = `translate(0px, 0px)`;
       }
-      // Start aiming/firing immediately if needed
-      // handleRightMove(e);
     }
   };
 
   const handleRightMove = (e: React.TouchEvent) => {
-    e.preventDefault();
     if (
       !rightActive ||
       rightTouchId === null ||
@@ -206,21 +195,20 @@ const MobileJoysticks = () => {
       deltaY *= ratio;
     }
 
-    // Update joystick position
-    // setRightPosition({ x: deltaX, y: deltaY }); // Commented out as unused
     rightStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
-    // Calculate absolute angle based on joystick position
     const angle = Math.atan2(deltaY, deltaX);
-
-    // Invert rotation, adjust by -90 degrees, and offset by 180 degrees
-    // Inverting rotation: -angle
-    // 180 degree offset: + Math.PI
-    // -90 degree adjustment: - Math.PI/2
-    // Combined: -angle - Math.PI/2 + Math.PI = -angle + Math.PI/2
     const correctedAngle = -angle + Math.PI / 2;
 
-    // Send absolute turret rotation input to game state
+    // Only log in development
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      console.log("Right Joystick Position:", { x: deltaX, y: deltaY });
+      console.log("Turret Rotation:", correctedAngle);
+    }
+
     setInput({
       turretRotation: correctedAngle,
       isFiring: true,
@@ -228,7 +216,6 @@ const MobileJoysticks = () => {
   };
 
   const handleRightEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
     let touchEnded = false;
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === rightTouchId) {
@@ -239,26 +226,22 @@ const MobileJoysticks = () => {
 
     if (!touchEnded) return;
 
-    rightTouchId = null; // Clear the touch ID
+    rightTouchId = null;
     setRightActive(false);
 
     if (rightStickRef.current) {
       rightStickRef.current.style.transform = `translate(0px, 0px)`;
-      // setRightPosition({ x: 0, y: 0 }); // Commented out as unused
 
-      // Stop firing when joystick is released
+      // Important: Keep the last turret rotation but stop firing
       setInput({
         isFiring: false,
+        // Don't reset turretRotation to avoid the spin
       });
-
-      // Don't reset turret rotation when joystick is released
-      // This allows the turret to stay in its current position
     }
   };
 
   return (
     <div className="mobile-joysticks">
-      {/* Left Joystick for Movement */}
       <div
         className="joystick-container left-joystick"
         ref={leftJoystickRef}
@@ -272,7 +255,6 @@ const MobileJoysticks = () => {
         <div className="joystick-label">MOVE</div>
       </div>
 
-      {/* Right Joystick - Turret */}
       <div
         className="joystick-container right-joystick"
         ref={rightJoystickRef}
