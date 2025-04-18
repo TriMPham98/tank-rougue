@@ -247,19 +247,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         let absoluteTurretAngle =
           (tankRotationRef.current + turretRotationRef.current) % (Math.PI * 2);
         while (absoluteTurretAngle < 0) absoluteTurretAngle += Math.PI * 2;
-
-        console.log(
-          "Turret Position:",
-          positionRef.current,
-          "Turret Rotation:",
-          turretRotationRef.current,
-          "Tank Rotation:",
-          tankRotationRef.current,
-          "Absolute Turret Angle:",
-          absoluteTurretAngle,
-          "Target Angle (from touch):",
-          touchTurretRotation
-        );
       }
     }
 

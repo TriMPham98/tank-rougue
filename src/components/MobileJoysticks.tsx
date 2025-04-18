@@ -234,18 +234,6 @@ const MobileJoysticks = () => {
     ) {
       // Get current player position from game state
       const playerPosition = useGameState.getState().playerTankPosition;
-      console.log(
-        "Joystick:",
-        { x: deltaX, y: deltaY },
-        "Angle (degrees):",
-        gameAngleDegrees,
-        "Angle (radians):",
-        normalizedAngle,
-        "Player Position:",
-        playerPosition,
-        "Current Tank Rotation (radians):",
-        Math.atan2(playerPosition[0], playerPosition[2]) // Estimate tank rotation from its position
-      );
     }
 
     // Send the angle to the game

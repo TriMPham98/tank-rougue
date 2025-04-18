@@ -826,13 +826,7 @@ export const useGameState = create<GameState>((set, get) => ({
           window.location.hostname === "127.0.0.1";
 
         if (debug && input.turretRotation !== null) {
-          console.log(
-            "GameState received turret rotation:",
-            input.turretRotation,
-            "Radians,",
-            ((input.turretRotation * 180) / Math.PI).toFixed(2),
-            "Degrees"
-          );
+          // Console log removed
         }
       }
 
