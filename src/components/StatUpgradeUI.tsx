@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { UpgradeableStat } from "../utils/gameState";
 import { useGameState } from "../utils/gameState";
 import {
@@ -40,6 +40,31 @@ const StatUpgradeUI = ({
     [isUpgrading, onUpgradeSelect]
   );
 
+  // Handle keyboard number key selection
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (isUpgrading) return;
+
+      const keyNum = parseInt(event.key);
+      if (
+        !isNaN(keyNum) &&
+        keyNum > 0 &&
+        keyNum <= availableEnhancements.length
+      ) {
+        handleEnhancementSelect(availableEnhancements[keyNum - 1]);
+      }
+    },
+    [availableEnhancements, handleEnhancementSelect, isUpgrading]
+  );
+
+  // Add keyboard event listener
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   // Collect all the player stat values
   const statValues = {
     playerSpeed,
@@ -62,7 +87,11 @@ const StatUpgradeUI = ({
             <div
               key={stat}
               className="enhancement-card"
-              onClick={() => handleEnhancementSelect(stat)}>
+              onClick={() => handleEnhancementSelect(stat)}
+              onTouchStart={() => {}} // Empty handler to ensure proper touch handling on mobile
+              role="button"
+              tabIndex={0}
+              aria-label={`Select ${getStatDisplayName(stat)} enhancement`}>
               <div className="enhancement-keybind">{index + 1}</div>
               <div className="enhancement-name">{getStatDisplayName(stat)}</div>
               <div className="enhancement-value">

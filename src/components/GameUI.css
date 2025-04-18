@@ -1173,6 +1173,7 @@
 .game-ui.military-theme.mobile .overlay-content.enhancement-content {
   max-width: 95%;
   width: 95%;
+  padding: 15px;
 }
 
 /* Mobile Enhancement/Upgrade Title (Assuming .enhancement-content has h2) */
@@ -1184,11 +1185,13 @@
 .game-ui.military-theme.mobile .enhancement-options {
   gap: 10px;
   padding: 15px;
-  grid-template-columns: 1fr; /* Stack cards on mobile */
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .game-ui.military-theme.mobile .enhancement-card {
   padding: 15px 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .game-ui.military-theme.mobile .enhancement-keybind {
@@ -1203,6 +1206,7 @@
   font-size: 1.1rem;
   margin: 12px 0 10px;
   padding-bottom: 8px;
+  word-break: break-word;
 }
 
 .game-ui.military-theme.mobile .enhancement-value {
@@ -1214,6 +1218,7 @@
   font-size: 0.8rem;
   line-height: 1.3;
   margin-top: 10px;
+  flex: 1;
 }
 
 /* Mobile Pause Menu */
@@ -1310,4 +1315,26 @@
 .game-ui.military-theme.mobile .rank-progression {
   min-width: 100px; /* Adjusted min-width for smaller bar */
   flex: 1;
+}
+
+/* Ensure the enhancement grid is responsive for all screen sizes */
+@media (max-width: 480px) {
+  .game-ui.military-theme.mobile .enhancement-options {
+    grid-template-columns: repeat(
+      2,
+      1fr
+    ); /* Change to 2 columns on very small screens */
+  }
+}
+
+@media (max-width: 350px) {
+  .game-ui.military-theme.mobile .enhancement-options {
+    grid-template-columns: 1fr; /* Single column on extremely small screens */
+  }
+}
+
+/* Mobile Game Over Menu */
+.game-ui.military-theme.mobile .game-over-content {
+  min-width: auto;
+  width: 90%;
 }
