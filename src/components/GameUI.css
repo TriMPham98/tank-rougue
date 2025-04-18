@@ -247,7 +247,7 @@
 }
 
 .military-theme .rank-progression .progress-bar-container {
-  height: 10px;
+  height: 24px;
 }
 
 .military-theme .rank-progression .progress-bar {
@@ -255,11 +255,11 @@
 }
 
 .military-theme .rank-progression .progress-text {
-  font-size: 0.9rem; /* Increased from 0.6rem by 50% */
-}
-
-.military-theme .rank-progression .progress-label {
-  font-size: 0.975rem; /* Increased from 0.65rem by 50% */
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 0 5px rgba(0, 0, 0, 0.6);
+  font-weight: bold;
+  letter-spacing: 0.5px;
 }
 
 .military-theme .rank-indicator {
@@ -1161,8 +1161,8 @@
   font-size: 0.7rem;
 }
 
-.game-ui.military-theme.mobile .progress-label {
-  font-size: 0.7rem;
+.game-ui.military-theme.mobile .rank-progression .progress-bar-container {
+  height: 20px;
 }
 
 .game-ui.military-theme.mobile .rank-indicator {

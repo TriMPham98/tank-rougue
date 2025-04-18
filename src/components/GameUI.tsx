@@ -689,9 +689,9 @@ const GameUI = () => {
                 backgroundColor: getRankColor(),
               }}
             />
-          </div>
-          <div className="progress-label">
-            Next Promotion: {targetsEliminated} / {targetsRequiredForPromotion}
+            <div className="progress-text">
+              {targetsEliminated} / {targetsRequiredForPromotion}
+            </div>
           </div>
         </div>
       </div>
