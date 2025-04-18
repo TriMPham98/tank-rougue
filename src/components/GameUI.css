@@ -102,36 +102,25 @@
   right: 15px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 10px;
+  align-items: stretch;
   gap: 20px;
   width: calc(100% - 30px);
   position: relative;
   z-index: 100;
   color: #5fdc5f;
-  background-color: rgba(30, 35, 30, 0.95);
-  border: 2px solid #2f7c2f;
-  border-radius: 5px;
   pointer-events: none;
   font-family: "Courier New", monospace;
 }
 
-.military-theme .top-hud:before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(60, 180, 60, 0.03) 50%,
-    rgba(0, 0, 0, 0) 50%
-  );
-  background-size: 100% 4px;
-  pointer-events: none;
-  animation: scanlines 2s linear infinite;
-  z-index: 2;
+.military-theme .top-hud .hud-section {
+  flex: 1;
+  background-color: rgba(30, 35, 30, 0.95);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 /* HUD Element Structure */
@@ -209,7 +198,6 @@
 
 /* Hull Integrity specific */
 .military-theme .hull-integrity {
-  flex: 0 1 300px;
   text-align: center;
   min-width: 250px;
 }
@@ -220,7 +208,6 @@
 
 /* Combat Score specific */
 .military-theme .combat-score {
-  flex: 1 1 auto;
   text-align: center;
   padding: 0 20px;
   display: flex;
@@ -241,7 +228,6 @@
 
 /* Rank Progression specific */
 .military-theme .rank-progression {
-  flex: 0 1 350px;
   text-align: center;
   min-width: 300px;
 }
