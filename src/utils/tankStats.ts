@@ -1,0 +1,200 @@
+import { UpgradeableStat } from "./gameState";
+
+export interface StatUpgradeIncrement {
+  amount: number;
+  maxValue?: number;
+}
+
+// Define the increment amounts for each stat
+export const STAT_UPGRADE_INCREMENTS: Record<
+  UpgradeableStat,
+  StatUpgradeIncrement
+> = {
+  tankSpeed: { amount: 0.5 },
+  fireRate: { amount: 0.1, maxValue: 3.5 }, // This is RPS, so fireRate is reduced
+  cameraRange: { amount: 2 },
+  maxHealth: { amount: 25 },
+  healthRegen: { amount: 0.5 },
+  turretDamage: { amount: 5 },
+  bulletVelocity: { amount: 2 },
+};
+
+// Get human-readable display name for each stat
+export const getStatDisplayName = (stat: UpgradeableStat): string => {
+  switch (stat) {
+    case "tankSpeed":
+      return "Mobility";
+    case "fireRate":
+      return "Rate of Fire";
+    case "cameraRange":
+      return "Sensor Range";
+    case "maxHealth":
+      return "Armor Plating";
+    case "healthRegen":
+      return "Repair Systems";
+    case "turretDamage":
+      return "Firepower";
+    case "bulletVelocity":
+      return "Muzzle Velocity";
+  }
+};
+
+// Get current value of a stat with proper formatting
+export const getStatCurrentValue = (
+  stat: UpgradeableStat,
+  values: {
+    playerSpeed: number;
+    playerFireRate: number;
+    playerCameraRange: number;
+    playerMaxHealth: number;
+    playerHealthRegen: number;
+    playerTurretDamage: number;
+    playerBulletVelocity: number;
+  }
+): string => {
+  const {
+    playerSpeed,
+    playerFireRate,
+    playerCameraRange,
+    playerMaxHealth,
+    playerHealthRegen,
+    playerTurretDamage,
+    playerBulletVelocity,
+  } = values;
+
+  switch (stat) {
+    case "tankSpeed":
+      return `${playerSpeed.toFixed(1)} m/s`;
+    case "fireRate":
+      return `${(1 / playerFireRate).toFixed(1)} rps`;
+    case "cameraRange":
+      return `${playerCameraRange.toFixed(0)}m`;
+    case "maxHealth":
+      return `${playerMaxHealth} HP`;
+    case "healthRegen":
+      return `${playerHealthRegen.toFixed(1)} HP/s`;
+    case "turretDamage":
+      return `${playerTurretDamage} DMG`;
+    case "bulletVelocity":
+      return `${playerBulletVelocity} m/s`;
+  }
+};
+
+// Calculate and format post-upgrade value for a stat
+export const getStatPostUpgradeValue = (
+  stat: UpgradeableStat,
+  values: {
+    playerSpeed: number;
+    playerFireRate: number;
+    playerCameraRange: number;
+    playerMaxHealth: number;
+    playerHealthRegen: number;
+    playerTurretDamage: number;
+    playerBulletVelocity: number;
+  }
+): string => {
+  const {
+    playerSpeed,
+    playerFireRate,
+    playerCameraRange,
+    playerMaxHealth,
+    playerHealthRegen,
+    playerTurretDamage,
+    playerBulletVelocity,
+  } = values;
+
+  const increment = STAT_UPGRADE_INCREMENTS[stat];
+
+  switch (stat) {
+    case "tankSpeed":
+      return `${(playerSpeed + increment.amount).toFixed(1)} m/s`;
+    case "fireRate":
+      const currentRPS = 1 / playerFireRate;
+      const newRPS = Math.min(
+        increment.maxValue || Infinity,
+        currentRPS + increment.amount
+      );
+      return `${newRPS.toFixed(1)} rps`;
+    case "cameraRange":
+      return `${(playerCameraRange + increment.amount).toFixed(0)}m`;
+    case "maxHealth":
+      return `${playerMaxHealth + increment.amount} HP`;
+    case "healthRegen":
+      return `${(playerHealthRegen + increment.amount).toFixed(1)} HP/s`;
+    case "turretDamage":
+      return `${playerTurretDamage + increment.amount} DMG`;
+    case "bulletVelocity":
+      return `${playerBulletVelocity + increment.amount} m/s`;
+  }
+};
+
+// Get flavor text description for each stat upgrade
+export const getStatDescription = (stat: UpgradeableStat): string => {
+  switch (stat) {
+    case "tankSpeed":
+      return "Enhance chassis servos for faster battlefield repositioning.";
+    case "fireRate":
+      return "Optimize loading mechanism for increased rounds per second.";
+    case "cameraRange":
+      return "Upgrade sensor suite for extended tactical awareness.";
+    case "maxHealth":
+      return "Reinforce hull structure, increasing damage tolerance.";
+    case "healthRegen":
+      return "Install nano-repair bots for passive armor regeneration.";
+    case "turretDamage":
+      return "Calibrate main gun for higher impact kinetic energy.";
+    case "bulletVelocity":
+      return "Improve projectile propulsion for faster target engagement.";
+  }
+};
+
+// Apply stat upgrade to current values
+export const applyStatUpgrade = (
+  stat: UpgradeableStat,
+  currentValues: {
+    playerSpeed: number;
+    playerFireRate: number;
+    playerCameraRange: number;
+    playerMaxHealth: number;
+    playerHealthRegen: number;
+    playerTurretDamage: number;
+    playerBulletVelocity: number;
+  }
+): Partial<typeof currentValues> => {
+  const increment = STAT_UPGRADE_INCREMENTS[stat];
+
+  switch (stat) {
+    case "tankSpeed":
+      return { playerSpeed: currentValues.playerSpeed + increment.amount };
+    case "fireRate": {
+      // Convert to RPS, increment, then convert back to cooldown
+      const currentRPS = 1 / currentValues.playerFireRate;
+      const newRPS = Math.min(
+        increment.maxValue || Infinity,
+        currentRPS + increment.amount
+      );
+      return { playerFireRate: 1 / newRPS };
+    }
+    case "cameraRange":
+      return {
+        playerCameraRange: currentValues.playerCameraRange + increment.amount,
+      };
+    case "maxHealth":
+      return {
+        playerMaxHealth: currentValues.playerMaxHealth + increment.amount,
+      };
+    case "healthRegen":
+      return {
+        playerHealthRegen: currentValues.playerHealthRegen + increment.amount,
+      };
+    case "turretDamage":
+      return {
+        playerTurretDamage: currentValues.playerTurretDamage + increment.amount,
+      };
+    case "bulletVelocity":
+      return {
+        playerBulletVelocity:
+          currentValues.playerBulletVelocity + increment.amount,
+      };
+  }
+};

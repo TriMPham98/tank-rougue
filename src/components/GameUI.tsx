@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
 import "./WeaponSelection.css";
 import { useSound } from "../utils/sound";
+import StatUpgradeUI from "./StatUpgradeUI";
 
 // Define BASE_TARGETS constant for enemy count calculation
 const BASE_TARGETS = 1;
@@ -22,7 +23,6 @@ const getMaxTargets = (rank: number): number => {
 };
 
 const GameUI = () => {
-  const [isUpgrading, setIsUpgrading] = useState(false);
   const [isOutsideCombatZone, setIsOutsideCombatZone] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const warningOpacityRef = useRef(0);
@@ -127,8 +127,6 @@ const GameUI = () => {
   // Handle keyboard shortcuts for enhancements and weapons
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (isUpgrading) return;
-
       if (showEnhancementUI) {
         const keyIndex = parseInt(event.key) - 1;
         if (
@@ -165,21 +163,16 @@ const GameUI = () => {
     showWeaponSelection,
     availableEnhancements,
     availableWeapons,
-    isUpgrading,
     rank,
-    applyEnhancement,
     selectWeapon,
     closeWeaponSelection,
   ]);
 
   const handleEnhancementSelect = useCallback(
     (stat: UpgradeableStat) => {
-      if (isUpgrading) return;
-      setIsUpgrading(true);
       applyEnhancement(stat);
-      setTimeout(() => setIsUpgrading(false), 500);
     },
-    [applyEnhancement, isUpgrading]
+    [applyEnhancement]
   );
 
   const hullIntegrityPercentage = (playerHealth / playerMaxHealth) * 100;
@@ -197,84 +190,6 @@ const GameUI = () => {
     if (rank <= 25) return "var(--color-rank-medium)"; // Mid game - 10 damage
     if (rank <= 40) return "var(--color-rank-high)"; // Late mid game - 15 damage
     return "var(--color-rank-elite)"; // Late game - 20 damage
-  };
-
-  const getStatDisplayName = (stat: UpgradeableStat) => {
-    switch (stat) {
-      case "tankSpeed":
-        return "Mobility";
-      case "fireRate":
-        return "Rate of Fire";
-      case "cameraRange":
-        return "Sensor Range";
-      case "maxHealth":
-        return "Armor Plating";
-      case "healthRegen":
-        return "Repair Systems";
-      case "turretDamage":
-        return "Firepower";
-      case "bulletVelocity":
-        return "Muzzle Velocity";
-    }
-  };
-
-  const getStatCurrentValue = (stat: UpgradeableStat) => {
-    switch (stat) {
-      case "tankSpeed":
-        return `${playerSpeed.toFixed(1)} m/s`;
-      case "fireRate":
-        return `${(1 / playerFireRate).toFixed(1)} rps`;
-      case "cameraRange":
-        return `${playerCameraRange.toFixed(0)}m`;
-      case "maxHealth":
-        return `${playerMaxHealth} HP`;
-      case "healthRegen":
-        return `${playerHealthRegen.toFixed(1)} HP/s`;
-      case "turretDamage":
-        return `${playerTurretDamage} DMG`;
-      case "bulletVelocity":
-        return `${playerBulletVelocity} m/s`;
-    }
-  };
-
-  const getStatPostUpgradeValue = (stat: UpgradeableStat) => {
-    switch (stat) {
-      case "tankSpeed":
-        return `${(playerSpeed + 0.5).toFixed(1)} m/s`;
-      case "fireRate":
-        const currentRPS = 1 / playerFireRate;
-        const newRPS = Math.min(3.5, currentRPS + 0.1);
-        return `${newRPS.toFixed(1)} rps`;
-      case "cameraRange":
-        return `${(playerCameraRange + 2).toFixed(0)}m`;
-      case "maxHealth":
-        return `${playerMaxHealth + 25} HP`;
-      case "healthRegen":
-        return `${(playerHealthRegen + 0.5).toFixed(1)} HP/s`;
-      case "turretDamage":
-        return `${playerTurretDamage + 5} DMG`;
-      case "bulletVelocity":
-        return `${playerBulletVelocity + 2} m/s`;
-    }
-  };
-
-  const getStatDescription = (stat: UpgradeableStat) => {
-    switch (stat) {
-      case "tankSpeed":
-        return "Enhance chassis servos for faster battlefield repositioning.";
-      case "fireRate":
-        return "Optimize loading mechanism for increased rounds per second.";
-      case "cameraRange":
-        return "Upgrade sensor suite for extended tactical awareness.";
-      case "maxHealth":
-        return "Reinforce hull structure, increasing damage tolerance.";
-      case "healthRegen":
-        return "Install nano-repair bots for passive armor regeneration.";
-      case "turretDamage":
-        return "Calibrate main gun for higher impact kinetic energy.";
-      case "bulletVelocity":
-        return "Improve projectile propulsion for faster target engagement.";
-    }
   };
 
   const renderWeaponSelection = () => {
@@ -722,37 +637,15 @@ const GameUI = () => {
           </div>
         </div>
       )}
+
+      {/* Use our new StatUpgradeUI component instead of inline enhancement UI */}
       {showEnhancementUI && !isGameOver && (
-        <div className="overlay enhancement-overlay">
-          <div className="overlay-content enhancement-content">
-            <h2 className="enhancement-title">
-              FIELD PROMOTION: SELECT ENHANCEMENT
-            </h2>
-            <div className="enhancement-options">
-              {availableEnhancements.map((stat, index) => (
-                <div
-                  key={stat}
-                  className="enhancement-card"
-                  onClick={() => handleEnhancementSelect(stat)}>
-                  <div className="enhancement-keybind">{index + 1}</div>
-                  <div className="enhancement-name">
-                    {getStatDisplayName(stat)}
-                  </div>
-                  <div className="enhancement-value">
-                    {getStatCurrentValue(stat)} →{" "}
-                    <span className="value-increase">
-                      {getStatPostUpgradeValue(stat)}
-                    </span>
-                  </div>
-                  <div className="enhancement-desc">
-                    {getStatDescription(stat)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <StatUpgradeUI
+          availableEnhancements={availableEnhancements}
+          onUpgradeSelect={handleEnhancementSelect}
+        />
       )}
+
       {isOutsideCombatZone && !isGameOver && !isPaused && (
         <div
           className="warning-overlay outside-zone-warning"
