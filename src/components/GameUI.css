@@ -102,7 +102,7 @@
   right: 15px;
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
+  align-items: center;
   gap: 20px;
   width: calc(100% - 30px);
   position: relative;
@@ -112,22 +112,12 @@
   font-family: "Courier New", monospace;
 }
 
-.military-theme .top-hud .hud-section {
-  flex: 1;
-  background-color: rgba(30, 35, 30, 0.95);
-  border: 2px solid #2f7c2f;
-  border-radius: 5px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* HUD Element Structure */
+/* HUD Element Structure - make each take equal space */
 .military-theme .hud-element {
   padding: 0 5px;
   text-transform: uppercase;
   position: relative;
+  flex: 1;
 }
 
 .military-theme .hud-label {
@@ -153,6 +143,7 @@
   white-space: nowrap;
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   letter-spacing: 1px;
+  text-align: center;
 }
 
 /* Progress Bars */
@@ -164,6 +155,7 @@
   overflow: hidden;
   position: relative;
   margin-bottom: 3px;
+  width: 100%;
 }
 
 .military-theme .progress-bar {
@@ -202,6 +194,14 @@
   min-width: 250px;
 }
 
+.military-theme .hull-integrity .hud-label,
+.military-theme .rank-progression .hud-label,
+.military-theme .combat-score .hud-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .military-theme .hull-integrity .progress-bar {
   background-color: #5fdc5f;
 }
@@ -215,7 +215,6 @@
   align-items: center;
   justify-content: center;
   min-width: 200px;
-  width: 100%;
 }
 
 .military-theme .elapsed-time {
@@ -1127,12 +1126,11 @@
   height: 16px;
 }
 
-.game-ui.military-theme.mobile .hull-integrity {
-  min-width: 150px;
-}
-
+.game-ui.military-theme.mobile .hull-integrity,
+.game-ui.military-theme.mobile .combat-score,
 .game-ui.military-theme.mobile .rank-progression {
-  min-width: 150px;
+  min-width: 0;
+  flex: 1;
 }
 
 .game-ui.military-theme.mobile .hud-label {
@@ -1267,22 +1265,43 @@
 
 .game-ui.military-theme.mobile .combat-score {
   min-width: 0;
+  flex: 1;
   padding: 0 10px;
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-/* Improve combat score centering for all devices */
-.military-theme .combat-score {
-  text-align: center;
-  padding: 0 20px;
+/* Restore the top-hud section that was accidentally removed */
+.military-theme .top-hud .hud-section {
+  flex: 1;
+  background-color: rgba(30, 35, 30, 0.95);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Mobile styles */
+.game-ui.military-theme.mobile .hull-integrity {
+  min-width: 100px;
+  flex: 1;
+}
+
+.game-ui.military-theme.mobile .combat-score {
+  min-width: 0;
+  flex: 1;
+  padding: 0 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 200px;
-  width: 100%;
+}
+
+.game-ui.military-theme.mobile .rank-progression {
+  min-width: 120px;
+  flex: 1;
 }
