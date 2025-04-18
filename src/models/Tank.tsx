@@ -214,20 +214,53 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       if (keyTurretRight) turretRotationRef.current -= delta * 2.5;
 
       if (touchTurretRotation !== null) {
-        const targetTurretWorldAngle = touchTurretRotation;
-        const currentTankWorldAngle = tankRotationRef.current;
-        const relativeTurretAngle =
-          targetTurretWorldAngle - currentTankWorldAngle;
-        const turretLerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 3.0);
-        const turretDiff = relativeTurretAngle - turretRotationRef.current;
-        const wrappedTurretDiff =
-          ((turretDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-        turretRotationRef.current += wrappedTurretDiff * turretLerpFactor;
+        const targetAbsoluteAngle = touchTurretRotation;
+        const currentTankAngle = tankRotationRef.current;
+
+        let desiredRelativeAngle = targetAbsoluteAngle - currentTankAngle;
+
+        while (desiredRelativeAngle < 0) desiredRelativeAngle += Math.PI * 2;
+        while (desiredRelativeAngle >= Math.PI * 2)
+          desiredRelativeAngle -= Math.PI * 2;
+
+        const turretLerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 5.0);
+
+        let angleDifference = desiredRelativeAngle - turretRotationRef.current;
+
+        if (angleDifference > Math.PI) angleDifference -= Math.PI * 2;
+        if (angleDifference < -Math.PI) angleDifference += Math.PI * 2;
+
+        turretRotationRef.current += angleDifference * turretLerpFactor;
+
+        while (turretRotationRef.current < 0)
+          turretRotationRef.current += Math.PI * 2;
+        while (turretRotationRef.current >= Math.PI * 2)
+          turretRotationRef.current -= Math.PI * 2;
       }
 
-      turretRotationRef.current =
-        (turretRotationRef.current + Math.PI * 2) % (Math.PI * 2);
       turretRef.current.rotation.y = turretRotationRef.current;
+
+      if (
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+      ) {
+        let absoluteTurretAngle =
+          (tankRotationRef.current + turretRotationRef.current) % (Math.PI * 2);
+        while (absoluteTurretAngle < 0) absoluteTurretAngle += Math.PI * 2;
+
+        console.log(
+          "Turret Position:",
+          positionRef.current,
+          "Turret Rotation:",
+          turretRotationRef.current,
+          "Tank Rotation:",
+          tankRotationRef.current,
+          "Absolute Turret Angle:",
+          absoluteTurretAngle,
+          "Target Angle (from touch):",
+          touchTurretRotation
+        );
+      }
     }
 
     const currentTime = state.clock.getElapsedTime();

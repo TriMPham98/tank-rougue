@@ -819,6 +819,21 @@ export const useGameState = create<GameState>((set, get) => ({
 
       if (input.turretRotation !== undefined) {
         newState.turretRotation = input.turretRotation;
+
+        // Add debug logging for turret rotation
+        const debug =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+
+        if (debug && input.turretRotation !== null) {
+          console.log(
+            "GameState received turret rotation:",
+            input.turretRotation,
+            "Radians,",
+            ((input.turretRotation * 180) / Math.PI).toFixed(2),
+            "Degrees"
+          );
+        }
       }
 
       if (input.isFiring !== undefined) {

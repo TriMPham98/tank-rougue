@@ -219,25 +219,38 @@ const MobileJoysticks = () => {
       gameAngleDegrees -= 360;
     }
 
+    // Convert back to radians for the game engine (if needed)
+    const gameAngleRadians = gameAngleDegrees * (Math.PI / 180);
+
+    // Normalize to [0, 2π) range
+    let normalizedAngle = gameAngleRadians;
+    while (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
+    while (normalizedAngle >= Math.PI * 2) normalizedAngle -= Math.PI * 2;
+
     // Only log in development
     if (
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1"
     ) {
+      // Get current player position from game state
+      const playerPosition = useGameState.getState().playerTankPosition;
       console.log(
         "Joystick:",
         { x: deltaX, y: deltaY },
         "Angle (degrees):",
-        gameAngleDegrees
+        gameAngleDegrees,
+        "Angle (radians):",
+        normalizedAngle,
+        "Player Position:",
+        playerPosition,
+        "Current Tank Rotation (radians):",
+        Math.atan2(playerPosition[0], playerPosition[2]) // Estimate tank rotation from its position
       );
     }
 
-    // Convert back to radians for the game engine (if needed)
-    const gameAngleRadians = gameAngleDegrees * (Math.PI / 180);
-
     // Send the angle to the game
     setInput({
-      turretRotation: gameAngleRadians, // Send as radians if your game expects radians
+      turretRotation: normalizedAngle, // Send normalized angle
       isFiring: true,
     });
   };
