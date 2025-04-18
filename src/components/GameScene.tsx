@@ -1,14 +1,12 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { Sky, OrbitControls } from "@react-three/drei";
+import { Sky } from "@react-three/drei";
 import Tank from "../models/Tank";
 import EnemyTank from "../models/EnemyTank";
-import PowerUpItem from "../models/PowerUpItem";
 import Ground from "../models/Ground";
 import TerrainObstacle from "../models/TerrainObstacle";
 import SafeZone from "../models/SafeZone";
 import RedZone from "../models/RedZone";
 import {
-  Suspense,
   useRef,
   useEffect,
   memo,

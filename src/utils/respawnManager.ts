@@ -31,6 +31,20 @@ export const useRespawnManager = () => {
   const currentLevelRef = useRef<number>(1);
   const isSpawningWaveRef = useRef<boolean>(false);
 
+  // Spawn initial enemies if none exist
+  useEffect(() => {
+    const initialState = useGameState.getState();
+    if (initialState.enemies.length === 0) {
+      // Spawn initial enemies
+      const maxEnemies = getMaxEnemies(initialState.level);
+      const initialEnemyCount = Math.min(3, maxEnemies);
+
+      // Spawn a wave of initial enemies
+      debug.log(`Spawning initial wave of ${initialEnemyCount} enemies`);
+      spawnEnemyWave(initialEnemyCount);
+    }
+  }, []);
+
   // Helper function to spawn a single enemy
   const spawnEnemy = (maxEnemies: number): boolean => {
     // Added return type boolean

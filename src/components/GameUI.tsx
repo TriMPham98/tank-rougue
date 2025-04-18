@@ -35,6 +35,9 @@ const GameUI = () => {
   >(null);
   const lastZoneUpdateTimeRef = useRef(0);
   const lastZoneRadiusRef = useRef(0);
+  // Red zone warning animation
+  const [showRedZoneWarning, setShowRedZoneWarning] = useState(false);
+  const redZoneWarningOpacityRef = useRef(0);
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
   const sound = useSound();
@@ -90,6 +93,7 @@ const GameUI = () => {
     safeZoneTargetRadius: combatZoneTargetRadius,
     safeZoneShrinkRate: combatZoneShrinkRate,
     isPreZoneChangeLevel: isPreContainmentShiftRank,
+    isRedZoneWarning,
   } = useGameState();
 
   // Reset elapsed time when game is restarted (level and score reset to initial values)
@@ -543,6 +547,39 @@ const GameUI = () => {
     formatTime,
   ]);
 
+  // Add red zone warning animation
+  useEffect(() => {
+    let animationFrameId: number;
+    if (!isRedZoneWarning || isPaused || isGameOver) {
+      setShowRedZoneWarning(false);
+      cancelAnimationFrame(warningAnimationRef.current);
+      return;
+    }
+
+    setShowRedZoneWarning(true);
+    let startTime: number;
+    const duration = 800; // Faster animation for urgency
+
+    const animateRedZoneWarning = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      redZoneWarningOpacityRef.current =
+        0.7 + (Math.sin((elapsed / duration) * Math.PI * 2) + 1) * 0.15;
+
+      if (showRedZoneWarning) {
+        animationFrameId = requestAnimationFrame(animateRedZoneWarning);
+        warningAnimationRef.current = animationFrameId;
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animateRedZoneWarning);
+    warningAnimationRef.current = animationFrameId;
+
+    return () => {
+      cancelAnimationFrame(warningAnimationRef.current);
+    };
+  }, [isRedZoneWarning, isPaused, isGameOver, showRedZoneWarning]);
+
   return (
     <div
       className={`game-ui military-theme ${
@@ -695,6 +732,18 @@ const GameUI = () => {
               <span>[ESC] Pause</span>
             </>
           )}
+        </div>
+      )}
+
+      {/* Red Zone Warning */}
+      {showRedZoneWarning && (
+        <div
+          className="redzone-warning-overlay"
+          style={{
+            opacity: redZoneWarningOpacityRef.current,
+          }}>
+          <div>🚨 DANGER: AIRSTRIKE INCOMING 🚨</div>
+          <div>Seek shelter immediately!</div>
         </div>
       )}
     </div>

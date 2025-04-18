@@ -173,6 +173,12 @@ export const useSound = () => {
     playLoop: (id: string, volume = 1) =>
       soundManager.current.playLoop(id, volume),
     stopLoop: (id: string) => soundManager.current.stopLoop(id),
+    resetSoundTimer: (id: string) => {
+      const lastPlayTimeMap = (soundManager.current as any).lastPlayTime;
+      if (lastPlayTimeMap) {
+        lastPlayTimeMap.set(id, 0);
+      }
+    },
   };
 };
 

@@ -16,6 +16,7 @@ const RedZone = () => {
   // Access game state
   const {
     isRedZoneActive,
+    isRedZoneWarning,
     redZoneRadius,
     redZoneCenter,
     playerTankPosition,
@@ -28,7 +29,7 @@ const RedZone = () => {
   } = useGameState();
 
   // Sound effects
-  const { play, playLoop, stopLoop } = useSound();
+  const { play, playLoop, stopLoop, resetSoundTimer } = useSound();
 
   // Refs and state
   const cylinderRef = useRef<THREE.Mesh>(null);
@@ -59,115 +60,183 @@ const RedZone = () => {
     if (level === 25 && !isRedZoneActive25.current) {
       isRedZoneActive25.current = true;
 
-      // Select a random position within the safe zone
-      const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
-      const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
-      const safeZoneRadius = useGameState.getState().safeZoneRadius;
+      // Reset sound timer first to ensure it plays
+      resetSoundTimer("airRaidSiren");
 
-      // Random angle and distance (not at edge of safe zone)
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
-      const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
-      const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+      // Stop any existing playback
+      stopLoop("airRaidSiren");
 
-      // Update redZoneCenter and activate
+      // Force play with increased volume
+      setTimeout(() => {
+        playLoop("airRaidSiren", 1.5); // Increased volume from 0.8 to 1.5
+        isSirenPlaying.current = true;
+      }, 100);
+
+      // Show the warning UI
       useGameState.setState({
-        isRedZoneActive: true,
-        redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+        isRedZoneWarning: true,
       });
 
-      // Play air raid siren
-      playLoop("airRaidSiren", 0.8);
-      isSirenPlaying.current = true;
-
-      // Set timer to deactivate red zone after 10 seconds
+      // Wait 3 seconds before activating the red zone
       setTimeout(() => {
-        useGameState.setState({ isRedZoneActive: false });
-        isRedZoneActive25.current = false;
-        if (isSirenPlaying.current) {
-          stopLoop("airRaidSiren");
-          isSirenPlaying.current = false;
-        }
-      }, 10000);
+        // Select a random position within the safe zone
+        const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
+        const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
+        const safeZoneRadius = useGameState.getState().safeZoneRadius;
+
+        // Random angle and distance (not at edge of safe zone)
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
+        const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
+        const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+
+        // Update redZoneCenter and activate with smaller radius (changed from 20 to 15)
+        useGameState.setState({
+          isRedZoneActive: true,
+          isRedZoneWarning: false,
+          redZoneRadius: 15,
+          redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+        });
+
+        // Set timer to deactivate red zone after 10 seconds
+        setTimeout(() => {
+          useGameState.setState({
+            isRedZoneActive: false,
+            isRedZoneWarning: false,
+          });
+          isRedZoneActive25.current = false;
+          if (isSirenPlaying.current) {
+            stopLoop("airRaidSiren");
+            isSirenPlaying.current = false;
+          }
+        }, 10000);
+      }, 3000); // 3 second warning before red zone activates
     }
 
     if (level === 35 && !isRedZoneActive35.current) {
       isRedZoneActive35.current = true;
 
-      // Select a random position within the safe zone
-      const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
-      const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
-      const safeZoneRadius = useGameState.getState().safeZoneRadius;
+      // Reset sound timer first to ensure it plays
+      resetSoundTimer("airRaidSiren");
 
-      // Random angle and distance (not at edge of safe zone)
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
-      const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
-      const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+      // Stop any existing playback
+      stopLoop("airRaidSiren");
 
-      // Update redZoneCenter and activate
+      // Force play with increased volume
+      setTimeout(() => {
+        playLoop("airRaidSiren", 1.5); // Increased volume from 0.8 to 1.5
+        isSirenPlaying.current = true;
+      }, 100);
+
+      // Show the warning UI
       useGameState.setState({
-        isRedZoneActive: true,
-        redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+        isRedZoneWarning: true,
       });
 
-      // Play air raid siren
-      playLoop("airRaidSiren", 0.8);
-      isSirenPlaying.current = true;
-
-      // Set timer to deactivate red zone after 10 seconds
+      // Wait 3 seconds before activating the red zone
       setTimeout(() => {
-        useGameState.setState({ isRedZoneActive: false });
-        isRedZoneActive35.current = false;
-        if (isSirenPlaying.current) {
-          stopLoop("airRaidSiren");
-          isSirenPlaying.current = false;
-        }
-      }, 10000);
+        // Select a random position within the safe zone
+        const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
+        const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
+        const safeZoneRadius = useGameState.getState().safeZoneRadius;
+
+        // Random angle and distance (not at edge of safe zone)
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
+        const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
+        const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+
+        // Update redZoneCenter and activate with smaller radius (changed from 20 to 12)
+        useGameState.setState({
+          isRedZoneActive: true,
+          isRedZoneWarning: false,
+          redZoneRadius: 12,
+          redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+        });
+
+        // Set timer to deactivate red zone after 10 seconds
+        setTimeout(() => {
+          useGameState.setState({
+            isRedZoneActive: false,
+            isRedZoneWarning: false,
+          });
+          isRedZoneActive35.current = false;
+          if (isSirenPlaying.current) {
+            stopLoop("airRaidSiren");
+            isSirenPlaying.current = false;
+          }
+        }, 10000);
+      }, 3000); // 3 second warning before red zone activates
     }
 
     if (level === 45 && !isRedZoneActive45.current) {
       isRedZoneActive45.current = true;
 
-      // Select a random position within the safe zone
-      const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
-      const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
-      const safeZoneRadius = useGameState.getState().safeZoneRadius;
+      // Reset sound timer first to ensure it plays
+      resetSoundTimer("airRaidSiren");
 
-      // Random angle and distance (not at edge of safe zone)
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
-      const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
-      const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+      // Stop any existing playback
+      stopLoop("airRaidSiren");
 
-      // Update redZoneCenter and activate
+      // Force play with increased volume
+      setTimeout(() => {
+        playLoop("airRaidSiren", 1.5); // Increased volume from 0.8 to 1.5
+        isSirenPlaying.current = true;
+      }, 100);
+
+      // Show the warning UI
       useGameState.setState({
-        isRedZoneActive: true,
-        redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+        isRedZoneWarning: true,
       });
 
-      // Play air raid siren
-      playLoop("airRaidSiren", 0.8);
-      isSirenPlaying.current = true;
-
-      // Set timer to deactivate red zone after 10 seconds
+      // Wait 3 seconds before activating the red zone
       setTimeout(() => {
-        useGameState.setState({ isRedZoneActive: false });
-        isRedZoneActive45.current = false;
-        if (isSirenPlaying.current) {
-          stopLoop("airRaidSiren");
-          isSirenPlaying.current = false;
-        }
-      }, 10000);
+        // Select a random position within the safe zone
+        const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
+        const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
+        const safeZoneRadius = useGameState.getState().safeZoneRadius;
+
+        // Random angle and distance (not at edge of safe zone)
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
+        const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
+        const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+
+        // Update redZoneCenter and activate with smaller radius (changed from 20 to 10)
+        useGameState.setState({
+          isRedZoneActive: true,
+          isRedZoneWarning: false,
+          redZoneRadius: 10,
+          redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+        });
+
+        // Set timer to deactivate red zone after 10 seconds
+        setTimeout(() => {
+          useGameState.setState({
+            isRedZoneActive: false,
+            isRedZoneWarning: false,
+          });
+          isRedZoneActive45.current = false;
+          if (isSirenPlaying.current) {
+            stopLoop("airRaidSiren");
+            isSirenPlaying.current = false;
+          }
+        }, 10000);
+      }, 3000); // 3 second warning before red zone activates
     }
   }, [level, playLoop, stopLoop]);
 
-  // Cleanup sound when component unmounts
+  // Make sure to clean up the siren when component unmounts
   useEffect(() => {
     return () => {
       if (isSirenPlaying.current) {
         stopLoop("airRaidSiren");
         isSirenPlaying.current = false;
+        // Reset the state
+        useGameState.setState({
+          isRedZoneWarning: false,
+          isRedZoneActive: false,
+        });
       }
     };
   }, [stopLoop]);

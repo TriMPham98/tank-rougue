@@ -69,6 +69,7 @@ interface GameState {
 
   // Red zone (PUBG-like bombing zone)
   isRedZoneActive: boolean;
+  isRedZoneWarning: boolean;
   redZoneRadius: number;
   redZoneCenter: [number, number];
 
@@ -174,6 +175,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
   // Red zone (PUBG-like bombing zone)
   isRedZoneActive: false,
+  isRedZoneWarning: false,
   redZoneRadius: 20,
   redZoneCenter: [0, 0],
 

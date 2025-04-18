@@ -1338,3 +1338,33 @@
   min-width: auto;
   width: 90%;
 }
+
+/* Red Zone Warning */
+.redzone-warning-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 0, 0, 0.25);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-weight: bold;
+  font-size: 24px;
+  text-align: center;
+  z-index: 1000;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+  border: 2px solid #ff0000;
+  animation: pulse 0.8s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.9);
+  }
+}
