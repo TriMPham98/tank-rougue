@@ -282,7 +282,7 @@
   left: 15px;
   bottom: 15px;
   width: 220px;
-  background-color: rgba(30, 35, 30, 0.95);
+  background-color: rgba(30, 35, 30, 0.5);
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   padding: 12px;
@@ -631,7 +631,7 @@
   right: 20px;
   width: 150px;
   height: 150px;
-  background-color: rgba(30, 35, 30, 0.95);
+  background-color: rgba(30, 35, 30, 0.5);
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   overflow: hidden;
@@ -1104,7 +1104,7 @@
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
   z-index: 102;
   pointer-events: none;
-  background-color: rgba(20, 30, 20, 0.7);
+  background-color: rgba(20, 30, 20, 0.5);
   padding: 2px 8px;
   border-radius: 3px;
   border: 2px solid #2f7c2f;
