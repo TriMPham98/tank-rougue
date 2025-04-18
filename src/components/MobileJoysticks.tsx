@@ -326,7 +326,7 @@ const MobileJoysticks = () => {
         <div className="joystick-base">
           <div className="joystick-stick" ref={rightStickRef}></div>
         </div>
-        <div className="joystick-label">AIM & FIRE</div>
+        <div className="joystick-label">AIM </div>
       </div>
     </div>
   );

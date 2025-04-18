@@ -29,7 +29,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background-color: rgba(10, 15, 10, 0.7);
+  background-color: rgba(10, 15, 10, 0.15);
   border: 2px solid #2f7c2f;
   display: flex;
   justify-content: center;
@@ -78,9 +78,6 @@
   letter-spacing: 1px;
   font-size: 14px;
 }
-
-/* D-pad styles */
-/* Remove D-pad styles */
 
 .fire-button {
   position: absolute;
