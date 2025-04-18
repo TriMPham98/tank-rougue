@@ -11,18 +11,18 @@
 
 .joystick-container {
   position: absolute;
-  bottom: 20px;
+  bottom: 40px;
   width: 120px;
   height: 120px;
   pointer-events: auto;
 }
 
 .left-joystick {
-  left: 20px;
+  left: 40px;
 }
 
 .right-joystick {
-  right: 20px;
+  right: 40px;
 }
 
 .joystick-base {
@@ -139,6 +139,7 @@ body.tablet-device .mobile-joysticks {
 body.tablet-device .joystick-container {
   width: 150px;
   height: 150px;
+  bottom: 50px;
 }
 
 body.tablet-device .joystick-stick {
@@ -148,11 +149,11 @@ body.tablet-device .joystick-stick {
 
 /* Position adjustments for portrait mode on tablets */
 body.tablet-device.orientation-portrait .left-joystick {
-  left: 20px;
-  bottom: 20px;
+  left: 50px;
+  bottom: 50px;
 }
 
 body.tablet-device.orientation-portrait .right-joystick {
-  right: 20px;
-  bottom: 20px;
+  right: 50px;
+  bottom: 50px;
 }
