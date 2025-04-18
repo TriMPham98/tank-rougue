@@ -812,7 +812,7 @@ const GameUI = () => {
           </div>
         )}
       {renderWeaponSelection()}
-      {!isGameOver && (
+      {!isGameOver && !isMobile && (
         <div className="controls-info">
           {!isMobile && (
             <>
