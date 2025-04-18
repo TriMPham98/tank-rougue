@@ -105,8 +105,7 @@
   align-items: center;
   gap: 20px;
   width: calc(100% - 30px);
-  position: relative;
-  z-index: 100;
+  /* Removed position: relative; z-index: 100; as it was likely not needed */
   color: #5fdc5f;
   pointer-events: none;
   font-family: "Courier New", monospace;
@@ -154,8 +153,8 @@
   border-radius: 2px;
   overflow: hidden;
   position: relative;
-  margin-bottom: 3px;
-  width: 100%;
+  width: 75%; /* CHANGED from 100% */
+  margin: 0 auto 3px; /* ADDED auto margins for centering, kept bottom margin */
 }
 
 .military-theme .progress-bar {
@@ -186,6 +185,8 @@
   text-align: center;
   white-space: nowrap;
   letter-spacing: 0.5px;
+  display: block; /* Ensure it takes block space for centering */
+  margin-top: 3px; /* Add some space if needed */
 }
 
 /* Hull Integrity specific */
@@ -233,7 +234,8 @@
 }
 
 .military-theme .rank-progression .progress-bar-container {
-  height: 24px;
+  /* Inherits width: 75% and auto margins */
+  height: 24px; /* Keep specific height if needed, or remove if base is fine */
 }
 
 .military-theme .rank-progression .progress-bar {
@@ -1044,6 +1046,7 @@
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   text-align: center;
   position: relative;
+  width: 100%; /* Ensure title spans width for border */
 }
 
 .military-theme .game-over-title:before,
@@ -1115,15 +1118,19 @@
   width: calc(100% - 10px);
   padding: 5px;
   font-size: 80%;
+  gap: 10px; /* Reduce gap for mobile */
 }
 
 .game-ui.military-theme.mobile .hud-element {
   font-size: 80%;
+  padding: 0 3px; /* Reduce padding */
 }
 
 .game-ui.military-theme.mobile .progress-bar-container {
-  width: 100%;
+  width: 75%; /* CHANGED from 100% */
   height: 16px;
+  margin-left: auto; /* Ensure centering */
+  margin-right: auto; /* Ensure centering */
 }
 
 .game-ui.military-theme.mobile .hull-integrity,
@@ -1148,6 +1155,7 @@
 
 .game-ui.military-theme.mobile .rank-progression .progress-bar-container {
   height: 20px;
+  /* Inherits width: 75% and auto margins */
 }
 
 .game-ui.military-theme.mobile .rank-indicator {
@@ -1167,7 +1175,8 @@
   width: 95%;
 }
 
-.game-ui.military-theme.mobile .enhancement-title {
+/* Mobile Enhancement/Upgrade Title (Assuming .enhancement-content has h2) */
+.game-ui.military-theme.mobile .overlay-content h2 {
   font-size: 1.4rem;
   padding: 10px 15px;
 }
@@ -1175,6 +1184,7 @@
 .game-ui.military-theme.mobile .enhancement-options {
   gap: 10px;
   padding: 15px;
+  grid-template-columns: 1fr; /* Stack cards on mobile */
 }
 
 .game-ui.military-theme.mobile .enhancement-card {
@@ -1233,6 +1243,17 @@
   font-size: 1.4rem;
 }
 
+.game-ui.military-theme.mobile .game-over-content p {
+  font-size: 0.9rem; /* Adjust text size */
+  margin: 10px 20px; /* Adjust margins */
+}
+
+.game-ui.military-theme.mobile .restart-button {
+  font-size: 1rem; /* Adjust button text */
+  padding: 10px 25px; /* Adjust button padding */
+  margin: 15px 0 20px; /* Adjust button margin */
+}
+
 /* Combat Zone Warning */
 .military-theme .combat-zone-warning {
   position: fixed;
@@ -1274,34 +1295,19 @@
 }
 
 /* Restore the top-hud section that was accidentally removed */
-.military-theme .top-hud .hud-section {
-  flex: 1;
-  background-color: rgba(30, 35, 30, 0.95);
-  border: 2px solid #2f7c2f;
-  border-radius: 5px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
+/* This was likely intended to style the containers within .top-hud */
+/* Now using .hud-element directly as the container seems more appropriate */
+/* Removed redundant .hud-section rule */
 
-/* Mobile styles */
+/* Mobile styles re-check */
 .game-ui.military-theme.mobile .hull-integrity {
-  min-width: 100px;
+  min-width: 80px; /* Adjusted min-width for smaller bar */
   flex: 1;
 }
 
-.game-ui.military-theme.mobile .combat-score {
-  min-width: 0;
-  flex: 1;
-  padding: 0 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+/* .game-ui.military-theme.mobile .combat-score styling already adjusted above */
 
 .game-ui.military-theme.mobile .rank-progression {
-  min-width: 120px;
+  min-width: 100px; /* Adjusted min-width for smaller bar */
   flex: 1;
 }
