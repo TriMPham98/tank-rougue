@@ -227,15 +227,6 @@ const MobileJoysticks = () => {
     while (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
     while (normalizedAngle >= Math.PI * 2) normalizedAngle -= Math.PI * 2;
 
-    // Only log in development
-    if (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    ) {
-      // Get current player position from game state
-      const playerPosition = useGameState.getState().playerTankPosition;
-    }
-
     // Send the angle to the game
     setInput({
       turretRotation: normalizedAngle, // Send normalized angle
