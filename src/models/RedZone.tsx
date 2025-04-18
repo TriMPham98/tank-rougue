@@ -12,6 +12,17 @@ interface Bomb {
   hasExploded: boolean;
 }
 
+// Store persistent siren state outside component to prevent unmount issues
+const globalSirenState = {
+  isSirenPlaying: false,
+  sirenStartTime: 0,
+  sirenEndTime: 0,
+  sirenDuration: 14000, // 14 seconds
+  shouldStartBombing: false,
+  sirenLevel: 0, // Which level triggered the siren
+  isRedZoneWarning: false, // Track warning state globally
+};
+
 const RedZone = () => {
   // Access game state
   const {
@@ -36,12 +47,13 @@ const RedZone = () => {
   const topRingRef = useRef<THREE.Mesh>(null);
   const bombMeshRefs = useRef<Map<string, THREE.Mesh>>(new Map());
   const [bombs, setBombs] = useState<Bomb[]>([]);
-  const isSirenPlaying = useRef(false);
+  const isRedZoneActive15 = useRef(false);
   const isRedZoneActive25 = useRef(false);
   const isRedZoneActive35 = useRef(false);
   const isRedZoneActive45 = useRef(false);
   const wasPaused = useRef(false);
   const sirenPlayedAfterResume = useRef(false);
+  const hasSyncedWarningState = useRef(false);
 
   // Constants for red zone
   const EXPLOSION_RADIUS = 3;
@@ -56,230 +68,297 @@ const RedZone = () => {
   // Flash effect for explosions
   const [flashIntensity, setFlashIntensity] = useState(0);
 
+  // Synchronize warning state with global state to avoid duplicate state updates
+  useEffect(() => {
+    if (!hasSyncedWarningState.current) {
+      hasSyncedWarningState.current = true;
+      if (globalSirenState.isRedZoneWarning !== isRedZoneWarning) {
+        // Only update game state when the initial values don't match
+        useGameState.setState({
+          isRedZoneWarning: globalSirenState.isRedZoneWarning,
+        });
+      }
+    }
+  }, [isRedZoneWarning]);
+
+  // Continue siren playback on component mount if it should be playing
+  useEffect(() => {
+    console.log("Component mounted - checking siren state");
+
+    // If siren should be playing but isn't, restart it
+    if (
+      globalSirenState.isSirenPlaying &&
+      Date.now() < globalSirenState.sirenEndTime
+    ) {
+      console.log("Restarting siren that was interrupted");
+      resetSoundTimer("airRaidSiren");
+      playLoop("airRaidSiren", 1.5);
+
+      // Update global state instead of directly updating React state
+      globalSirenState.isRedZoneWarning = true;
+      // Only update UI state if needed and outside the current render cycle
+      setTimeout(() => {
+        if (!isRedZoneWarning) {
+          useGameState.setState({ isRedZoneWarning: true });
+        }
+      }, 0);
+
+      // Calculate remaining time
+      const remainingTime = globalSirenState.sirenEndTime - Date.now();
+      console.log(`Siren should continue for ${remainingTime}ms more`);
+
+      // Set up timeout to stop siren and start bombing when the original duration is complete
+      if (remainingTime > 0) {
+        setTimeout(() => {
+          console.log(
+            `Siren timeout triggered after component remount (elapsed total: ${
+              Date.now() - globalSirenState.sirenStartTime
+            }ms)`
+          );
+
+          if (globalSirenState.isSirenPlaying) {
+            console.log("Stopping siren after full duration");
+            stopLoop("airRaidSiren");
+            globalSirenState.isSirenPlaying = false;
+          }
+
+          console.log("Starting bombing after siren completion");
+          globalSirenState.shouldStartBombing = true;
+          globalSirenState.isRedZoneWarning = true;
+        }, remainingTime);
+      }
+    }
+
+    return () => {
+      // Don't stop the siren on unmount anymore, let it continue playing
+      console.log("Component unmounting - preserving siren state");
+    };
+  }, [isRedZoneWarning, playLoop, resetSoundTimer, stopLoop]);
+
+  // Log siren state for debugging
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (globalSirenState.isSirenPlaying) {
+        const elapsedTime = Date.now() - globalSirenState.sirenStartTime;
+        console.log(
+          `Siren playing for ${elapsedTime}ms of ${
+            globalSirenState.sirenDuration
+          }ms (remaining: ${globalSirenState.sirenDuration - elapsedTime}ms)`
+        );
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Track pause state changes
   useEffect(() => {
     // If game was paused and is now resumed
     if (wasPaused.current && !isPaused && isRedZoneActive) {
       if (!sirenPlayedAfterResume.current) {
+        console.log("Game resumed - starting siren");
         // Play siren once after resume
         resetSoundTimer("airRaidSiren");
         stopLoop("airRaidSiren");
+
+        // Start timer
+        globalSirenState.sirenStartTime = Date.now();
+        globalSirenState.sirenEndTime =
+          globalSirenState.sirenStartTime + globalSirenState.sirenDuration;
+        console.log(
+          `Siren started at ${globalSirenState.sirenStartTime}, will end at ${globalSirenState.sirenEndTime} (duration: ${globalSirenState.sirenDuration}ms)`
+        );
+
         playLoop("airRaidSiren", 1.5);
-        isSirenPlaying.current = true;
+        globalSirenState.isSirenPlaying = true;
         sirenPlayedAfterResume.current = true;
 
-        // Set a timeout to stop the siren after a short duration (e.g., 3 seconds)
+        // Show the warning UI
+        globalSirenState.isRedZoneWarning = true;
+
+        // Update UI in next tick to avoid render loop
         setTimeout(() => {
-          if (isSirenPlaying.current) {
+          useGameState.setState({
+            isRedZoneWarning: true,
+          });
+        }, 0);
+
+        // Reset bombing flag
+        globalSirenState.shouldStartBombing = false;
+
+        // Set a timeout to start bombing after the siren plays
+        setTimeout(() => {
+          console.log(
+            `Siren timeout triggered (actual elapsed: ${
+              Date.now() - globalSirenState.sirenStartTime
+            }ms)`
+          );
+
+          if (globalSirenState.isSirenPlaying) {
+            console.log("Stopping siren after timeout");
             stopLoop("airRaidSiren");
-            isSirenPlaying.current = false;
+            globalSirenState.isSirenPlaying = false;
           }
-        }, 3000);
+
+          console.log("Starting bombing after siren");
+          globalSirenState.shouldStartBombing = true;
+          globalSirenState.isRedZoneWarning = true;
+        }, globalSirenState.sirenDuration);
       }
     }
 
     // Update wasPaused for next check
     wasPaused.current = isPaused;
 
-    // Reset sirenPlayedAfterResume when red zone deactivates
+    // Reset flags when red zone deactivates
     if (!isRedZoneActive) {
       sirenPlayedAfterResume.current = false;
+      globalSirenState.shouldStartBombing = false;
     }
   }, [isPaused, isRedZoneActive, resetSoundTimer, stopLoop, playLoop]);
 
-  // Check if we should be in a red zone level
+  // Check if we should be in a red zone level - using a ref to track initialization
+  const initializedLevels = useRef(false);
   useEffect(() => {
-    // Update red zone active state based on level
-    if (level === 25 && !isRedZoneActive25.current) {
-      isRedZoneActive25.current = true;
-
-      // Reset sound timer first to ensure it plays
-      resetSoundTimer("airRaidSiren");
-
-      // Stop any existing playback
-      stopLoop("airRaidSiren");
-
-      // Force play with increased volume
-      setTimeout(() => {
-        playLoop("airRaidSiren", 1.5); // Increased volume from 0.8 to 1.5
-        isSirenPlaying.current = true;
-      }, 100);
-
-      // Show the warning UI and keep it displayed throughout
-      useGameState.setState({
-        isRedZoneWarning: true,
-      });
-
-      // Wait 3 seconds before activating the red zone
-      setTimeout(() => {
-        // Select a random position within the safe zone
-        const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
-        const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
-        const safeZoneRadius = useGameState.getState().safeZoneRadius;
-
-        // Random angle and distance (not at edge of safe zone)
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
-        const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
-        const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
-
-        // Update redZoneCenter and activate with smaller radius
-        useGameState.setState({
-          isRedZoneActive: true,
-          redZoneRadius: 15,
-          redZoneCenter: [redZoneCenterX, redZoneCenterZ],
-          // Keep isRedZoneWarning true here
-        });
-
-        // Set timer to deactivate red zone after 10 seconds
-        setTimeout(() => {
-          useGameState.setState({
-            isRedZoneActive: false,
-            isRedZoneWarning: false,
-          });
-          isRedZoneActive25.current = false;
-          sirenPlayedAfterResume.current = false;
-          if (isSirenPlaying.current) {
-            stopLoop("airRaidSiren");
-            isSirenPlaying.current = false;
-          }
-        }, 10000);
-      }, 3000); // 3 second warning before red zone activates
+    if (initializedLevels.current) {
+      return;
     }
+    initializedLevels.current = true;
 
-    if (level === 35 && !isRedZoneActive35.current) {
-      isRedZoneActive35.current = true;
+    const setupRedZone = (levelNum, isActiveRef, radius) => {
+      if (
+        level === levelNum &&
+        !isActiveRef.current &&
+        globalSirenState.sirenLevel !== levelNum
+      ) {
+        console.log(`Level ${levelNum} red zone triggered`);
+        isActiveRef.current = true;
+        globalSirenState.sirenLevel = levelNum;
 
-      // Reset sound timer first to ensure it plays
-      resetSoundTimer("airRaidSiren");
+        // Reset sound timer first to ensure it plays
+        resetSoundTimer("airRaidSiren");
 
-      // Stop any existing playback
-      stopLoop("airRaidSiren");
-
-      // Force play with increased volume
-      setTimeout(() => {
-        playLoop("airRaidSiren", 1.5); // Increased volume from 0.8 to 1.5
-        isSirenPlaying.current = true;
-      }, 100);
-
-      // Show the warning UI
-      useGameState.setState({
-        isRedZoneWarning: true,
-      });
-
-      // Wait 3 seconds before activating the red zone
-      setTimeout(() => {
-        // Select a random position within the safe zone
-        const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
-        const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
-        const safeZoneRadius = useGameState.getState().safeZoneRadius;
-
-        // Random angle and distance (not at edge of safe zone)
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
-        const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
-        const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
-
-        // Update redZoneCenter and activate with smaller radius
-        useGameState.setState({
-          isRedZoneActive: true,
-          redZoneRadius: 12,
-          redZoneCenter: [redZoneCenterX, redZoneCenterZ],
-          // Keep isRedZoneWarning true here
-        });
-
-        // Set timer to deactivate red zone after 10 seconds
-        setTimeout(() => {
-          useGameState.setState({
-            isRedZoneActive: false,
-            isRedZoneWarning: false,
-          });
-          isRedZoneActive35.current = false;
-          sirenPlayedAfterResume.current = false;
-          if (isSirenPlaying.current) {
-            stopLoop("airRaidSiren");
-            isSirenPlaying.current = false;
-          }
-        }, 10000);
-      }, 3000); // 3 second warning before red zone activates
-    }
-
-    if (level === 45 && !isRedZoneActive45.current) {
-      isRedZoneActive45.current = true;
-
-      // Reset sound timer first to ensure it plays
-      resetSoundTimer("airRaidSiren");
-
-      // Stop any existing playback
-      stopLoop("airRaidSiren");
-
-      // Force play with increased volume
-      setTimeout(() => {
-        playLoop("airRaidSiren", 1.5); // Increased volume from 0.8 to 1.5
-        isSirenPlaying.current = true;
-      }, 100);
-
-      // Show the warning UI
-      useGameState.setState({
-        isRedZoneWarning: true,
-      });
-
-      // Wait 3 seconds before activating the red zone
-      setTimeout(() => {
-        // Select a random position within the safe zone
-        const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
-        const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
-        const safeZoneRadius = useGameState.getState().safeZoneRadius;
-
-        // Random angle and distance (not at edge of safe zone)
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
-        const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
-        const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
-
-        // Update redZoneCenter and activate with smaller radius
-        useGameState.setState({
-          isRedZoneActive: true,
-          redZoneRadius: 10,
-          redZoneCenter: [redZoneCenterX, redZoneCenterZ],
-          // Keep isRedZoneWarning true here
-        });
-
-        // Set timer to deactivate red zone after 10 seconds
-        setTimeout(() => {
-          useGameState.setState({
-            isRedZoneActive: false,
-            isRedZoneWarning: false,
-          });
-          isRedZoneActive45.current = false;
-          sirenPlayedAfterResume.current = false;
-          if (isSirenPlaying.current) {
-            stopLoop("airRaidSiren");
-            isSirenPlaying.current = false;
-          }
-        }, 10000);
-      }, 3000); // 3 second warning before red zone activates
-    }
-  }, [level, playLoop, stopLoop]);
-
-  // Make sure to clean up the siren when component unmounts
-  useEffect(() => {
-    return () => {
-      if (isSirenPlaying.current) {
+        // Stop any existing playback
         stopLoop("airRaidSiren");
-        isSirenPlaying.current = false;
-        // Reset the state
-        useGameState.setState({
-          isRedZoneWarning: false,
-          isRedZoneActive: false,
-        });
+
+        // Reset bombing flag
+        globalSirenState.shouldStartBombing = false;
+
+        // Start timer
+        globalSirenState.sirenStartTime = Date.now();
+        globalSirenState.sirenEndTime =
+          globalSirenState.sirenStartTime + globalSirenState.sirenDuration;
+        console.log(
+          `Level ${levelNum}: Siren started at ${globalSirenState.sirenStartTime}, will end at ${globalSirenState.sirenEndTime} (duration: ${globalSirenState.sirenDuration}ms)`
+        );
+
+        // Set warning state in global state
+        globalSirenState.isRedZoneWarning = true;
+
+        // Update UI state in next tick to avoid render loop
+        setTimeout(() => {
+          useGameState.setState({
+            isRedZoneWarning: true,
+          });
+        }, 0);
+
+        // Force play with increased volume
+        setTimeout(() => {
+          console.log(`Starting siren for level ${levelNum}`);
+          playLoop("airRaidSiren", 1.5);
+          globalSirenState.isSirenPlaying = true;
+        }, 100);
+
+        // Wait for siren duration before activating the red zone
+        setTimeout(() => {
+          console.log(
+            `Level ${levelNum}: Siren timeout triggered (actual elapsed: ${
+              Date.now() - globalSirenState.sirenStartTime
+            }ms)`
+          );
+
+          // Select a random position within the safe zone
+          const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
+          const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
+          const safeZoneRadius = useGameState.getState().safeZoneRadius;
+
+          // Random angle and distance (not at edge of safe zone)
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * (safeZoneRadius * 0.7); // Stay within 70% of safe zone radius
+          const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
+          const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+
+          // Update redZoneCenter and activate
+          useGameState.setState({
+            isRedZoneActive: true,
+            redZoneRadius: radius,
+            redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+            isRedZoneWarning: true,
+          });
+
+          // Stop siren and start bombing
+          if (globalSirenState.isSirenPlaying) {
+            console.log(`Stopping siren after level ${levelNum} timeout`);
+            stopLoop("airRaidSiren");
+            globalSirenState.isSirenPlaying = false;
+          }
+
+          console.log(`Starting bombing for level ${levelNum}`);
+          globalSirenState.shouldStartBombing = true;
+
+          // Set timer to deactivate red zone after 10 seconds
+          setTimeout(() => {
+            console.log(`Deactivating red zone for level ${levelNum}`);
+            useGameState.setState({
+              isRedZoneActive: false,
+              isRedZoneWarning: false,
+            });
+            isActiveRef.current = false;
+            sirenPlayedAfterResume.current = false;
+            globalSirenState.shouldStartBombing = false;
+            globalSirenState.sirenLevel = 0;
+            globalSirenState.isRedZoneWarning = false;
+          }, 10000);
+        }, globalSirenState.sirenDuration);
       }
     };
-  }, [stopLoop]);
+
+    // Setup red zones for different levels
+    setupRedZone(15, isRedZoneActive15, 20);
+    setupRedZone(25, isRedZoneActive25, 15);
+    setupRedZone(35, isRedZoneActive35, 12);
+    setupRedZone(45, isRedZoneActive45, 10);
+
+    // Reset initialization flag when level changes
+    return () => {
+      initializedLevels.current = false;
+    };
+  }, [level, playLoop, resetSoundTimer, stopLoop]);
+
+  // Add event listener to detect pause/play of game
+  useEffect(() => {
+    // Log the state of the siren and game
+    console.log(
+      `Game state changed - isPaused: ${isPaused}, isSirenPlaying: ${globalSirenState.isSirenPlaying}, isRedZoneActive: ${isRedZoneActive}`
+    );
+
+    // If game is paused, log that we're pausing siren
+    if (isPaused && globalSirenState.isSirenPlaying) {
+      console.log(
+        "Game paused while siren was playing - siren will continue on resume"
+      );
+    }
+  }, [isPaused, isRedZoneActive]);
 
   // Process red zone bombs and explosions
   useFrame((state, delta) => {
-    if (isPaused || isGameOver || !isRedZoneActive) return;
+    if (
+      isPaused ||
+      isGameOver ||
+      !isRedZoneActive ||
+      !globalSirenState.shouldStartBombing
+    )
+      return;
 
     const currentTime = state.clock.getElapsedTime();
 
