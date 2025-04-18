@@ -197,20 +197,47 @@ const MobileJoysticks = () => {
 
     rightStickRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
-    const angle = Math.atan2(deltaY, deltaX);
-    const correctedAngle = -angle + Math.PI / 2;
+    // Use the absolute simplest angle calculation: Math.atan2(y, x)
+    // This gives an angle in radians (-π to π) where 0 is to the right (3 o'clock)
+    const angleRadians = Math.atan2(deltaY, deltaX);
+
+    // Convert to degrees for better readability
+    const angleDegrees = angleRadians * (180 / Math.PI);
+
+    // For our game, we want 0 to be at 12 o'clock (up), so rotate by -90 degrees
+    // But in screen coordinates, +y points down, so we need to use the opposite
+    let gameAngleDegrees = angleDegrees - 90;
+
+    // Invert left/right orientation to fix the turret rotation direction
+    gameAngleDegrees = 360 - gameAngleDegrees;
+
+    // Normalize to 0-360 range for consistency
+    if (gameAngleDegrees < 0) {
+      gameAngleDegrees += 360;
+    }
+    if (gameAngleDegrees >= 360) {
+      gameAngleDegrees -= 360;
+    }
 
     // Only log in development
     if (
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1"
     ) {
-      console.log("Right Joystick Position:", { x: deltaX, y: deltaY });
-      console.log("Turret Rotation:", correctedAngle);
+      console.log(
+        "Joystick:",
+        { x: deltaX, y: deltaY },
+        "Angle (degrees):",
+        gameAngleDegrees
+      );
     }
 
+    // Convert back to radians for the game engine (if needed)
+    const gameAngleRadians = gameAngleDegrees * (Math.PI / 180);
+
+    // Send the angle to the game
     setInput({
-      turretRotation: correctedAngle,
+      turretRotation: gameAngleRadians, // Send as radians if your game expects radians
       isFiring: true,
     });
   };
@@ -235,7 +262,7 @@ const MobileJoysticks = () => {
       // Important: Keep the last turret rotation but stop firing
       setInput({
         isFiring: false,
-        // Don't reset turretRotation to avoid the spin
+        // Don't modify turretRotation
       });
     }
   };
