@@ -560,6 +560,7 @@ const GameUI = () => {
           <div className="warning-text">
             <div>Combat Zone shrinking</div>
           </div>
+          <div className="warning-icon">☢️</div>
         </div>
       )}
       {!isGameOver && !isPaused && !isMobile && renderTacticalDisplay()}
