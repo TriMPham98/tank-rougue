@@ -1121,26 +1121,57 @@
   border: 2px solid #2f7c2f;
 }
 
-/* Scale down enhancement overlay for mobile */
-.game-ui.military-theme.mobile .enhancement-overlay .overlay-content {
-  transform: translate(-50%, -50%) scale(0.6);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 160%;
-  margin: 0;
+/* Mobile Class */
+.game-ui.military-theme.mobile .top-hud {
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  width: calc(100% - 10px);
+  padding: 5px;
+  font-size: 80%;
 }
 
-.game-ui.military-theme.mobile .enhancement-options {
-  grid-template-columns: repeat(3, 1fr);
+.game-ui.military-theme.mobile .hud-element {
+  font-size: 80%;
 }
 
-/* Scale down weapon selection for mobile */
-.game-ui.military-theme.mobile .weapon-selection-content {
-  transform: translate(-50%, -50%) scale(0.6);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 160%;
-  margin: 0;
+.game-ui.military-theme.mobile .progress-bar-container {
+  width: 100%;
+  height: 16px;
+}
+
+.game-ui.military-theme.mobile .hull-integrity {
+  min-width: 150px;
+}
+
+.game-ui.military-theme.mobile .rank-progression {
+  min-width: 150px;
+}
+
+.game-ui.military-theme.mobile .hud-label {
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+}
+
+.game-ui.military-theme.mobile .score-value {
+  font-size: 1.1rem;
+}
+
+.game-ui.military-theme.mobile .progress-text {
+  font-size: 0.7rem;
+}
+
+.game-ui.military-theme.mobile .progress-label {
+  font-size: 0.7rem;
+}
+
+.game-ui.military-theme.mobile .rank-indicator {
+  width: 22px;
+  height: 22px;
+  font-size: 0.8rem;
+  margin: 0 3px;
+}
+
+.game-ui.military-theme.mobile .target-count-info {
+  font-size: 0.7rem;
 }
