@@ -192,10 +192,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1 rem;
+  font-size: 1rem;
   font-weight: bold;
-  color: #5fdc5f;
-  text-shadow: 0 0 5px rgba(95, 220, 95, 0.5);
+  color: #ffffff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 0 5px rgba(0, 0, 0, 0.6);
   letter-spacing: 1px;
 }
 
