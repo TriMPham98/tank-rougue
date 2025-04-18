@@ -225,11 +225,83 @@ const RedZone = () => {
     }
     initializedLevels.current = true;
 
-    const setupRedZone = (levelNum, isActiveRef, radius) => {
+    const setupRedZone = (
+      levelNum: number,
+      isActiveRef: React.MutableRefObject<boolean>,
+      radius: number
+    ) => {
+      // If a siren is already playing, don't interrupt it or reset timers.
+      // The original timeout will handle stopping the siren and starting bombing.
+      if (globalSirenState.isSirenPlaying) {
+        console.log(
+          `Level ${levelNum} check: Siren already playing, skipping new siren start.`
+        );
+        // Ensure the correct red zone properties are still set if the level matches,
+        // even if the siren part is skipped.
+        if (level === levelNum && !isActiveRef.current) {
+          console.log(
+            `Level ${levelNum}: Setting up red zone visuals and future deactivation timer.`
+          );
+          isActiveRef.current = true; // Mark this level's red zone as conceptually active
+          globalSirenState.sirenLevel = levelNum; // Track which level *initiated* the current sequence
+
+          // Set the visual properties and warning state immediately
+          const safeZoneCenterX = useGameState.getState().safeZoneCenter[0];
+          const safeZoneCenterZ = useGameState.getState().safeZoneCenter[1];
+          const safeZoneRadius = useGameState.getState().safeZoneRadius;
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * (safeZoneRadius * 0.7);
+          const redZoneCenterX = safeZoneCenterX + Math.cos(angle) * distance;
+          const redZoneCenterZ = safeZoneCenterZ + Math.sin(angle) * distance;
+
+          useGameState.setState({
+            isRedZoneActive: true, // Activate visuals immediately
+            redZoneRadius: radius,
+            redZoneCenter: [redZoneCenterX, redZoneCenterZ],
+            isRedZoneWarning: true, // Keep warning active
+          });
+
+          // Set the deactivation timer, relative to *now*, but don't touch bombing state
+          // Deactivate 10 seconds *after* the siren finishes (total duration + 10s)
+          const sirenEndTime = globalSirenState.sirenEndTime;
+          const now = Date.now();
+          const deactivateDelay = Math.max(0, sirenEndTime - now) + 10000; // Delay from now
+
+          console.log(
+            `Level ${levelNum}: Scheduling deactivation in ${deactivateDelay}ms`
+          );
+          setTimeout(() => {
+            console.log(
+              `Deactivating red zone for level ${levelNum} (originally triggered)`
+            );
+            // Check if this *specific* level trigger should still deactivate
+            // Avoid deactivating if another red zone level took over
+            if (globalSirenState.sirenLevel === levelNum) {
+              useGameState.setState({
+                isRedZoneActive: false,
+                isRedZoneWarning: false, // Warning off only when zone deactivates
+              });
+              globalSirenState.sirenLevel = 0; // Clear the initiating level
+              // Ensure bombing stops and global warning is off if this level was the controller
+              globalSirenState.shouldStartBombing = false;
+              globalSirenState.isRedZoneWarning = false;
+            } else {
+              console.log(
+                `Level ${levelNum}: Deactivation skipped, sirenLevel is now ${globalSirenState.sirenLevel}`
+              );
+            }
+            isActiveRef.current = false; // Allow this level trigger again later
+            sirenPlayedAfterResume.current = false; // Reset resume flag if needed
+          }, deactivateDelay);
+        }
+        return; // Exit the function, do not proceed with siren logic
+      }
+
+      // Proceed only if the level matches, ref isn't active, and this level didn't already start a siren
       if (
         level === levelNum &&
         !isActiveRef.current &&
-        globalSirenState.sirenLevel !== levelNum
+        globalSirenState.sirenLevel !== levelNum // Check global level lock
       ) {
         console.log(`Level ${levelNum} red zone triggered`);
         isActiveRef.current = true;
@@ -306,19 +378,28 @@ const RedZone = () => {
           console.log(`Starting bombing for level ${levelNum}`);
           globalSirenState.shouldStartBombing = true;
 
-          // Set timer to deactivate red zone after 10 seconds
+          // Set timer to deactivate red zone after 10 seconds *from bombing start*
           setTimeout(() => {
             console.log(`Deactivating red zone for level ${levelNum}`);
-            useGameState.setState({
-              isRedZoneActive: false,
-              isRedZoneWarning: false,
-            });
+            // Check if this level is still the one controlling the red zone
+            if (globalSirenState.sirenLevel === levelNum) {
+              useGameState.setState({
+                isRedZoneActive: false,
+                isRedZoneWarning: false,
+              });
+              globalSirenState.sirenLevel = 0; // Clear the level lock
+              globalSirenState.shouldStartBombing = false; // Bombing stops
+              globalSirenState.isRedZoneWarning = false; // Warning off
+            } else {
+              console.log(
+                `Level ${levelNum}: Deactivation skipped, sirenLevel is now ${globalSirenState.sirenLevel}`
+              );
+            }
             isActiveRef.current = false;
-            sirenPlayedAfterResume.current = false;
-            globalSirenState.shouldStartBombing = false;
-            globalSirenState.sirenLevel = 0;
-            globalSirenState.isRedZoneWarning = false;
-          }, 10000);
+            sirenPlayedAfterResume.current = false; // Reset resume flag
+            // Don't reset globalSirenState.shouldStartBombing = false here if another level took over?
+            // Let's reset bombing flag only if *this* level is deactivating.
+          }, 10000); // 10 seconds *after* bombing starts
         }, globalSirenState.sirenDuration);
       }
     };
