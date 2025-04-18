@@ -47,7 +47,10 @@ const GameUI = () => {
     setIsMobile(checkMobile());
 
     // Also detect if touch is supported
-    if ("ontouchstart" in window) {
+    if (
+      "ontouchstart" in window ||
+      window.matchMedia("(max-width: 768px)").matches
+    ) {
       setIsMobile(true);
     }
   }, []);
@@ -631,7 +634,7 @@ const GameUI = () => {
     <div
       className={`game-ui military-theme ${
         isGameOver ? "blur-background" : ""
-      }`}>
+      } ${isMobile ? "mobile" : ""}`}>
       {showContainmentWarning && !isGameOver && !isPaused && (
         <div
           className="warning-overlay containment-warning"

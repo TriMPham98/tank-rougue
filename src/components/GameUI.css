@@ -1120,3 +1120,35 @@
   border-radius: 3px;
   border: 2px solid #2f7c2f;
 }
+
+/* Mobile Class */
+.game-ui.military-theme.mobile .top-hud {
+  transform: scale(0.6);
+  transform-origin: top center;
+  position: absolute;
+  top: 5px;
+  left: 0;
+  right: 0;
+  width: 167%;
+  margin-left: -33.5%;
+  padding: 5px;
+  background-color: rgba(30, 35, 30, 0.95);
+  z-index: 100;
+  border: 2px solid #2f7c2f;
+}
+
+.game-ui.military-theme.mobile .progress-bar-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.game-ui.military-theme.mobile .progress-bar {
+  max-width: 100%;
+}
+
+.game-ui.military-theme.mobile .hull-integrity,
+.game-ui.military-theme.mobile .combat-score,
+.game-ui.military-theme.mobile .rank-progression {
+  min-width: unset;
+}
