@@ -1121,34 +1121,26 @@
   border: 2px solid #2f7c2f;
 }
 
-/* Mobile Class */
-.game-ui.military-theme.mobile .top-hud {
-  transform: scale(0.6);
-  transform-origin: top center;
+/* Scale down enhancement overlay for mobile */
+.game-ui.military-theme.mobile .enhancement-overlay .overlay-content {
+  transform: translate(-50%, -50%) scale(0.6);
   position: absolute;
-  top: 5px;
-  left: 0;
-  right: 0;
-  width: 167%;
-  margin-left: -33.5%;
-  padding: 5px;
-  background-color: rgba(30, 35, 30, 0.95);
-  z-index: 100;
-  border: 2px solid #2f7c2f;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  margin: 0;
 }
 
-.game-ui.military-theme.mobile .progress-bar-container {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
+.game-ui.military-theme.mobile .enhancement-options {
+  grid-template-columns: repeat(3, 1fr);
 }
 
-.game-ui.military-theme.mobile .progress-bar {
-  max-width: 100%;
-}
-
-.game-ui.military-theme.mobile .hull-integrity,
-.game-ui.military-theme.mobile .combat-score,
-.game-ui.military-theme.mobile .rank-progression {
-  min-width: unset;
+/* Scale down weapon selection for mobile */
+.game-ui.military-theme.mobile .weapon-selection-content {
+  transform: translate(-50%, -50%) scale(0.6);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  margin: 0;
 }
