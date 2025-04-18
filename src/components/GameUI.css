@@ -1220,3 +1220,30 @@
   line-height: 1.3;
   margin-top: 10px;
 }
+
+/* Mobile Pause Menu */
+.game-ui.military-theme.mobile .pause-content {
+  min-width: auto;
+  width: 90%;
+  padding: 20px;
+}
+
+.game-ui.military-theme.mobile .pause-title {
+  font-size: 1.4rem;
+  padding: 10px;
+}
+
+.game-ui.military-theme.mobile .resume-button {
+  font-size: 1rem;
+  padding: 12px 25px;
+}
+
+/* Mobile Game Over Menu */
+.game-ui.military-theme.mobile .game-over-content {
+  min-width: auto;
+  width: 90%;
+}
+
+.game-ui.military-theme.mobile .game-over-title {
+  font-size: 1.4rem;
+}
