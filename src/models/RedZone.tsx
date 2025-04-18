@@ -272,11 +272,14 @@ const RedZone = () => {
           );
           setTimeout(() => {
             console.log(
-              `Deactivating red zone for level ${levelNum} (originally triggered)`
+              `Deactivating red zone for level ${levelNum} (originally triggered) - checking level match.`
             );
             // Check if this *specific* level trigger should still deactivate
             // Avoid deactivating if another red zone level took over
             if (globalSirenState.sirenLevel === levelNum) {
+              console.log(
+                ` -> Level ${levelNum} MATCHES global ${globalSirenState.sirenLevel}. Deactivating zone and warning.`
+              );
               useGameState.setState({
                 isRedZoneActive: false,
                 isRedZoneWarning: false, // Warning off only when zone deactivates
@@ -287,7 +290,7 @@ const RedZone = () => {
               globalSirenState.isRedZoneWarning = false;
             } else {
               console.log(
-                `Level ${levelNum}: Deactivation skipped, sirenLevel is now ${globalSirenState.sirenLevel}`
+                ` -> Level ${levelNum} DOES NOT MATCH global ${globalSirenState.sirenLevel}. Skipping deactivation/warning off.`
               );
             }
             isActiveRef.current = false; // Allow this level trigger again later
@@ -380,9 +383,14 @@ const RedZone = () => {
 
           // Set timer to deactivate red zone after 10 seconds *from bombing start*
           setTimeout(() => {
-            console.log(`Deactivating red zone for level ${levelNum}`);
+            console.log(
+              `Deactivating red zone for level ${levelNum} - checking level match.`
+            );
             // Check if this level is still the one controlling the red zone
             if (globalSirenState.sirenLevel === levelNum) {
+              console.log(
+                ` -> Level ${levelNum} MATCHES global ${globalSirenState.sirenLevel}. Deactivating zone and warning.`
+              );
               useGameState.setState({
                 isRedZoneActive: false,
                 isRedZoneWarning: false,
@@ -392,7 +400,7 @@ const RedZone = () => {
               globalSirenState.isRedZoneWarning = false; // Warning off
             } else {
               console.log(
-                `Level ${levelNum}: Deactivation skipped, sirenLevel is now ${globalSirenState.sirenLevel}`
+                ` -> Level ${levelNum} DOES NOT MATCH global ${globalSirenState.sirenLevel}. Skipping deactivation/warning off.`
               );
             }
             isActiveRef.current = false;

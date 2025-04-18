@@ -743,7 +743,6 @@ const GameUI = () => {
             opacity: redZoneWarningOpacityRef.current,
           }}>
           <div>🚨 DANGER: AIRSTRIKE INCOMING 🚨</div>
-          <div>Seek shelter immediately!</div>
         </div>
       )}
     </div>
