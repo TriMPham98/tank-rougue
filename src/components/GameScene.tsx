@@ -6,6 +6,7 @@ import PowerUpItem from "../models/PowerUpItem";
 import Ground from "../models/Ground";
 import TerrainObstacle from "../models/TerrainObstacle";
 import SafeZone from "../models/SafeZone";
+import RedZone from "../models/RedZone";
 import {
   Suspense,
   useRef,
@@ -248,45 +249,65 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   }, [enemies, terrainObstacles]);
 
   return (
-    <Suspense fallback={null}>
-      <EnemyRespawnManager />
+    <>
+      {/* Ambient light for general illumination */}
       <ambientLight
         intensity={ambientIntensity}
-        color={[ambientR, ambientG, ambientB]}
+        color={`rgb(${Math.floor(ambientR * 255)}, ${Math.floor(
+          ambientG * 255
+        )}, ${Math.floor(ambientB * 255)})`}
       />
+
+      {/* Directional light for shadows/highlights */}
       <directionalLight
-        position={[10, 20, 10]}
+        position={[0, 10, 0]}
         intensity={directionalIntensity}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-far={50}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        shadow-camera-left={-25}
+        shadow-camera-right={25}
+        shadow-camera-top={25}
+        shadow-camera-bottom={-25}
       />
+
+      {/* Spotlight that follows the player - dynamic in SpotlightUpdater */}
       <SpotlightUpdater />
-      <SafeZone />
+
+      {/* Sky backdrop */}
+      <Sky
+        distance={450000}
+        sunPosition={[0, Math.sin(sunAzimuth), -Math.cos(sunAzimuth)]}
+        inclination={0.3} // Fixed inclination for horizon position
+        turbidity={turbidity}
+        rayleigh={rayleigh}
+      />
+
+      {/* Player and safe zone - always render */}
       {playerTank}
+      <SafeZone />
+      <RedZone />
+
+      {/* Ground plane */}
+      <Ground />
+
+      {/* Enemies and obstacles - mapped from state */}
       {enemies.map((enemy) => (
-        <EnemyTank key={`enemy-${enemy.id}`} enemy={enemy} />
+        <EnemyTank key={enemy.id} enemy={enemy} />
       ))}
-      {getState().powerUps.map((powerUp) => (
-        <PowerUpItem key={`powerup-${powerUp.id}`} powerUp={powerUp} />
-      ))}
+
       {terrainObstacles.map((obstacle) => (
         <TerrainObstacle
-          key={`obstacle-${obstacle.id}`}
+          key={obstacle.id}
           position={obstacle.position}
           size={obstacle.size}
         />
       ))}
-      <Ground />
-      <Sky turbidity={turbidity} rayleigh={rayleigh} azimuth={sunAzimuth} />
+
+      {/* Ensure the camera follows the player */}
       <FollowCamera />
-      <OrbitControls enabled={false} />
-    </Suspense>
+    </>
   );
 });
 
@@ -424,6 +445,7 @@ const GameScene = () => {
           <color attach="background" args={[skyColor]} />
           <fog attach="fog" args={[skyColor, fogNear, fogFar]} />
           <TerrainObstacleGenerator />
+          <EnemyRespawnManager />
           <SceneContent playerTank={<Tank position={[0, 0.5, 0]} />} />
         </Canvas>
         <MobileJoysticks />

@@ -67,6 +67,11 @@ interface GameState {
   safeZoneActive: boolean;
   isPreZoneChangeLevel: boolean; // New property to identify levels right before zone changes
 
+  // Red zone (PUBG-like bombing zone)
+  isRedZoneActive: boolean;
+  redZoneRadius: number;
+  redZoneCenter: [number, number];
+
   // Upgrade system
   showUpgradeUI: boolean;
   availableUpgrades: UpgradeableStat[];
@@ -166,6 +171,11 @@ export const useGameState = create<GameState>((set, get) => ({
   safeZoneDamage: 1, // Damage per second outside the safe zone
   safeZoneActive: false, // Safe zone not active initially
   isPreZoneChangeLevel: false, // Initial value
+
+  // Red zone (PUBG-like bombing zone)
+  isRedZoneActive: false,
+  redZoneRadius: 20,
+  redZoneCenter: [0, 0],
 
   // Upgrade system
   showUpgradeUI: false,
