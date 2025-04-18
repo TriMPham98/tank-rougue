@@ -215,6 +215,7 @@
   align-items: center;
   justify-content: center;
   min-width: 200px;
+  width: 100%;
 }
 
 .military-theme .elapsed-time {
@@ -1232,4 +1233,56 @@
 
 .game-ui.military-theme.mobile .game-over-title {
   font-size: 1.4rem;
+}
+
+/* Combat Zone Warning */
+.military-theme .combat-zone-warning {
+  position: fixed;
+  bottom: 120px; /* Position above controls */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background-color: rgba(240, 173, 78, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(240, 173, 78, 0.5);
+  text-align: center;
+  font-weight: bold;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  width: auto;
+  max-width: 90%;
+}
+
+/* Mobile-specific adjustments */
+.game-ui.military-theme.mobile .combat-zone-warning {
+  bottom: 180px;
+  width: 80%;
+  max-width: 300px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+}
+
+.game-ui.military-theme.mobile .combat-score {
+  min-width: 0;
+  padding: 0 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improve combat score centering for all devices */
+.military-theme .combat-score {
+  text-align: center;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  width: 100%;
 }

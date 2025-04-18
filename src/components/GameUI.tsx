@@ -765,26 +765,7 @@ const GameUI = () => {
       )}
       {/* Combat Zone Warning */}
       {isCombatZoneWarningVisible && !isGameOver && !isPaused && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "120px", // Position above controls
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            backgroundColor: "rgba(240, 173, 78, 0.8)",
-            color: "#fff",
-            padding: "10px 20px",
-            borderRadius: "5px",
-            boxShadow: "0 0 15px rgba(240, 173, 78, 0.5)",
-            textAlign: "center",
-            fontWeight: "bold",
-            pointerEvents: "none",
-            opacity: 1,
-            transition: "opacity 0.3s ease-in-out",
-          }}>
-          Combat zone is shrinking!
-        </div>
+        <div className="combat-zone-warning">Combat zone is shrinking!</div>
       )}
       {isGameOver && (
         <div className="overlay game-over-overlay">
