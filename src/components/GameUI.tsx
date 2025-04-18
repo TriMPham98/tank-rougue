@@ -204,7 +204,7 @@ const GameUI = () => {
       case "tankSpeed":
         return "Mobility";
       case "fireRate":
-        return "Rate of Fire (RoF)";
+        return "Rate of Fire";
       case "cameraRange":
         return "Sensor Range";
       case "maxHealth":
@@ -448,22 +448,6 @@ const GameUI = () => {
   const [showContainmentWarning, setShowContainmentWarning] = useState(false);
   const containmentWarningOpacityRef = useRef(0);
 
-  const calculateNextZoneInfo = useCallback(() => {
-    const maxRadius = 50;
-    const minRadius = 5;
-    const radiusDecrease = 4;
-    const currentZoneTier = Math.floor(rank / 5);
-    const nextZoneTier = currentZoneTier + 1;
-    const nextZoneShiftRank = nextZoneTier * 5;
-    const nextZoneTargetRadius = Math.max(
-      minRadius,
-      maxRadius - nextZoneTier * radiusDecrease
-    );
-    return { nextZoneTargetRadius, nextZoneShiftRank };
-  }, [rank]);
-
-  const { nextZoneTargetRadius, nextZoneShiftRank } = calculateNextZoneInfo();
-
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -659,11 +643,7 @@ const GameUI = () => {
           }>
           <div className="warning-icon">☢️</div>
           <div className="warning-text">
-            <div>IMMINENT CONTAINMENT SHIFT</div>
-            <div>
-              Combat Zone shrinking to {nextZoneTargetRadius.toFixed(0)}m at
-              Rank {nextZoneShiftRank}
-            </div>
+            <div>Combat Zone shrinking</div>
           </div>
         </div>
       )}
