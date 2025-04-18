@@ -29,21 +29,63 @@ const MobileJoysticks = () => {
 
     setIsMobile(checkMobile());
 
+    // Also detect if touch is supported
     if ("ontouchstart" in window) {
       setIsMobile(true);
     }
 
     // Handle passive event listeners for mobile browsers
-    if (leftJoystickRef.current) {
-      document.addEventListener("touchmove", preventDefaultForTouch, {
-        passive: false,
-      });
+    document.addEventListener("touchmove", preventDefaultForTouch, {
+      passive: false,
+    });
+
+    // Force mobile mode for iPads and tablets separately from phone detection
+    const isTablet =
+      /iPad/i.test(navigator.userAgent) ||
+      (/Macintosh/i.test(navigator.userAgent) && "ontouchend" in document) || // iPad with iOS 13+ shows as Mac
+      (window.innerWidth >= 768 &&
+        window.innerWidth <= 1366 &&
+        "ontouchend" in document);
+
+    if (isTablet) {
+      // Add a class to document body to help with CSS targeting
+      document.body.classList.add("tablet-device");
+      setIsMobile(true);
+
+      // Set initial orientation class
+      if (window.matchMedia("(orientation: portrait)").matches) {
+        document.body.classList.add("orientation-portrait");
+        document.body.classList.remove("orientation-landscape");
+      } else {
+        document.body.classList.add("orientation-landscape");
+        document.body.classList.remove("orientation-portrait");
+      }
     }
 
+    // Listen for orientation changes
+    const updateOrientation = () => {
+      if (window.matchMedia("(orientation: portrait)").matches) {
+        document.body.classList.add("orientation-portrait");
+        document.body.classList.remove("orientation-landscape");
+      } else {
+        document.body.classList.add("orientation-landscape");
+        document.body.classList.remove("orientation-portrait");
+      }
+    };
+
+    window.addEventListener("orientationchange", updateOrientation);
+    window.addEventListener("resize", updateOrientation);
+
+    // Return a cleanup function
     return () => {
       leftTouchId = null;
       rightTouchId = null;
       document.removeEventListener("touchmove", preventDefaultForTouch);
+      document.body.classList.remove("tablet-device");
+      document.body.classList.remove("orientation-portrait");
+      document.body.classList.remove("orientation-landscape");
+      window.removeEventListener("orientationchange", updateOrientation);
+      window.removeEventListener("resize", updateOrientation);
     };
   }, []);
 

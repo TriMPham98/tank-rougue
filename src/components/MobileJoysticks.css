@@ -116,7 +116,7 @@
   }
 }
 
-/* Only show in landscape on mobile */
+/* Only show in landscape on mobile phones */
 @media screen and (orientation: portrait) {
   .mobile-joysticks {
     display: none;
@@ -128,4 +128,31 @@
   .mobile-joysticks {
     display: block;
   }
+}
+
+/* Tablet-specific overrides - these come after the media queries */
+body.tablet-device .mobile-joysticks {
+  display: block; /* Always show joysticks on tablets */
+}
+
+/* Make joysticks larger on tablets for better UX */
+body.tablet-device .joystick-container {
+  width: 150px;
+  height: 150px;
+}
+
+body.tablet-device .joystick-stick {
+  width: 60px;
+  height: 60px;
+}
+
+/* Position adjustments for portrait mode on tablets */
+body.tablet-device.orientation-portrait .left-joystick {
+  left: 20px;
+  bottom: 20px;
+}
+
+body.tablet-device.orientation-portrait .right-joystick {
+  right: 20px;
+  bottom: 20px;
 }
