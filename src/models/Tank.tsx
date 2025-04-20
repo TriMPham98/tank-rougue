@@ -144,7 +144,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     let moved = false;
     const moveSpeed = playerSpeed;
-    const turnSpeed = 3.5;
+    const turnSpeed = 4.0;
 
     const currentQuat = tankRef.current.quaternion;
 
@@ -210,8 +210,8 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     }
 
     if (turretRef.current) {
-      if (keyTurretLeft) turretRotationRef.current += delta * 2.5;
-      if (keyTurretRight) turretRotationRef.current -= delta * 2.5;
+      if (keyTurretLeft) turretRotationRef.current += delta * 4.0;
+      if (keyTurretRight) turretRotationRef.current -= delta * 4.0;
 
       if (touchTurretRotation !== null) {
         const targetAbsoluteAngle = touchTurretRotation;
