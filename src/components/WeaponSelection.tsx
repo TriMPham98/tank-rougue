@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { WeaponSelectionProps, SecondaryWeapon } from "../types";
 
 const WeaponSelection: React.FC<WeaponSelectionProps> = ({
@@ -8,63 +8,26 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
 }) => {
   const { availableWeapons, level, canSelect } = state;
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Add direct DOM event listeners as a fallback
-  useEffect(() => {
-    const setupDirectEventListeners = () => {
-      if (!containerRef.current) return;
-
-      // Find all weapon card elements
-      const weaponCards = containerRef.current.querySelectorAll(".weapon-card");
-
-      weaponCards.forEach((card, index) => {
-        if (index < availableWeapons.length) {
-          const weapon = availableWeapons[index];
-
-          // Remove existing listeners (if any)
-          card.removeEventListener("click", () => {});
-
-          // Add new direct listener
-          card.addEventListener("click", (e) => {
-            e.stopPropagation();
-            onWeaponSelect(weapon);
-            onClose();
-          });
-        }
-      });
-
-      // Find cancel button
-      const cancelButton = containerRef.current.querySelector(".close-button");
-      if (cancelButton) {
-        cancelButton.removeEventListener("click", () => {});
-        cancelButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          onClose();
-        });
-      }
-    };
-
-    // Run after a short delay to ensure the DOM is ready
-    const timeoutId = setTimeout(setupDirectEventListeners, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [availableWeapons, onWeaponSelect, onClose]);
-
-  if (!canSelect) {
-    return null;
-  }
+  const [isSelectionLocked, setIsSelectionLocked] = useState(false);
 
   // Function to handle weapon selection and close the modal
   const handleWeaponSelect = (
     weapon: SecondaryWeapon,
     event: React.MouseEvent
   ) => {
+    // Prevent multiple selections
+    if (isSelectionLocked) {
+      return;
+    }
+
+    // Lock selections immediately
+    setIsSelectionLocked(true);
+
     // Stop event propagation to prevent bubbling
     event.stopPropagation();
     event.preventDefault();
 
+    // Process selection
     onWeaponSelect(weapon);
     onClose();
 
@@ -73,11 +36,27 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
 
   // Add a manual close function for the cancel button
   const handleClose = (event: React.MouseEvent) => {
+    if (isSelectionLocked) {
+      return;
+    }
+
+    setIsSelectionLocked(true);
     event.stopPropagation();
     event.preventDefault();
     onClose();
     return false; // Prevent default
   };
+
+  // Reset the lock when the component unmounts or when canSelect changes
+  useEffect(() => {
+    return () => {
+      setIsSelectionLocked(false);
+    };
+  }, [canSelect]);
+
+  if (!canSelect) {
+    return null;
+  }
 
   return (
     <div
