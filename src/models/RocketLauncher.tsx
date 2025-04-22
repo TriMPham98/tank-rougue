@@ -1,5 +1,5 @@
 // src/components/RocketLauncher.tsx
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Box, Cylinder } from "@react-three/drei";
 import { Group } from "three";
 import { useGameState, SecondaryWeapon } from "../utils/gameState";
@@ -19,7 +19,8 @@ const RocketLauncher = ({
   rotation,
 }: RocketLauncherProps) => {
   const launcherRef = useRef<Group>(null);
-  const projectilesRef = useRef<
+  // Changed from useRef to useState
+  const [activeProjectiles, setActiveProjectiles] = useState<
     {
       id: string;
       position: [number, number, number];
@@ -28,83 +29,163 @@ const RocketLauncher = ({
     }[]
   >([]);
 
+  const onFire = (
+    firePosition: [number, number, number],
+    targetId: string | null
+  ) => {
+    const projectileId = Math.random().toString(36).substring(2, 9);
+    const newProjectile = {
+      id: projectileId,
+      position: firePosition,
+      rotation: launcherRef.current?.rotation.y ?? 0,
+      targetId: targetId,
+    };
+    // Use setActiveProjectiles to update the state
+    setActiveProjectiles((prev) => [...prev, newProjectile]);
+    debug.log(`Rocket fired: ${projectileId}`);
+  };
+
   // Use the shared weapon tracking logic
   const { instanceId } = useWeaponTracking({
     weaponInstance,
     position,
     rotation,
     weaponRef: launcherRef as React.RefObject<Group>,
-    barrelLength: 1.5,
-    fireOffsetY: 0.1,
-    onFire: (firePosition, targetId) => {
-      const projectileId = Math.random().toString(36).substr(2, 9);
-      projectilesRef.current.push({
-        id: projectileId,
-        position: firePosition,
-        rotation: launcherRef.current?.rotation.y ?? 0,
-        targetId: targetId,
-      });
-    },
+    barrelLength: 1.6, // Slightly adjusted barrel length
+    fireOffsetY: 0.05, // Adjusted fire offset
+    onFire: onFire, // Pass the callback
   });
 
   const removeProjectile = (id: string) => {
-    projectilesRef.current = projectilesRef.current.filter((p) => p.id !== id);
+    setActiveProjectiles((prev) => prev.filter((p) => p.id !== id));
+    debug.log(`Rocket projectile ${id} removed from active list.`);
   };
 
   useEffect(() => {
     debug.log(`Rocket launcher instance ${instanceId} mounted.`);
     return () => {
       debug.log(`Rocket launcher instance ${instanceId} unmounted`);
+      // Clear projectiles associated with this specific launcher on unmount
+      setActiveProjectiles([]); // Clear the local list
     };
-  }, [instanceId]);
+  }, [instanceId]); // Dependency array ensures this runs once per instance
 
   return (
     <>
+      {/* Launcher Model Group */}
       <group ref={launcherRef}>
-        <Box args={[0.2, 0.25, 1.3]} position={[0, 0, 0.5]} castShadow>
-          <meshStandardMaterial color="#303030" />
+        {/* Main Body Box */}
+        <Box args={[0.3, 0.35, 1.4]} position={[0, 0, 0.6]} castShadow>
+          <meshStandardMaterial
+            color="#333338"
+            metalness={0.4}
+            roughness={0.6}
+          />
         </Box>
+
+        {/* Barrel Tube */}
         <Cylinder
-          args={[0.15, 0.15, 1.0, 12]}
-          position={[0, 0, 1.0]}
+          args={[0.18, 0.18, 1.2, 16]} // Slightly wider, more segments
+          position={[0, 0, 1.1]} // Adjusted position
           rotation={[Math.PI / 2, 0, 0]}
           castShadow>
           <meshStandardMaterial
-            color="#252525"
-            metalness={0.6}
+            color="#2A2A2F"
+            metalness={0.7}
             roughness={0.3}
           />
         </Cylinder>
+
+        {/* Muzzle Break / End Cap */}
         <Cylinder
-          args={[0.16, 0.14, 0.1, 12]}
-          position={[0, 0, 1.5]}
+          args={[0.2, 0.17, 0.15, 16]} // Tapered shape
+          position={[0, 0, 1.7]} // Positioned at the end of the barrel
           rotation={[Math.PI / 2, 0, 0]}
           castShadow>
           <meshStandardMaterial
-            color="#1F1F1F"
-            metalness={0.7}
+            color="#1E1E22"
+            metalness={0.8}
             roughness={0.2}
           />
         </Cylinder>
-        <Box args={[0.1, 0.18, 0.25]} position={[0, -0.2, 0.3]} castShadow>
-          <meshStandardMaterial color="#202020" />
+
+        {/* Underslung Grip Box */}
+        <Box args={[0.12, 0.22, 0.35]} position={[0, -0.25, 0.4]} castShadow>
+          <meshStandardMaterial color="#25252A" />
         </Box>
-        <Box args={[0.06, 0.12, 0.2]} position={[0, 0.19, 0.3]} castShadow>
+
+        {/* Top Sight/Accessory Rail */}
+        <Box args={[0.08, 0.08, 0.5]} position={[0, 0.22, 0.5]} castShadow>
           <meshStandardMaterial
-            color="#111111"
-            metalness={0.7}
-            roughness={0.3}
+            color="#151518"
+            metalness={0.6}
+            roughness={0.4}
           />
         </Box>
-        <Box args={[0.3, 0.2, 0.4]} position={[0.25, 0, 0.4]} castShadow>
-          <meshStandardMaterial color="#3A3A3A" />
+
+        {/* Side Panel Detail 1 */}
+        <Box args={[0.05, 0.25, 0.6]} position={[0.2, 0, 0.7]} castShadow>
+          <meshStandardMaterial color="#3A3A40" roughness={0.7} />
         </Box>
-        <Box args={[0.31, 0.05, 0.41]} position={[0.25, -0.08, 0.4]} castShadow>
-          <meshStandardMaterial color="#FFCC00" />
+        {/* Side Panel Detail 2 (Opposite Side) */}
+        <Box args={[0.05, 0.25, 0.6]} position={[-0.2, 0, 0.7]} castShadow>
+          <meshStandardMaterial color="#3A3A40" roughness={0.7} />
         </Box>
+
+        {/* Warning Stripe Detail */}
+        <Box args={[0.31, 0.06, 0.45]} position={[0, -0.1, 0.7]} castShadow>
+          <meshStandardMaterial
+            color="#FFD700"
+            emissive="#332200"
+            roughness={0.5}
+          />
+        </Box>
+
+        {/* Small Rivet/Bolt Details */}
+        <Cylinder
+          args={[0.02, 0.02, 0.06, 6]}
+          position={[0.2, 0.15, 0.95]}
+          rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial
+            color="#555555"
+            metalness={0.9}
+            roughness={0.2}
+          />
+        </Cylinder>
+        <Cylinder
+          args={[0.02, 0.02, 0.06, 6]}
+          position={[-0.2, 0.15, 0.95]}
+          rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial
+            color="#555555"
+            metalness={0.9}
+            roughness={0.2}
+          />
+        </Cylinder>
+        <Cylinder
+          args={[0.02, 0.02, 0.06, 6]}
+          position={[0.2, -0.15, 0.95]}
+          rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial
+            color="#555555"
+            metalness={0.9}
+            roughness={0.2}
+          />
+        </Cylinder>
+        <Cylinder
+          args={[0.02, 0.02, 0.06, 6]}
+          position={[-0.2, -0.15, 0.95]}
+          rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial
+            color="#555555"
+            metalness={0.9}
+            roughness={0.2}
+          />
+        </Cylinder>
       </group>
 
-      {projectilesRef.current.map((projectile) => (
+      {/* Render Active Projectiles */}
+      {activeProjectiles.map((projectile) => (
         <RocketProjectile
           key={projectile.id}
           id={projectile.id}
