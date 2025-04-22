@@ -381,7 +381,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           />
         </Box>
         <Box
-          args={[0.3, 0.1, 0.5]}
+          args={[0.8, 0.1, 0.25]}
           position={[0, 0.35, 0.9]}
           castShadow
           receiveShadow>
