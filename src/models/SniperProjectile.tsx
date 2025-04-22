@@ -12,6 +12,7 @@ interface SniperProjectileProps {
   damage: number;
   targetId: string | null; // The ID of the enemy to track
   onRemove: (id: string) => void;
+  penetrationPower?: number; // Number of enemies the bullet can penetrate
 }
 
 const SniperProjectile = ({
@@ -21,11 +22,14 @@ const SniperProjectile = ({
   damage,
   targetId,
   onRemove,
+  penetrationPower = 1, // Default to 1 (no penetration)
 }: SniperProjectileProps) => {
   const projectileRef = useRef<Mesh>(null);
   const hasCollidedRef = useRef(false);
   const initialPositionRef = useRef<[number, number, number]>([...position]);
   const distanceTraveledRef = useRef(0);
+  const penetrationsLeftRef = useRef(penetrationPower);
+  const hitEnemiesRef = useRef<Set<string>>(new Set());
 
   // Access state functions
   const damageEnemy = useGameState((state) => state.damageEnemy);
@@ -43,7 +47,7 @@ const SniperProjectile = ({
   useFrame((_, delta) => {
     if (
       !projectileRef.current ||
-      hasCollidedRef.current ||
+      (hasCollidedRef.current && penetrationsLeftRef.current <= 0) ||
       isPaused ||
       isGameOver
     )
@@ -77,7 +81,8 @@ const SniperProjectile = ({
       ? enemies.find((e) => e.id === targetId)
       : null;
 
-    if (targetEnemy) {
+    if (targetEnemy && penetrationsLeftRef.current === penetrationPower) {
+      // Only track for first target
       // Calculate direction to target for tracking
       const currentPos = new Vector3(
         projectileRef.current.position.x,
@@ -150,19 +155,18 @@ const SniperProjectile = ({
         obstacle.type === "rock" ? obstacle.size : obstacle.size * 0.3;
 
       if (distanceToObstacle < collisionRadius) {
-        if (!hasCollidedRef.current) {
-          hasCollidedRef.current = true;
-          debug.log(`Sniper bullet hit terrain obstacle`);
-          onRemove(id);
-          break;
-        }
+        // Terrain obstacles always stop bullets regardless of penetration power
+        debug.log(`Sniper bullet hit terrain obstacle`);
+        onRemove(id);
+        return;
       }
     }
 
-    if (hasCollidedRef.current) return;
-
     // Check for collisions with all enemies
     for (const enemy of enemies) {
+      // Skip enemies we've already hit with this bullet
+      if (hitEnemiesRef.current.has(enemy.id)) continue;
+
       const enemyPos = new Vector3(...enemy.position);
       const distanceToEnemy = enemyPos.distanceTo(projectilePos);
 
@@ -170,34 +174,41 @@ const SniperProjectile = ({
       const collisionRadius = enemy.type === "tank" ? 2.0 : 1.2;
 
       if (distanceToEnemy < collisionRadius) {
-        if (!hasCollidedRef.current) {
-          hasCollidedRef.current = true;
+        hitEnemiesRef.current.add(enemy.id);
 
-          // Apply extra critical hit chance for sniper (50% chance)
-          const isCriticalHit = Math.random() < 0.5;
-          const finalDamage = isCriticalHit ? damage * 1.5 : damage;
+        // Apply extra critical hit chance for sniper (50% chance)
+        const isCriticalHit = Math.random() < 0.5;
+        const finalDamage = isCriticalHit ? damage * 1.5 : damage;
 
-          debug.log(
-            `Sniper hit on enemy ${enemy.id}${
-              isCriticalHit ? " (CRITICAL HIT!)" : ""
-            }`
-          );
+        debug.log(
+          `Sniper hit on enemy ${enemy.id}${
+            isCriticalHit ? " (CRITICAL HIT!)" : ""
+          } - Penetrations left: ${penetrationsLeftRef.current - 1}`
+        );
 
-          // Apply damage to the enemy
-          damageEnemy(enemy.id, finalDamage);
+        // Apply damage to the enemy
+        damageEnemy(enemy.id, finalDamage);
 
-          // Check if enemy was destroyed
-          const updatedEnemies = getState().enemies;
-          const enemyDestroyed = !updatedEnemies.some((e) => e.id === enemy.id);
+        // Check if enemy was destroyed
+        const updatedEnemies = getState().enemies;
+        const enemyDestroyed = !updatedEnemies.some((e) => e.id === enemy.id);
 
-          if (enemyDestroyed) {
-            debug.log(`Enemy ${enemy.id} eliminated by sniper`);
-          }
-
-          // Remove the projectile
-          onRemove(id);
-          break;
+        if (enemyDestroyed) {
+          debug.log(`Enemy ${enemy.id} eliminated by sniper`);
         }
+
+        // Reduce penetration power
+        penetrationsLeftRef.current--;
+
+        // If no more penetration power, remove the projectile
+        if (penetrationsLeftRef.current <= 0) {
+          debug.log(`Sniper bullet has no more penetration power`);
+          onRemove(id);
+          return;
+        }
+
+        // We only check one collision per frame, so break after the first hit
+        break;
       }
     }
   });
@@ -205,11 +216,16 @@ const SniperProjectile = ({
   return (
     <Sphere ref={projectileRef} args={[0.1, 8, 8]} position={position}>
       <meshStandardMaterial
-        color="#00A0FF"
-        emissive="#00A0FF"
+        color={penetrationPower > 1 ? "#FF6000" : "#00A0FF"}
+        emissive={penetrationPower > 1 ? "#FF3000" : "#00A0FF"}
         emissiveIntensity={3}
       />
-      <pointLight color="#00A0FF" intensity={2} distance={8} decay={2} />
+      <pointLight
+        color={penetrationPower > 1 ? "#FF3000" : "#00A0FF"}
+        intensity={2}
+        distance={8}
+        decay={2}
+      />
     </Sphere>
   );
 };

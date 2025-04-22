@@ -28,6 +28,7 @@ const SniperRifle = ({
       targetId: string | null; // Keep targetId if SniperProjectile uses it for guidance/initial velocity
       // Add damage if SniperProjectile needs it directly
       damage: number;
+      penetrationPower: number; // Add penetration power property
     }[]
   >([]);
 
@@ -40,13 +41,20 @@ const SniperRifle = ({
     barrelLength: 1.8,
     onFire: (firePosition, targetId, damage) => {
       const projectileId = Math.random().toString(36).substr(2, 9);
+
+      // Sniper rifles have penetration power to hit multiple targets in a row
+      const penetrationPower = 3; // Can penetrate up to 3 enemies
+
       projectilesRef.current.push({
         id: projectileId,
         position: firePosition,
         rotation: rifleRef.current?.rotation.y ?? 0,
         targetId: targetId,
         damage: damage,
+        penetrationPower: penetrationPower,
       });
+
+      debug.log(`Fired sniper shot with penetration power ${penetrationPower}`);
     },
   });
 
@@ -164,8 +172,9 @@ const SniperRifle = ({
           id={projectile.id}
           position={projectile.position}
           rotation={projectile.rotation}
-          damage={projectile.damage} // Pass damage from the stored data
+          damage={projectile.damage}
           targetId={projectile.targetId}
+          penetrationPower={projectile.penetrationPower}
           onRemove={removeProjectile}
         />
       ))}
