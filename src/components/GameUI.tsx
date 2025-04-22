@@ -653,8 +653,9 @@ const GameUI = () => {
           style={
             { "--opacity": warningOpacityRef.current } as React.CSSProperties
           }>
-          <div className="warning-icon">⚠️</div>
-          <div className="warning-text">WARNING: OUTSIDE COMBAT ZONE</div>
+          <div className="warning-icon">🚨</div>
+          <div className="warning-text">WARNING: ZONE DAMAGE</div>
+          <div className="warning-icon">🚨</div>
         </div>
       )}
       {/* Combat Zone Warning */}
