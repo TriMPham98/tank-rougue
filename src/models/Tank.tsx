@@ -39,6 +39,7 @@ const WeaponComponents: Record<string, WeaponComponentType> = {
 const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
+  const [isBraking, setIsBraking] = useState(false);
 
   const tankRotationRef = useRef(Math.PI);
   const turretRotationRef = useRef(0);
@@ -145,6 +146,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
     let moved = false;
+    let isMovingBackward = false;
     const moveSpeed = playerSpeed;
     const turnSpeed = 4.0;
 
@@ -173,43 +175,55 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     let potentialX = tankRef.current.position.x;
     let potentialZ = tankRef.current.position.z;
     let movementMagnitude = 0;
+    let intendedMovementMagnitude = 0;
 
     if (keyForward || keyBackward) {
-      movementMagnitude = keyForward ? 1 : -1;
+      intendedMovementMagnitude = keyForward ? 1 : -1;
       potentialX +=
         Math.sin(tankRotationRef.current) *
         delta *
         moveSpeed *
-        movementMagnitude;
+        intendedMovementMagnitude;
       potentialZ +=
         Math.cos(tankRotationRef.current) *
         delta *
         moveSpeed *
-        movementMagnitude;
+        intendedMovementMagnitude;
     } else if (moveX !== 0 || moveZ !== 0) {
-      movementMagnitude = Math.min(1, Math.sqrt(moveX * moveX + moveZ * moveZ));
+      intendedMovementMagnitude = Math.min(
+        1,
+        Math.sqrt(moveX * moveX + moveZ * moveZ)
+      );
       potentialX +=
         Math.sin(tankRotationRef.current) *
         delta *
         moveSpeed *
-        movementMagnitude;
+        intendedMovementMagnitude;
       potentialZ +=
         Math.cos(tankRotationRef.current) *
         delta *
         moveSpeed *
-        movementMagnitude;
+        intendedMovementMagnitude;
     }
 
     if (
-      movementMagnitude !== 0 &&
-      (potentialX !== tankRef.current.position.x ||
-        potentialZ !== tankRef.current.position.z) &&
+      intendedMovementMagnitude !== 0 &&
       !checkTerrainCollision(potentialX, potentialZ)
     ) {
+      movementMagnitude = intendedMovementMagnitude;
       tankRef.current.position.x = potentialX;
       tankRef.current.position.z = potentialZ;
       moved = true;
+      isMovingBackward = movementMagnitude < 0;
+    } else {
+      isMovingBackward = keyBackward;
+      moved = false;
+      movementMagnitude = 0;
     }
+
+    setIsBraking(
+      keyBackward || (!moved && (keyForward || moveX !== 0 || moveZ !== 0))
+    );
 
     if (turretRef.current) {
       if (keyTurretLeft) turretRotationRef.current += delta * 4.0;
@@ -345,6 +359,67 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           />
         </Box>
         <Box
+          args={[0.5, 0.1, 0.3]}
+          position={[-0.5, 0.35, -0.8]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#257548"
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </Box>
+        <Box
+          args={[0.5, 0.1, 0.3]}
+          position={[0.5, 0.35, -0.8]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#257548"
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </Box>
+        <Box
+          args={[0.3, 0.1, 0.5]}
+          position={[0, 0.35, 0.9]}
+          castShadow
+          receiveShadow>
+          <meshStandardMaterial
+            color="#257548"
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </Box>
+        <Box args={[0.15, 0.1, 0.05]} position={[-0.6, 0.1, 1.15]} castShadow>
+          <meshStandardMaterial
+            color="white"
+            emissive="yellow"
+            emissiveIntensity={1}
+          />
+        </Box>
+        <Box args={[0.15, 0.1, 0.05]} position={[0.6, 0.1, 1.15]} castShadow>
+          <meshStandardMaterial
+            color="white"
+            emissive="yellow"
+            emissiveIntensity={1}
+          />
+        </Box>
+        <Box args={[0.15, 0.1, 0.05]} position={[-0.7, 0.1, -1.15]} castShadow>
+          <meshStandardMaterial
+            color="red"
+            emissive="red"
+            emissiveIntensity={isBraking ? 2.5 : 0.8}
+          />
+        </Box>
+        <Box args={[0.15, 0.1, 0.05]} position={[0.7, 0.1, -1.15]} castShadow>
+          <meshStandardMaterial
+            color="red"
+            emissive="red"
+            emissiveIntensity={isBraking ? 2.5 : 0.8}
+          />
+        </Box>
+        <Box
           args={[0.4, 0.25, 2.4]}
           position={[-0.8, -0.3, 0]}
           castShadow
@@ -380,7 +455,36 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             roughness={0.7}
           />
         </Box>
-
+        {[...Array(6)].map((_, i) => (
+          <Cylinder
+            key={`roller-l-${i}`}
+            args={[0.12, 0.12, 0.1, 8]}
+            position={[-0.8, -0.3, -0.8 + i * 0.36]}
+            rotation={[0, 0, Math.PI / 2]}
+            castShadow
+            receiveShadow>
+            <meshStandardMaterial
+              color="#444444"
+              roughness={0.8}
+              metalness={0.2}
+            />
+          </Cylinder>
+        ))}
+        {[...Array(6)].map((_, i) => (
+          <Cylinder
+            key={`roller-r-${i}`}
+            args={[0.12, 0.12, 0.1, 8]}
+            position={[0.8, -0.3, -0.8 + i * 0.36]}
+            rotation={[0, 0, Math.PI / 2]}
+            castShadow
+            receiveShadow>
+            <meshStandardMaterial
+              color="#444444"
+              roughness={0.8}
+              metalness={0.2}
+            />
+          </Cylinder>
+        ))}
         <group position={[0, 0.5, 0]} ref={turretRef}>
           <Cylinder
             args={[0.7, 0.8, 0.5, 20]}
@@ -397,7 +501,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             position={[0, 0.55, -0.3]}
             castShadow>
             <meshStandardMaterial
-              color="darkolivegreen"
+              color="#4a5e2a"
               metalness={0.4}
               roughness={0.6}
             />
@@ -424,13 +528,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.4}
             />
           </Cylinder>
-          <Box args={[0.25, 0.35, 1]} position={[0.65, 0.25, 0]} castShadow>
-            <meshStandardMaterial
-              color="darkolivegreen"
-              metalness={0.4}
-              roughness={0.6}
-            />
-          </Box>
           <Box args={[0.25, 0.35, 1]} position={[-0.65, 0.25, 0]} castShadow>
             <meshStandardMaterial
               color="darkolivegreen"
@@ -438,10 +535,26 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.6}
             />
           </Box>
+          <Box args={[0.25, 0.35, 1]} position={[0.65, 0.25, 0]} castShadow>
+            <meshStandardMaterial
+              color="darkolivegreen"
+              metalness={0.4}
+              roughness={0.6}
+            />
+          </Box>
           <Cylinder
-            args={[0.03, 0.03, 1.2, 8]}
-            position={[0.4, 0.75, -0.4]}
-            rotation={[0, 0, Math.PI / 8]}
+            args={[0.05, 0.05, 0.2, 8]}
+            position={[0.4, 0.55, -0.4]}
+            castShadow>
+            <meshStandardMaterial
+              color="#333"
+              metalness={0.8}
+              roughness={0.2}
+            />
+          </Cylinder>
+          <Cylinder
+            args={[0.02, 0.02, 1.0, 8]}
+            position={[0.4, 1.0, -0.4]}
             castShadow>
             <meshStandardMaterial
               color="silver"
@@ -453,16 +566,16 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             <meshStandardMaterial
               color="black"
               emissive="blue"
-              emissiveIntensity={0.2}
+              emissiveIntensity={0.3}
             />
           </Box>
-          <Sphere args={[0.2, 16, 16]} position={[0, 0.75, 0]} castShadow>
+          <Sphere args={[0.15, 16, 16]} position={[0, 0.6, 0.2]} castShadow>
             <meshStandardMaterial
               color="cyan"
               emissive="cyan"
-              emissiveIntensity={0.5 + Math.sin(Date.now() * 0.005) * 0.3}
+              emissiveIntensity={0.6 + Math.sin(Date.now() * 0.005) * 0.4}
               transparent
-              opacity={0.8}
+              opacity={0.85}
             />
           </Sphere>
         </group>
