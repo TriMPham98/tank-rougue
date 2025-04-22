@@ -217,7 +217,8 @@ const TeslaArc = ({
         position: nextTargetPos,
       });
       chainCount++;
-      sound.play("electricity", 0.35 - chainCount * 0.08);
+      sound.setVolume("teslaZap", 0.30);
+      sound.play("teslaZap");
     }
     setChainArcPoints(newChainArcs);
     if (chainCount > 0) {
@@ -247,7 +248,8 @@ const TeslaArc = ({
     const lightningPoints = generateLightningPath(startPos, targetPos);
     setPrimaryArcPoints(lightningPoints);
     setForks(generateForks(lightningPoints));
-    sound.play("electricity", 0.6);
+    sound.setVolume("teslaZap", 0.25);
+    sound.play("teslaZap");
     targetPositionsRef.current.push({ id: targetId, position: targetPos });
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
