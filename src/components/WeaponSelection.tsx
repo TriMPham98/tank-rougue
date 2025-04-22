@@ -1,5 +1,21 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { WeaponSelectionProps, SecondaryWeapon } from "../types";
+
+// Fisher-Yates shuffle algorithm
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
 
 const WeaponSelection: React.FC<WeaponSelectionProps> = ({
   onWeaponSelect,
@@ -9,6 +25,12 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
   const { availableWeapons, level, canSelect } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSelectionLocked, setIsSelectionLocked] = useState(false);
+
+  // Shuffle and limit weapons to 4 max
+  const displayWeapons = useMemo(() => {
+    const shuffled = shuffleArray(availableWeapons);
+    return shuffled.slice(0, 4); // Limit to 4 weapons max
+  }, [availableWeapons]);
 
   // Function to handle weapon selection and close the modal
   const handleWeaponSelect = useCallback(
@@ -65,16 +87,16 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
       }
 
       const keyNum = parseInt(event.key);
-      if (!isNaN(keyNum) && keyNum > 0 && keyNum <= availableWeapons.length) {
+      if (!isNaN(keyNum) && keyNum > 0 && keyNum <= displayWeapons.length) {
         event.stopPropagation();
         event.preventDefault();
         event.stopImmediatePropagation(); // Crucial to stop other listeners
 
-        const selectedWeapon = availableWeapons[keyNum - 1];
+        const selectedWeapon = displayWeapons[keyNum - 1];
         handleWeaponSelect(selectedWeapon, event); // Pass the event
       }
     },
-    [canSelect, isSelectionLocked, availableWeapons, handleWeaponSelect]
+    [canSelect, isSelectionLocked, displayWeapons, handleWeaponSelect]
   );
 
   // Add keyboard event listener using capture phase
@@ -116,7 +138,7 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
         </div>
 
         <div className="weapon-grid">
-          {availableWeapons.map((weapon, index) => (
+          {displayWeapons.map((weapon, index) => (
             <div
               key={weapon.id}
               className="weapon-card"
