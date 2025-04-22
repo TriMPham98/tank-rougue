@@ -173,7 +173,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
     let potentialX = tankRef.current.position.x;
     let potentialZ = tankRef.current.position.z;
-    let movementMagnitude = 0;
     let intendedMovementMagnitude = 0;
 
     if (keyForward || keyBackward) {
@@ -209,13 +208,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       intendedMovementMagnitude !== 0 &&
       !checkTerrainCollision(potentialX, potentialZ)
     ) {
-      movementMagnitude = intendedMovementMagnitude;
       tankRef.current.position.x = potentialX;
       tankRef.current.position.z = potentialZ;
       moved = true;
     } else {
       moved = false;
-      movementMagnitude = 0;
     }
 
     setIsBraking(
