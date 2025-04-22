@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGameState } from "../utils/gameState";
 import * as THREE from "three";
@@ -33,6 +33,11 @@ const SafeZone = () => {
   const nextZoneTopRingRef = useRef<THREE.Mesh>(null);
   const nextZoneBottomRingRef = useRef<THREE.Mesh>(null);
 
+  // Create refs for shader materials
+  const cylinderMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const targetCylinderMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const nextZoneCylinderMaterialRef = useRef<THREE.ShaderMaterial>(null);
+
   const lastDamageTime = useRef(0);
   const currentRadiusRef = useRef(safeZoneRadius);
   const isShrinkingRef = useRef(false);
@@ -55,6 +60,98 @@ const SafeZone = () => {
     const radiusDecrease = 4;
     return Math.max(minRadius, maxRadius - nextZoneLevel * radiusDecrease);
   })();
+
+  // Custom shader for the SafeZone walls
+  const zoneShader = useMemo(() => {
+    return {
+      uniforms: {
+        time: { value: 0 },
+        color: { value: new THREE.Color() },
+        opacity: { value: 0.2 },
+        pulseActive: { value: 0.0 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        void main() {
+          vUv = uv;
+          vPosition = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        uniform vec3 color;
+        uniform float opacity;
+        uniform float pulseActive;
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        
+        void main() {
+          // Horizontal grid lines
+          float gridY = mod(vPosition.y * 2.0 + time * 2.0, 10.0);
+          float horizontalLines = step(0.95, (1.0 - abs(sin(gridY))));
+          
+          // Edge highlight
+          float edgeHighlight = smoothstep(0.95, 1.0, vUv.y) + smoothstep(0.95, 1.0, 1.0 - vUv.y);
+          
+          // Wave pattern
+          float waves = 0.5 + 0.5 * sin(vUv.y * 20.0 + time * 1.5);
+          
+          // Subtle hexagon pattern
+          float hexPattern = 0.5 + 0.5 * sin(vUv.y * 30.0 + vUv.x * 30.0 + time);
+          
+          // Pulse effect when active
+          float pulse = pulseActive * 0.3 * (0.5 + 0.5 * sin(time * 3.0));
+          
+          // Final color
+          vec3 finalColor = color * (1.0 + horizontalLines * 0.3 + edgeHighlight * 0.2 + hexPattern * 0.1);
+          float finalOpacity = opacity * (1.0 + horizontalLines * 0.2 + waves * 0.05 + pulse);
+          
+          gl_FragColor = vec4(finalColor, finalOpacity);
+        }
+      `,
+    };
+  }, []);
+
+  // Define enhanced ring shader
+  const ringShader = useMemo(() => {
+    return {
+      uniforms: {
+        time: { value: 0 },
+        color: { value: new THREE.Color() },
+        opacity: { value: 0.6 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        uniform vec3 color;
+        uniform float opacity;
+        varying vec2 vUv;
+        
+        void main() {
+          // Pulsing glow
+          float pulse = 0.15 * sin(time * 3.0);
+          
+          // Rotating patterns
+          float angle = atan(vUv.y - 0.5, vUv.x - 0.5);
+          float dist = length(vUv - vec2(0.5));
+          float pattern = 0.5 + 0.5 * sin(angle * 20.0 + time * 1.0);
+          
+          vec3 finalColor = color * (1.0 + pulse + pattern * 0.1);
+          float finalOpacity = opacity * (1.0 + pulse * 0.5 + pattern * 0.1);
+          
+          gl_FragColor = vec4(finalColor, finalOpacity);
+        }
+      `,
+    };
+  }, []);
 
   useEffect(() => {
     if (level % 5 === 0 && level > 0 && prevLevelRef.current !== level) {
@@ -126,6 +223,30 @@ const SafeZone = () => {
     const currentState = useGameState.getState();
     const currentTime = state.clock.getElapsedTime();
     animationTimeRef.current += delta;
+
+    // Update shader uniforms
+    if (cylinderMaterialRef.current) {
+      cylinderMaterialRef.current.uniforms.time.value =
+        animationTimeRef.current;
+      cylinderMaterialRef.current.uniforms.pulseActive.value =
+        shouldPulse || shouldUrgencyPulse ? 1.0 : 0.0;
+      cylinderMaterialRef.current.uniforms.opacity.value =
+        shouldPulse || shouldUrgencyPulse
+          ? getPulseOpacity()
+          : getSafeZoneOpacity();
+    }
+
+    if (targetCylinderMaterialRef.current) {
+      targetCylinderMaterialRef.current.uniforms.time.value =
+        animationTimeRef.current;
+    }
+
+    if (nextZoneCylinderMaterialRef.current) {
+      nextZoneCylinderMaterialRef.current.uniforms.time.value =
+        animationTimeRef.current;
+      nextZoneCylinderMaterialRef.current.uniforms.opacity.value =
+        previewOpacity * 0.2;
+    }
 
     if (
       isZoneChangeLevel &&
@@ -296,24 +417,37 @@ const SafeZone = () => {
     return getSafeZoneOpacity() * 1.5;
   };
 
+  // Calculate number of vertical lines based on radius for better performance
+  const getVerticalLineCount = (radius: number) => {
+    const minLines = 8;
+    const maxLines = 32;
+    // Scale number of lines based on radius
+    return Math.min(maxLines, Math.max(minLines, Math.floor(radius / 2)));
+  };
+
   return safeZoneActive ? (
     <group position={[safeZoneCenter[0], 20, safeZoneCenter[1]]}>
       <mesh ref={cylinderRef} position={[0, 0, 0]}>
         <cylinderGeometry
           args={[safeZoneRadius, safeZoneRadius, 40, 64, 1, true]}
         />
-        <meshBasicMaterial
-          color={safeZoneColor}
-          transparent
-          opacity={
-            shouldPulse || shouldUrgencyPulse
-              ? getPulseOpacity()
-              : getSafeZoneOpacity()
-          }
-          side={THREE.DoubleSide}
-          depthWrite={false}
-          depthTest={false}
-          blending={THREE.AdditiveBlending}
+        <shaderMaterial
+          ref={cylinderMaterialRef}
+          args={[
+            {
+              ...zoneShader,
+              transparent: true,
+              side: THREE.DoubleSide,
+              depthWrite: false,
+              depthTest: false,
+              blending: THREE.AdditiveBlending,
+              uniforms: {
+                ...zoneShader.uniforms,
+                color: { value: new THREE.Color(safeZoneColor) },
+                opacity: { value: getSafeZoneOpacity() },
+              },
+            },
+          ]}
         />
       </mesh>
 
@@ -322,14 +456,22 @@ const SafeZone = () => {
         position={[0, 20, 0]}
         rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
-        <meshBasicMaterial
-          color={ringColor}
-          transparent
-          opacity={0.6}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-          depthTest={false}
-          blending={THREE.AdditiveBlending}
+        <shaderMaterial
+          args={[
+            {
+              ...ringShader,
+              transparent: true,
+              side: THREE.DoubleSide,
+              depthWrite: false,
+              depthTest: false,
+              blending: THREE.AdditiveBlending,
+              uniforms: {
+                ...ringShader.uniforms,
+                color: { value: new THREE.Color(ringColor) },
+                opacity: { value: 0.6 },
+              },
+            },
+          ]}
         />
       </mesh>
 
@@ -338,14 +480,22 @@ const SafeZone = () => {
         position={[0, -20, 0]}
         rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[safeZoneRadius - 0.5, safeZoneRadius, 64]} />
-        <meshBasicMaterial
-          color={ringColor}
-          transparent
-          opacity={0.6}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-          depthTest={false}
-          blending={THREE.AdditiveBlending}
+        <shaderMaterial
+          args={[
+            {
+              ...ringShader,
+              transparent: true,
+              side: THREE.DoubleSide,
+              depthWrite: false,
+              depthTest: false,
+              blending: THREE.AdditiveBlending,
+              uniforms: {
+                ...ringShader.uniforms,
+                color: { value: new THREE.Color(ringColor) },
+                opacity: { value: 0.6 },
+              },
+            },
+          ]}
         />
       </mesh>
 
@@ -362,14 +512,24 @@ const SafeZone = () => {
                 true,
               ]}
             />
-            <meshBasicMaterial
-              color={targetZoneColor}
-              transparent
-              opacity={isPreZoneChangeLevel ? 0.08 : 0.05}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
+            <shaderMaterial
+              ref={targetCylinderMaterialRef}
+              args={[
+                {
+                  ...zoneShader,
+                  transparent: true,
+                  side: THREE.DoubleSide,
+                  depthWrite: false,
+                  depthTest: false,
+                  blending: THREE.AdditiveBlending,
+                  uniforms: {
+                    ...zoneShader.uniforms,
+                    color: { value: new THREE.Color(targetZoneColor) },
+                    opacity: { value: isPreZoneChangeLevel ? 0.08 : 0.05 },
+                    pulseActive: { value: isPreZoneChangeLevel ? 1.0 : 0.0 },
+                  },
+                },
+              ]}
             />
           </mesh>
 
@@ -380,14 +540,22 @@ const SafeZone = () => {
             <ringGeometry
               args={[safeZoneTargetRadius - 0.3, safeZoneTargetRadius, 64]}
             />
-            <meshBasicMaterial
-              color={targetZoneColor}
-              transparent
-              opacity={isPreZoneChangeLevel ? 0.7 : 0.5}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
+            <shaderMaterial
+              args={[
+                {
+                  ...ringShader,
+                  transparent: true,
+                  side: THREE.DoubleSide,
+                  depthWrite: false,
+                  depthTest: false,
+                  blending: THREE.AdditiveBlending,
+                  uniforms: {
+                    ...ringShader.uniforms,
+                    color: { value: new THREE.Color(targetZoneColor) },
+                    opacity: { value: isPreZoneChangeLevel ? 0.7 : 0.5 },
+                  },
+                },
+              ]}
             />
           </mesh>
 
@@ -398,14 +566,22 @@ const SafeZone = () => {
             <ringGeometry
               args={[safeZoneTargetRadius - 0.3, safeZoneTargetRadius, 64]}
             />
-            <meshBasicMaterial
-              color={targetZoneColor}
-              transparent
-              opacity={isPreZoneChangeLevel ? 0.7 : 0.5}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
+            <shaderMaterial
+              args={[
+                {
+                  ...ringShader,
+                  transparent: true,
+                  side: THREE.DoubleSide,
+                  depthWrite: false,
+                  depthTest: false,
+                  blending: THREE.AdditiveBlending,
+                  uniforms: {
+                    ...ringShader.uniforms,
+                    color: { value: new THREE.Color(targetZoneColor) },
+                    opacity: { value: isPreZoneChangeLevel ? 0.7 : 0.5 },
+                  },
+                },
+              ]}
             />
           </mesh>
         </>
@@ -424,14 +600,24 @@ const SafeZone = () => {
                 true,
               ]}
             />
-            <meshBasicMaterial
-              color={nextZoneColor}
-              transparent
-              opacity={previewOpacity * 0.2}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
+            <shaderMaterial
+              ref={nextZoneCylinderMaterialRef}
+              args={[
+                {
+                  ...zoneShader,
+                  transparent: true,
+                  side: THREE.DoubleSide,
+                  depthWrite: false,
+                  depthTest: false,
+                  blending: THREE.AdditiveBlending,
+                  uniforms: {
+                    ...zoneShader.uniforms,
+                    color: { value: new THREE.Color(nextZoneColor) },
+                    opacity: { value: previewOpacity * 0.2 },
+                    pulseActive: { value: 1.0 },
+                  },
+                },
+              ]}
             />
           </mesh>
 
@@ -442,14 +628,22 @@ const SafeZone = () => {
             <ringGeometry
               args={[nextZoneTargetRadius - 0.4, nextZoneTargetRadius, 64]}
             />
-            <meshBasicMaterial
-              color={nextZoneColor}
-              transparent
-              opacity={previewOpacity * 0.8}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
+            <shaderMaterial
+              args={[
+                {
+                  ...ringShader,
+                  transparent: true,
+                  side: THREE.DoubleSide,
+                  depthWrite: false,
+                  depthTest: false,
+                  blending: THREE.AdditiveBlending,
+                  uniforms: {
+                    ...ringShader.uniforms,
+                    color: { value: new THREE.Color(nextZoneColor) },
+                    opacity: { value: previewOpacity * 0.8 },
+                  },
+                },
+              ]}
             />
           </mesh>
 
@@ -460,83 +654,26 @@ const SafeZone = () => {
             <ringGeometry
               args={[nextZoneTargetRadius - 0.4, nextZoneTargetRadius, 64]}
             />
-            <meshBasicMaterial
-              color={nextZoneColor}
-              transparent
-              opacity={previewOpacity * 0.8}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
+            <shaderMaterial
+              args={[
+                {
+                  ...ringShader,
+                  transparent: true,
+                  side: THREE.DoubleSide,
+                  depthWrite: false,
+                  depthTest: false,
+                  blending: THREE.AdditiveBlending,
+                  uniforms: {
+                    ...ringShader.uniforms,
+                    color: { value: new THREE.Color(nextZoneColor) },
+                    opacity: { value: previewOpacity * 0.8 },
+                  },
+                },
+              ]}
             />
           </mesh>
         </>
       )}
-
-      {Array.from({ length: 16 }).map((_, index) => {
-        const angle = (index / 16) * Math.PI * 2;
-        const x = Math.sin(angle) * safeZoneRadius;
-        const z = Math.cos(angle) * safeZoneRadius;
-        return (
-          <mesh key={`line-${index}`} position={[x, 0, z]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[0.2, 40, 0.2]} />
-            <meshBasicMaterial
-              color={ringColor}
-              transparent
-              opacity={0.3}
-              depthWrite={false}
-              depthTest={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-        );
-      })}
-
-      {safeZoneTargetRadius < safeZoneRadius &&
-        Array.from({ length: 8 }).map((_, index) => {
-          const angle = (index / 8) * Math.PI * 2;
-          const x = Math.sin(angle) * safeZoneTargetRadius;
-          const z = Math.cos(angle) * safeZoneTargetRadius;
-          return (
-            <mesh
-              key={`target-line-${index}`}
-              position={[x, 0, z]}
-              rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.15, 40, 0.15]} />
-              <meshBasicMaterial
-                color={targetZoneColor}
-                transparent
-                opacity={isPreZoneChangeLevel ? 0.4 : 0.25}
-                depthWrite={false}
-                depthTest={false}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-          );
-        })}
-
-      {isPreZoneChangeLevel &&
-        Array.from({ length: 12 }).map((_, index) => {
-          const angle = (index / 12) * Math.PI * 2;
-          const x = Math.sin(angle) * nextZoneTargetRadius;
-          const z = Math.cos(angle) * nextZoneTargetRadius;
-          return (
-            <mesh
-              key={`next-zone-line-${index}`}
-              position={[x, 0, z]}
-              rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.15, 40, 0.15]} />
-              <meshBasicMaterial
-                color={nextZoneColor}
-                transparent
-                opacity={previewOpacity * 0.5}
-                depthWrite={false}
-                depthTest={false}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-          );
-        })}
     </group>
   ) : null;
 };
