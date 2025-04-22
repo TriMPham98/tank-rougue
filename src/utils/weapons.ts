@@ -35,9 +35,9 @@ export const availableWeapons: SecondaryWeapon[] = [
     id: "sniper",
     name: "Sniper Rifle",
     description:
-      "Fires high-damage bullets with excellent range but slow fire rate.",
-    damage: 350,
-    cooldown: 2.5,
+      "Fires penetrating bullets with excellent range but slow fire rate.",
+    damage: 250,
+    cooldown: 5.0,
     range: 50,
     projectileSpeed: 50,
   },
