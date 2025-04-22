@@ -33,7 +33,6 @@ const SafeZone = () => {
   const nextZoneTopRingRef = useRef<THREE.Mesh>(null);
   const nextZoneBottomRingRef = useRef<THREE.Mesh>(null);
 
-  // Create refs for shader materials
   const cylinderMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const targetCylinderMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const nextZoneCylinderMaterialRef = useRef<THREE.ShaderMaterial>(null);
@@ -61,7 +60,6 @@ const SafeZone = () => {
     return Math.max(minRadius, maxRadius - nextZoneLevel * radiusDecrease);
   })();
 
-  // Custom shader for the SafeZone walls
   const zoneShader = useMemo(() => {
     return {
       uniforms: {
@@ -89,8 +87,8 @@ const SafeZone = () => {
         
         void main() {
           // Horizontal grid lines
-          float gridY = mod(vPosition.y * 1.0 + time * 0.8, 16.0);
-          float horizontalLines = step(0.95, (1.0 - abs(sin(gridY))));
+          float gridY = mod(vPosition.y * 0.5 + time * 0.8, 16.0);
+          float horizontalLines = step(0.98, (1.0 - abs(sin(gridY))));
           
           // Edge highlight
           float edgeHighlight = smoothstep(0.95, 1.0, vUv.y) + smoothstep(0.95, 1.0, 1.0 - vUv.y);
@@ -114,7 +112,6 @@ const SafeZone = () => {
     };
   }, []);
 
-  // Define enhanced ring shader
   const ringShader = useMemo(() => {
     return {
       uniforms: {
@@ -181,14 +178,12 @@ const SafeZone = () => {
   }, [safeZoneRadius, safeZoneTargetRadius, safeZoneShrinkRate, level]);
 
   useEffect(() => {
-    // Handle sound effects
     if (!isPreZoneChangeLevel || !safeZoneActive || isPaused || isGameOver) {
       if (isSoundPlaying.current) {
         stopLoop("zoneWarning");
         isSoundPlaying.current = false;
       }
     } else if (!isSoundPlaying.current) {
-      // Play warning sound at 125% volume (1.25)
       playLoop("zoneWarning", 1.25);
       isSoundPlaying.current = true;
     }
@@ -201,7 +196,6 @@ const SafeZone = () => {
     stopLoop,
   ]);
 
-  // Separate effect for visual animations
   useEffect(() => {
     if (!isPreZoneChangeLevel || !safeZoneActive) {
       setPreviewOpacity(0);
@@ -224,7 +218,6 @@ const SafeZone = () => {
     const currentTime = state.clock.getElapsedTime();
     animationTimeRef.current += delta;
 
-    // Update shader uniforms
     if (cylinderMaterialRef.current) {
       cylinderMaterialRef.current.uniforms.time.value =
         animationTimeRef.current;
@@ -397,11 +390,10 @@ const SafeZone = () => {
     }
   });
 
-  // Define fixed colors for this map
-  const safeZoneColor = "#33ccff"; // Light cyan to complement purple and green
-  const ringColor = "#66d9ff"; // Slightly brighter cyan for the ring borders
-  const targetZoneColor = "#ff4d4d"; // Orange-red for the warning zone
-  const nextZoneColor = "#ff9500"; // Orange for next zone preview
+  const safeZoneColor = "#33ccff";
+  const ringColor = "#66d9ff";
+  const targetZoneColor = "#ff4d4d";
+  const nextZoneColor = "#ff9500";
 
   const getSafeZoneOpacity = () => {
     const baseOpacity = 0.01;
