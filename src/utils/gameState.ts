@@ -405,23 +405,32 @@ export const useGameState = create<GameState>((set, get) => ({
 
       // Only generate upgrade options if below level 51
       if (newLevel <= 50) {
-        const allUpgrades: UpgradeableStat[] = [
+        let possibleUpgrades: UpgradeableStat[] = [
           "tankSpeed",
-          "cameraRange",
+          // "cameraRange", // Removed from initial list, handled below
           "maxHealth",
           "healthRegen",
           "turretDamage",
           "bulletVelocity",
         ];
 
-        // Only add fireRate if not maxed out
+        // Only add fireRate if not maxed out (3.5 shots/sec)
         if (state.playerFireRate > 0.286) {
-          // 0.286s = 3.5 shots/sec
-          allUpgrades.push("fireRate");
+          possibleUpgrades.push("fireRate");
         }
 
-        const shuffled = [...allUpgrades].sort(() => 0.5 - Math.random());
-        availableUpgrades = shuffled.slice(0, 3);
+        // Only add cameraRange if not capped at 14m
+        if (state.playerCameraRange < 14) {
+          possibleUpgrades.push("cameraRange");
+        }
+
+        // Filter out any other potentially capped stats here in the future
+        // Example: if (state.playerMaxHealth < 500) { possibleUpgrades.push("maxHealth"); }
+
+        const shuffled = [...possibleUpgrades].sort(() => 0.5 - Math.random());
+        // Ensure we don't try to slice more than available
+        const upgradesToOffer = Math.min(3, shuffled.length);
+        availableUpgrades = shuffled.slice(0, upgradesToOffer);
       }
 
       // Calculate main turret damage increase based on a diminishing percentage of NPC health scaling

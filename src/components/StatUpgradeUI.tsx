@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { UpgradeableStat } from "../utils/gameState";
 import { useGameState } from "../utils/gameState";
+import type { UpgradeableStat } from "../utils/gameState";
 import {
   getStatDisplayName,
   getStatCurrentValue,
@@ -30,6 +30,11 @@ const StatUpgradeUI = ({
     playerBulletVelocity,
   } = useGameState();
 
+  // Filter out Sensor Range upgrade if it's already at or above 14
+  const filteredEnhancements = availableEnhancements.filter(
+    (stat) => !(stat === "cameraRange" && playerCameraRange >= 14)
+  );
+
   const handleEnhancementSelect = useCallback(
     (stat: UpgradeableStat) => {
       if (isUpgrading) return;
@@ -49,12 +54,12 @@ const StatUpgradeUI = ({
       if (
         !isNaN(keyNum) &&
         keyNum > 0 &&
-        keyNum <= availableEnhancements.length
+        keyNum <= filteredEnhancements.length
       ) {
-        handleEnhancementSelect(availableEnhancements[keyNum - 1]);
+        handleEnhancementSelect(filteredEnhancements[keyNum - 1]);
       }
     },
-    [availableEnhancements, handleEnhancementSelect, isUpgrading]
+    [filteredEnhancements, handleEnhancementSelect, isUpgrading]
   );
 
   // Add keyboard event listener
@@ -83,12 +88,12 @@ const StatUpgradeUI = ({
           FIELD PROMOTION: SELECT ENHANCEMENT
         </h2>
         <div className="enhancement-options">
-          {availableEnhancements.map((stat, index) => (
+          {filteredEnhancements.map((stat, index) => (
             <div
               key={stat}
               className="enhancement-card"
               onClick={() => handleEnhancementSelect(stat)}
-              onTouchStart={() => {}} // Empty handler to ensure proper touch handling on mobile
+              onTouchStart={() => {}}
               role="button"
               tabIndex={0}
               aria-label={`Select ${getStatDisplayName(stat)} enhancement`}>
