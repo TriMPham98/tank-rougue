@@ -41,4 +41,14 @@ export const availableWeapons: SecondaryWeapon[] = [
     range: 50,
     projectileSpeed: 50,
   },
+  {
+    id: "tesla",
+    name: "Tesla Coil",
+    description:
+      "Emits electrical arcs that chain between nearby enemies, dealing damage to multiple targets.",
+    damage: 125,
+    cooldown: 0.75,
+    range: 7.5,
+    projectileSpeed: 80,
+  },
 ];

@@ -11,6 +11,7 @@ import SniperRifle from "./SniperRifle";
 import Shotgun from "./Shotgun";
 import LaserWeapon from "./LaserWeapon";
 import RocketLauncher from "./RocketLauncher";
+import TeslaCoil from "./TeslaCoil";
 import { WeaponInstance } from "../utils/weaponTypes";
 
 interface TankProps {
@@ -32,6 +33,7 @@ const WeaponComponents: Record<string, WeaponComponentType> = {
   shotgun: Shotgun,
   laser: LaserWeapon,
   rocket: RocketLauncher,
+  tesla: TeslaCoil,
 };
 
 const Tank = ({ position = [0, 0, 0] }: TankProps) => {
