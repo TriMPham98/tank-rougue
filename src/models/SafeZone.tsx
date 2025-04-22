@@ -89,7 +89,7 @@ const SafeZone = () => {
         
         void main() {
           // Horizontal grid lines
-          float gridY = mod(vPosition.y * 2.0 + time * 2.0, 10.0);
+          float gridY = mod(vPosition.y * 1.0 + time * 0.8, 16.0);
           float horizontalLines = step(0.95, (1.0 - abs(sin(gridY))));
           
           // Edge highlight
@@ -404,7 +404,7 @@ const SafeZone = () => {
   const nextZoneColor = "#ff9500"; // Orange for next zone preview
 
   const getSafeZoneOpacity = () => {
-    const baseOpacity = 0.15;
+    const baseOpacity = 0.01;
     const zoneIncrease = Math.min(0.35, currentZoneLevel * 0.05);
     const urgencyBonus = isPreZoneChangeLevel ? 0.15 : 0;
     return baseOpacity + zoneIncrease + urgencyBonus;
@@ -415,14 +415,6 @@ const SafeZone = () => {
 
   const getPulseOpacity = () => {
     return getSafeZoneOpacity() * 1.5;
-  };
-
-  // Calculate number of vertical lines based on radius for better performance
-  const getVerticalLineCount = (radius: number) => {
-    const minLines = 8;
-    const maxLines = 32;
-    // Scale number of lines based on radius
-    return Math.min(maxLines, Math.max(minLines, Math.floor(radius / 2)));
   };
 
   return safeZoneActive ? (
