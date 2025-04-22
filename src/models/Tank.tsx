@@ -18,8 +18,8 @@ interface TankProps {
   position: [number, number, number];
 }
 
-const SIDE_WEAPON_DISTANCE = 2.25;
-const SIDE_WEAPON_Y_OFFSET = 0.2;
+const SIDE_WEAPON_DISTANCE = 2.75;
+const SIDE_WEAPON_Y_OFFSET = 0.0;
 const MAX_SIDE_WEAPONS = 4;
 
 type WeaponComponentType = React.ComponentType<{
@@ -146,7 +146,6 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     if (!tankRef.current || isPaused || isGameOver) return;
 
     let moved = false;
-    let isMovingBackward = false;
     const moveSpeed = playerSpeed;
     const turnSpeed = 4.0;
 
@@ -214,9 +213,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       tankRef.current.position.x = potentialX;
       tankRef.current.position.z = potentialZ;
       moved = true;
-      isMovingBackward = movementMagnitude < 0;
     } else {
-      isMovingBackward = keyBackward;
       moved = false;
       movementMagnitude = 0;
     }
