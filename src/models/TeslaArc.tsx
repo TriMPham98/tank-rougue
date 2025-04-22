@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Group, Vector3, AdditiveBlending, Color } from "three";
-import { Line, Sphere } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import { useGameState } from "../utils/gameState";
 import { debug } from "../utils/debug";
 import { useSound } from "../utils/sound";
@@ -17,7 +17,7 @@ interface TeslaArcProps {
 }
 
 // Constants for the Tesla Arc behavior
-const MAX_CHAIN_TARGETS = 3;
+const MAX_CHAIN_TARGETS = 1;
 const CHAIN_DAMAGE_FALLOFF = 0.7;
 const ARC_LIFETIME = 0.4;
 const CHAIN_RANGE = 10;
@@ -33,14 +33,6 @@ interface LightningFork {
   color: Color;
   width: number;
   opacity: number;
-}
-
-interface GlowPoint {
-  position: Vector3;
-  size: number;
-  color: Color;
-  intensity: number;
-  isImpact?: boolean;
 }
 
 const TeslaArc = ({
@@ -64,9 +56,7 @@ const TeslaArc = ({
   const [chainArcPoints, setChainArcPoints] = useState<
     Array<{ points: Vector3[]; color: Color; width: number }>
   >([]);
-
   const [forks, setForks] = useState<LightningFork[]>([]);
-  const [glowPoints, setGlowPoints] = useState<GlowPoint[]>([]);
   const [arcOpacity, setArcOpacity] = useState(1.0);
 
   const damageEnemy = useGameState((state) => state.damageEnemy);
@@ -156,41 +146,6 @@ const TeslaArc = ({
     return newForks;
   };
 
-  const generateGlowPoints = (path: Vector3[]): GlowPoint[] => {
-    const glows: GlowPoint[] = [];
-    const baseColor = new Color(0xa0ffff);
-    path.forEach((point, index) => {
-      if (index > 0 && index < path.length - 1 && Math.random() > 0.6) {
-        glows.push({
-          position: point
-            .clone()
-            .add(
-              new Vector3(
-                Math.random() - 0.5,
-                Math.random() - 0.5,
-                Math.random() - 0.5
-              ).multiplyScalar(0.1)
-            ),
-          size: 0.08 + Math.random() * 0.12,
-          color: baseColor
-            .clone()
-            .lerp(new Color(0xffffff), Math.random() * 0.3),
-          intensity: 0.6 + Math.random() * 0.4,
-        });
-      }
-    });
-    if (path.length > 0) {
-      glows.push({
-        position: path[path.length - 1].clone(),
-        size: 0.4 + Math.random() * 0.2,
-        color: new Color(0xffffff),
-        intensity: 1.5 + Math.random() * 0.5,
-        isImpact: true,
-      });
-    }
-    return glows;
-  };
-
   const processChainEffect = () => {
     if (hasProcessedChainRef.current || !primaryTargetPosRef.current) return;
 
@@ -262,13 +217,7 @@ const TeslaArc = ({
         position: nextTargetPos,
       });
       chainCount++;
-      // --- Sound Fix ---
-      // Reverted to original sound ID, assuming "electricity" exists.
-      // If even "electricity" doesn't exist, comment this out.
       sound.play("electricity", 0.35 - chainCount * 0.08);
-      // Original attempt (caused errors):
-      // sound.play("electricity_chain", 0.35 - chainCount * 0.08);
-      // --- End Sound Fix ---
     }
     setChainArcPoints(newChainArcs);
     if (chainCount > 0) {
@@ -298,16 +247,7 @@ const TeslaArc = ({
     const lightningPoints = generateLightningPath(startPos, targetPos);
     setPrimaryArcPoints(lightningPoints);
     setForks(generateForks(lightningPoints));
-    setGlowPoints(generateGlowPoints(lightningPoints));
-
-    // --- Sound Fix ---
-    // Reverted to original sound ID, assuming "electricity" exists.
-    // If even "electricity" doesn't exist, comment this out.
     sound.play("electricity", 0.6);
-    // Original attempt (caused errors):
-    // sound.play("electricity_hit", 0.6);
-    // --- End Sound Fix ---
-
     targetPositionsRef.current.push({ id: targetId, position: targetPos });
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -335,44 +275,9 @@ const TeslaArc = ({
       onRemove(id);
       return;
     }
-    setGlowPoints((prevGlows) =>
-      prevGlows.map((glow) => {
-        const pulseFactor = glow.isImpact ? 1.5 : 1.0;
-        const randomTimeOffset = glow.position.x + glow.position.z;
-        const sizeMultiplier =
-          0.9 +
-          Math.sin(animationTimeRef.current * pulseFactor + randomTimeOffset) *
-            0.2;
-        const intensityMultiplier =
-          0.85 +
-          Math.cos(
-            animationTimeRef.current * 1.2 * pulseFactor + glow.position.y
-          ) *
-            0.15;
-        return {
-          ...glow,
-          size: Math.max(
-            0.02,
-            (glow.isImpact ? 0.4 : 0.08) +
-              Math.random() * (glow.isImpact ? 0.2 : 0.12) * sizeMultiplier
-          ),
-          intensity: Math.max(
-            0.1,
-            (glow.isImpact ? 1.5 : 0.6) +
-              Math.random() * (glow.isImpact ? 0.5 : 0.4) * intensityMultiplier
-          ),
-        };
-      })
-    );
   });
 
   const lineMaterialProps = {
-    transparent: true,
-    blending: AdditiveBlending,
-    depthWrite: false,
-  };
-
-  const glowMaterialProps = {
     transparent: true,
     blending: AdditiveBlending,
     depthWrite: false,
@@ -386,10 +291,6 @@ const TeslaArc = ({
           color={new Color(0xa0ffff)}
           lineWidth={2.8}
           opacity={arcOpacity}
-          // --- Resolution Fix ---
-          // Removed the problematic prop
-          // material-resolution={[512, 512]}
-          // --- End Resolution Fix ---
           {...lineMaterialProps}
         />
       )}
@@ -412,18 +313,6 @@ const TeslaArc = ({
           opacity={arcOpacity * (1 - index * 0.1)}
           {...lineMaterialProps}
         />
-      ))}
-      {glowPoints.map((glow, index) => (
-        <Sphere
-          key={`glow-${id}-${index}`}
-          args={[glow.size, 8, 8]}
-          position={glow.position}>
-          <meshBasicMaterial
-            color={glow.color}
-            opacity={arcOpacity * glow.intensity * (glow.isImpact ? 1.3 : 1.0)}
-            {...glowMaterialProps}
-          />
-        </Sphere>
       ))}
     </group>
   );

@@ -9,14 +9,14 @@ export const availableWeapons: SecondaryWeapon[] = [
     damage: 75,
     cooldown: 7,
     range: 20,
-    projectileSpeed: 20,
+    projectileSpeed: 1,
   },
   {
     id: "laser",
     name: "Laser Cannon",
     description:
       "Fires instant laser beams that deal moderate damage with no travel time.",
-    damage: 150,
+    damage: 175,
     cooldown: 1.5,
     range: 15,
     projectileSpeed: 100,
@@ -47,7 +47,7 @@ export const availableWeapons: SecondaryWeapon[] = [
     description:
       "Emits electrical arcs that chain between nearby enemies, dealing damage to multiple targets.",
     damage: 125,
-    cooldown: 0.75,
+    cooldown: 1.0,
     range: 7.5,
     projectileSpeed: 80,
   },
