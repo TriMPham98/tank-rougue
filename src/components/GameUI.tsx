@@ -422,6 +422,20 @@ const GameUI = () => {
     handleUnlockAudio();
   }, []);
 
+  // Handle ENTER key press for game restart when game over
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (isGameOver && event.key === "Enter") {
+        restartGame();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [isGameOver, restartGame]);
+
   const renderTacticalDisplay = useCallback(() => {
     const mapSize = 150;
     const gameWorldSize = 100;
