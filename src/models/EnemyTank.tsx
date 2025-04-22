@@ -478,7 +478,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               <Cylinder
                 args={[0.02, 0.02, 1, 8]}
                 position={[0.3, 0.65, -0.3]}
-                rotation={[0, 0, Math.PI / 6]}
+                rotation={[0, 0, 0]}
                 castShadow
                 onClick={() => handleHit(25)}>
                 <meshStandardMaterial color="gray" />

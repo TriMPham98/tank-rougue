@@ -405,14 +405,14 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
             emissiveIntensity={1}
           />
         </Box>
-        <Box args={[0.15, 0.1, 0.05]} position={[-0.7, 0.1, -1.15]} castShadow>
+        <Box args={[0.15, 0.1, 0.05]} position={[-0.75, 0.1, -1.15]} castShadow>
           <meshStandardMaterial
             color="red"
             emissive="red"
             emissiveIntensity={isBraking ? 2.5 : 0.8}
           />
         </Box>
-        <Box args={[0.15, 0.1, 0.05]} position={[0.7, 0.1, -1.15]} castShadow>
+        <Box args={[0.15, 0.1, 0.05]} position={[0.75, 0.1, -1.15]} castShadow>
           <meshStandardMaterial
             color="red"
             emissive="red"
