@@ -115,14 +115,6 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
           <p>SELECT SECONDARY WEAPON SYSTEM FOR DEPLOYMENT</p>
         </div>
 
-        <div className="intel-note">
-          <div className="intel-icon"></div>
-          <p>
-            FIELD INTEL: Multiple deployments of the same weapon system will
-            increase overall firepower capacity.
-          </p>
-        </div>
-
         <div className="weapon-grid">
           {availableWeapons.map((weapon, index) => (
             <div
