@@ -56,9 +56,9 @@ const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
     // Animate rotation and hover effect using ref instead of state
     rotationRef.current += delta * 2;
 
-    // Hover effect - faster for drop items
+    // Hover effect - faster for drop items, base height ensures it stays above ground
     const hoverHeight = Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
-    powerUpRef.current.position.y = powerUp.position[1] + hoverHeight;
+    powerUpRef.current.position.y = powerUp.position[1] + 0.8 + hoverHeight;
 
     // Apply rotation directly
     powerUpRef.current.rotation.y = rotationRef.current;
