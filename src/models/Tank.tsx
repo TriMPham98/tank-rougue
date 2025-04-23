@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Group, Vector3, Quaternion, Euler } from "three";
@@ -320,9 +320,61 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const currentTankPositionVec = new Vector3(...positionRef.current);
   const currentTankRotation = tankRotationRef.current;
 
+  const renderedSideWeapons = useMemo(() => {
+    return sideWeapons.map((weapon: SecondaryWeapon, index: number) => {
+      const WeaponComponent = WeaponComponents[weapon.id];
+      if (!WeaponComponent) {
+        console.warn(`No component found for weapon ID: ${weapon.id}`);
+        return null;
+      }
+
+      let offsetX = 0;
+      let offsetZ = 0;
+      const angle = currentTankRotation;
+      const dist = SIDE_WEAPON_DISTANCE;
+
+      switch (index) {
+        case 0:
+          offsetX = dist * Math.sin(angle);
+          offsetZ = dist * Math.cos(angle);
+          break;
+        case 1:
+          offsetX = -dist * Math.sin(angle);
+          offsetZ = -dist * Math.cos(angle);
+          break;
+        case 2:
+          offsetX = -dist * Math.cos(angle);
+          offsetZ = dist * Math.sin(angle);
+          break;
+        case 3:
+          offsetX = dist * Math.cos(angle);
+          offsetZ = -dist * Math.sin(angle);
+          break;
+      }
+
+      const weaponPosition: [number, number, number] = [
+        currentTankPositionVec.x + offsetX,
+        currentTankPositionVec.y + SIDE_WEAPON_Y_OFFSET,
+        currentTankPositionVec.z + offsetZ,
+      ];
+
+      return (
+        <WeaponComponent
+          key={weapon.instanceId || `side-weapon-${index}`}
+          weaponInstance={weapon}
+          position={weaponPosition}
+          rotation={currentTankRotation}
+        />
+      );
+    });
+  }, [sideWeapons]);
+
   return (
     <>
-      <group ref={tankRef}>
+      <group
+        ref={tankRef}
+        position={position}
+        rotation={[0, tankRotationRef.current, 0]}>
         <Box
           args={[1.8, 0.6, 2.2]}
           position={[0, 0, 0]}
@@ -580,52 +632,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         />
       ))}
 
-      {sideWeapons.map((weapon: SecondaryWeapon, index: number) => {
-        const WeaponComponent = WeaponComponents[weapon.id];
-        if (!WeaponComponent) {
-          console.warn(`No component found for weapon ID: ${weapon.id}`);
-          return null;
-        }
-
-        let offsetX = 0;
-        let offsetZ = 0;
-        const angle = currentTankRotation;
-        const dist = SIDE_WEAPON_DISTANCE;
-
-        switch (index) {
-          case 0:
-            offsetX = dist * Math.sin(angle);
-            offsetZ = dist * Math.cos(angle);
-            break;
-          case 1:
-            offsetX = -dist * Math.sin(angle);
-            offsetZ = -dist * Math.cos(angle);
-            break;
-          case 2:
-            offsetX = -dist * Math.cos(angle);
-            offsetZ = dist * Math.sin(angle);
-            break;
-          case 3:
-            offsetX = dist * Math.cos(angle);
-            offsetZ = -dist * Math.sin(angle);
-            break;
-        }
-
-        const weaponPosition: [number, number, number] = [
-          currentTankPositionVec.x + offsetX,
-          currentTankPositionVec.y + SIDE_WEAPON_Y_OFFSET,
-          currentTankPositionVec.z + offsetZ,
-        ];
-
-        return (
-          <WeaponComponent
-            key={weapon.instanceId || `side-weapon-${index}`}
-            weaponInstance={weapon}
-            position={weaponPosition}
-            rotation={currentTankRotation}
-          />
-        );
-      })}
+      {renderedSideWeapons}
     </>
   );
 };
