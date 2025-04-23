@@ -265,31 +265,25 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     const isShootingRequested = keyShoot || touchIsFiring;
 
     if (timeSinceLastShot >= playerFireRate) {
-      const shotsMissed = Math.floor(timeSinceLastShot / playerFireRate);
-      if (shotsMissed > 0) {
-        const shootPosition: [number, number, number] = [
-          tankRef.current.position.x +
-            Math.sin(tankRotationRef.current + turretRotationRef.current) *
-              2.15,
-          tankRef.current.position.y + 0.75,
-          tankRef.current.position.z +
-            Math.cos(tankRotationRef.current + turretRotationRef.current) *
-              2.15,
-        ];
-        setProjectiles((prev) => [
-          ...prev,
-          {
-            id: Math.random().toString(36).substr(2, 9),
-            position: shootPosition,
-            rotation: tankRotationRef.current + turretRotationRef.current,
-          },
-        ]);
-        lastShootTimeRef.current =
-          currentTime - (timeSinceLastShot % playerFireRate);
+      const shootPosition: [number, number, number] = [
+        tankRef.current.position.x +
+          Math.sin(tankRotationRef.current + turretRotationRef.current) * 2.15,
+        tankRef.current.position.y + 0.75,
+        tankRef.current.position.z +
+          Math.cos(tankRotationRef.current + turretRotationRef.current) * 2.15,
+      ];
+      setProjectiles((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substr(2, 9),
+          position: shootPosition,
+          rotation: tankRotationRef.current + turretRotationRef.current,
+        },
+      ]);
+      lastShootTimeRef.current = currentTime;
 
-        sound.setVolume("playerCannon", 0.2);
-        sound.play("playerCannon");
-      }
+      sound.setVolume("playerCannon", 0.2);
+      sound.play("playerCannon");
     }
 
     if (isShootingRequested) {
