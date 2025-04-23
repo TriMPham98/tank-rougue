@@ -561,7 +561,6 @@ export const useGameState = create<GameState>((set, get) => ({
         playerLevel: newLevel, // Update player level to match game level
         playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
         playerTurretDamage: state.playerTurretDamage + turretDamageIncrease, // Diminishing % of NPC health scaling
-        enemiesDefeated: 0, // Reset counter for the new level
         enemiesRequiredForNextLevel: nextLevelRequirement,
         showUpgradeUI: newLevel <= 50, // Only show upgrade UI if level is 50 or below
         availableUpgrades, // Set available upgrades
