@@ -466,9 +466,8 @@ const GameUI = () => {
         <div className="elapsed-time-display">{formatTime(elapsedTime)}</div>
         <div className="tactical-display">
           <div className="radar-bg">
-            <div className="radar-rings ring-1"></div>
-            <div className="radar-rings ring-2"></div>
-            <div className="radar-rings ring-3"></div>
+            <div className="grid-overlay"></div>
+            <div className="grid-sections"></div>
           </div>
 
           {combatZoneActive && (

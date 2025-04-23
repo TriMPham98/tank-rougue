@@ -647,28 +647,36 @@
   inset: 0;
 }
 
-.military-theme .radar-rings {
+.military-theme .grid-overlay {
   position: absolute;
-  border: 1px solid var(--color-radar-lines);
-  border-radius: 50%;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  background-image: linear-gradient(
+      to right,
+      var(--color-radar-lines) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--color-radar-lines) 1px, transparent 1px);
+  background-size: calc(100% / 20) calc(100% / 20); /* 20x20 grid for 100x100 map */
+  background-position: center center;
+  opacity: 0.4;
 }
 
-.military-theme .radar-rings.ring-1 {
-  width: 33%;
-  height: 33%;
-}
-
-.military-theme .radar-rings.ring-2 {
-  width: 66%;
-  height: 66%;
-}
-
-.military-theme .radar-rings.ring-3 {
-  width: 99%;
-  height: 99%;
+.military-theme .grid-sections {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      to right,
+      var(--color-radar-sections, #2c5e1e) 2px,
+      transparent 2px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--color-radar-sections, #2c5e1e) 2px,
+      transparent 2px
+    );
+  background-size: calc(100% / 4) calc(100% / 4); /* 5 sections (4 lines) for the 100x100 map */
+  background-position: center center;
+  opacity: 0.9;
 }
 
 .military-theme .zone-circle {
