@@ -1,4 +1,4 @@
-/* StartScreen.css (No changes needed for this fix, provided for completeness) */
+/* StartScreen.css */
 .start-screen {
   position: fixed;
   top: 0;
@@ -142,9 +142,14 @@
 }
 
 .start-button {
-  background-color: transparent;
+  background-color: rgba(
+    30,
+    35,
+    30,
+    0.8
+  ); /* Darker background to match the theme */
   color: #5fdc5f;
-  border: 2px solid #5fdc5f;
+  border: 2px solid #2f7c2f; /* Darker green border */
   border-radius: 4px;
   padding: 15px 35px;
   cursor: pointer;
@@ -154,7 +159,7 @@
   font-size: 1.3rem;
   font-weight: bold;
   text-transform: uppercase;
-  box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.3); /* Softer green glow */
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   margin: 15px 0;
   position: relative;
@@ -166,9 +171,15 @@
 }
 
 .start-button:hover {
-  background-color: rgba(95, 220, 95, 0.1);
-  box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
-  text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
+  background-color: rgba(
+    95,
+    220,
+    95,
+    0.2
+  ); /* Light green background on hover */
+  border-color: #5fdc5f; /* Brighter green border on hover */
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.6); /* Stronger green glow */
+  text-shadow: 0 0 15px rgba(95, 220, 95, 0.8); /* Enhanced green text shadow */
   transform: translateY(-2px);
   opacity: 1;
 }
