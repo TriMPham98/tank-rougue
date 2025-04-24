@@ -449,22 +449,20 @@ export const useGameState = create<GameState>((set, get) => ({
         availableUpgrades = shuffled.slice(0, upgradesToOffer);
       }
 
-      // Calculate main turret damage increase based on a diminishing percentage of NPC health scaling
-      // NPCs gain health at level * 9 rate (linear scaling)
-      // Start at 65% scaling but decrease to 55% at higher levels
-      const baseNpcHealthScaling = 9; // From levelGenerator.ts
-      let turretScalingPercentage = 0.65; // Start at 65% of NPC health scaling
+      // Calculate main turret damage to be slightly below enemy tank health
+      // Tank health scales at level * 9 rate (linear scaling)
+      // We'll keep turret damage at around 70% of a tank's health
+      const tankBaseHealth = 75;
+      const linearHealthScale = 9; // From levelGenerator.ts
+      const tankHealth = tankBaseHealth + newLevel * linearHealthScale;
 
-      // Gradually reduce scaling percentage as levels increase
-      if (newLevel > 10) {
-        // Decrease by 0.01 for each level above 10, bottoming out at 0.55 (55%)
-        turretScalingPercentage = Math.max(0.55, 0.65 - (newLevel - 10) * 0.01);
-      }
+      // Set turret damage to be ~70% of tank health - enough to kill in 2 shots without upgrades
+      const baseTurretDamage = Math.floor(tankHealth * 0.7);
 
-      // Calculate the turret damage increase for this level
-      const turretDamageIncrease = Math.floor(
-        baseNpcHealthScaling * turretScalingPercentage
-      );
+      // We don't automatically increase damage with level - player must choose upgrades
+      // Just set initial value if it's level 1
+      const newTurretDamage =
+        newLevel === 1 ? baseTurretDamage : state.playerTurretDamage;
 
       // Adjust safe zone for the new level
       const maxRadius = 50;
@@ -576,7 +574,7 @@ export const useGameState = create<GameState>((set, get) => ({
         level: newLevel,
         playerLevel: newLevel, // Update player level to match game level
         playerDamage: state.playerDamage + 5, // Linear damage increase of 5 per level
-        playerTurretDamage: state.playerTurretDamage + turretDamageIncrease, // Diminishing % of NPC health scaling
+        playerTurretDamage: newTurretDamage,
         enemiesRequiredForNextLevel: nextLevelRequirement,
         showUpgradeUI: newLevel <= 50, // Only show upgrade UI if level is 50 or below
         availableUpgrades, // Set available upgrades
@@ -698,25 +696,21 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerHealthRegen = state.playerHealthRegen + 0.5; // Linear increase by 0.5
           break;
         case "turretDamage":
-          // Calculate upgrade based on the same diminishing percentage of NPC health scaling
-          const baseNpcHealthScaling = 9; // From levelGenerator.ts
-          let turretScalingPercentage = 0.65; // Start at 65% of NPC health scaling
+          // Calculate current enemy tank health at player's level
+          const tankBaseHealth = 75;
+          const linearHealthScale = 9; // From levelGenerator.ts
+          const currentTankHealth =
+            tankBaseHealth + state.level * linearHealthScale;
 
-          // Gradually reduce scaling percentage as levels increase
-          if (state.level > 10) {
-            turretScalingPercentage = Math.max(
-              0.55,
-              0.65 - (state.level - 10) * 0.01
-            );
-          }
-
-          const baseUpgrade = 12; // Increase base upgrade to offset diminishing scaling
-          const levelScaling = Math.floor(
-            state.level * baseNpcHealthScaling * turretScalingPercentage
+          // Calculate damage upgrade to be ~25% of a tank's current health
+          // This ensures that with enough upgrades, player can eventually one-shot tanks
+          const damageIncrease = Math.max(
+            15,
+            Math.floor(currentTankHealth * 0.25)
           );
-          const totalIncrease = baseUpgrade + levelScaling;
 
-          updates.playerTurretDamage = state.playerTurretDamage + totalIncrease;
+          updates.playerTurretDamage =
+            state.playerTurretDamage + damageIncrease;
           break;
         case "bulletVelocity":
           updates.playerBulletVelocity = state.playerBulletVelocity + 2; // Linear increase by 2
