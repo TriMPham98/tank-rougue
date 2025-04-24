@@ -29,7 +29,7 @@
   background-size: 100% 4px;
   pointer-events: none;
   animation: scanlines 2s linear infinite;
-  z-index: 2;
+  z-index: 1;
 }
 
 .start-screen-content {
@@ -67,6 +67,7 @@
   z-index: -1;
   opacity: 0.5;
   animation: radarSweep 4s linear infinite;
+  pointer-events: none;
 }
 
 .game-title {
@@ -138,7 +139,7 @@
   border-radius: 4px;
   padding: 15px 35px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: var(--font-primary);
   letter-spacing: 2px;
   font-size: 1.3rem;
@@ -147,7 +148,12 @@
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   margin: 15px 0;
-  animation: fadeIn 0.8s ease-out 0.8s both, pulseButton 2s infinite 1.5s;
+  position: relative;
+  z-index: 20; /* Increased z-index */
+  opacity: 1;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .start-button:hover {
@@ -155,7 +161,7 @@
   box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
   text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
   transform: translateY(-2px);
-  animation: none;
+  opacity: 1;
 }
 
 .controls-info {
@@ -263,12 +269,20 @@
 }
 
 @keyframes pulseButton {
-  0%,
-  100% {
-    box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
+    opacity: 1;
   }
   50% {
-    box-shadow: 0 0 20px rgba(95, 220, 95, 0.6);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
+    opacity: 1;
   }
 }
 
@@ -279,4 +293,15 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* Ensure the button is always visible */
+.start-screen-content .start-button {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.start-screen:before {
+  pointer-events: none;
 }
