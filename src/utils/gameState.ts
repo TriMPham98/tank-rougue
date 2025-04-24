@@ -424,7 +424,7 @@ export const useGameState = create<GameState>((set, get) => ({
           "healthRegen",
           "turretDamage",
           "bulletVelocity",
-          "penetration",
+          // "penetration" removed from main list to make it rare
         ];
 
         // Only add fireRate if not maxed out (3.0 shots/sec)
@@ -437,13 +437,10 @@ export const useGameState = create<GameState>((set, get) => ({
           possibleUpgrades.push("cameraRange");
         }
 
-        // Only add penetration if not already at max (5)
-        // The penetration stat is already included in the main possibleUpgrades list above
-        // No need to filter and re-add it, just filter it out if it's at max
-        if (state.playerPenetration >= 3) {
-          possibleUpgrades = possibleUpgrades.filter(
-            (stat) => stat !== "penetration"
-          );
+        // Make penetration a rare upgrade (25% chance to be offered)
+        // Only consider adding penetration if not already at max (3)
+        if (state.playerPenetration < 3 && Math.random() < 0.25) {
+          possibleUpgrades.push("penetration");
         }
 
         const shuffled = [...possibleUpgrades].sort(() => 0.5 - Math.random());
@@ -701,14 +698,32 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerHealthRegen = state.playerHealthRegen + 0.5; // Linear increase by 0.5
           break;
         case "turretDamage":
-          updates.playerTurretDamage = state.playerTurretDamage + 5; // Linear increase by 5
+          // Calculate upgrade based on the same diminishing percentage of NPC health scaling
+          const baseNpcHealthScaling = 9; // From levelGenerator.ts
+          let turretScalingPercentage = 0.65; // Start at 65% of NPC health scaling
+
+          // Gradually reduce scaling percentage as levels increase
+          if (state.level > 10) {
+            turretScalingPercentage = Math.max(
+              0.55,
+              0.65 - (state.level - 10) * 0.01
+            );
+          }
+
+          const baseUpgrade = 12; // Increase base upgrade to offset diminishing scaling
+          const levelScaling = Math.floor(
+            state.level * baseNpcHealthScaling * turretScalingPercentage
+          );
+          const totalIncrease = baseUpgrade + levelScaling;
+
+          updates.playerTurretDamage = state.playerTurretDamage + totalIncrease;
           break;
         case "bulletVelocity":
           updates.playerBulletVelocity = state.playerBulletVelocity + 2; // Linear increase by 2
           break;
         case "penetration":
-          // Max value is 5
-          updates.playerPenetration = Math.min(5, state.playerPenetration + 1); // Linear increase by 1, max 5
+          // Max value is 3
+          updates.playerPenetration = Math.min(3, state.playerPenetration + 1); // Linear increase by 1, max 3
           break;
       }
 

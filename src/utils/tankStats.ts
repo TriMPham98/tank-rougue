@@ -17,7 +17,7 @@ export const STAT_UPGRADE_INCREMENTS: Record<
   healthRegen: { amount: 0.5 },
   turretDamage: { amount: 5 },
   bulletVelocity: { amount: 2 },
-  penetration: { amount: 1, maxValue: 3 },
+  penetration: { amount: 1, maxValue: 3 }, // Reduced max value to 3 but kept increment at 1
 };
 
 // Get human-readable display name for each stat
@@ -160,7 +160,7 @@ export const getStatDescription = (stat: UpgradeableStat): string => {
     case "bulletVelocity":
       return "Improve projectile propulsion for faster target engagement.";
     case "penetration":
-      return "Enhance shell core density for penetration through multiple targets.";
+      return "Integrate experimental core-piercing ammunition technology.";
   }
 };
 
