@@ -6,19 +6,32 @@ import { generateLevel } from "../utils/levelGenerator";
 const StartScreen: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { startGame, restartGame } = useGameState();
+  const [subtitleText, setSubtitleText] = useState("");
+  const fullSubtitle = "TACTICAL COMBAT SIMULATOR";
 
   useEffect(() => {
-    const checkMobile = () => {
-      return (
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        ) ||
-        "ontouchstart" in window ||
-        window.matchMedia("(max-width: 768px)").matches
-      );
-    };
-
+    // Check if the device is mobile
+    const checkMobile = () =>
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) ||
+      "ontouchstart" in window ||
+      window.matchMedia("(max-width: 768px)").matches;
     setIsMobile(checkMobile());
+
+    // Typewriter effect for subtitle
+    let charIndex = 0;
+    setSubtitleText(""); // Reset subtitle text on mount
+    const typingInterval = setInterval(() => {
+      if (charIndex < fullSubtitle.length) {
+        setSubtitleText(fullSubtitle.slice(0, charIndex + 1));
+        charIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 100);
+
+    return () => clearInterval(typingInterval); // Cleanup on unmount
   }, []);
 
   const handleStartGame = () => {
@@ -31,18 +44,20 @@ const StartScreen: React.FC = () => {
     <div className={`start-screen military-theme ${isMobile ? "mobile" : ""}`}>
       <div className="start-screen-content">
         <h1 className="game-title">ROGUE TANK ROYALE</h1>
-        <h2 className="game-subtitle">TACTICAL COMBAT SIMULATOR</h2>
-
+        <h2 className="game-subtitle">
+          {subtitleText}
+          {subtitleText.length < fullSubtitle.length && (
+            <span className="typing-cursor">|</span>
+          )}
+        </h2>
         <div className="title-decoration">
           <div className="line"></div>
           <div className="circle"></div>
           <div className="line"></div>
         </div>
-
         <button className="start-button" onClick={handleStartGame}>
           DEPLOY UNIT
         </button>
-
         <div className="version-badge">v1.0.0</div>
       </div>
     </div>

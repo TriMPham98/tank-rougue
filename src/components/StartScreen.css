@@ -1,3 +1,4 @@
+/* StartScreen.css (No changes needed for this fix, provided for completeness) */
 .start-screen {
   position: fixed;
   top: 0;
@@ -86,6 +87,14 @@
   margin: 10px 0 20px;
   letter-spacing: 3px;
   font-weight: normal;
+  min-height: 1.4rem; /* Prevent layout shift during typing */
+  white-space: pre; /* Ensure spaces are preserved */
+}
+
+/* Optional: Style for the blinking cursor */
+.typing-cursor {
+  animation: blink 0.7s infinite;
+  margin-left: 2px;
 }
 
 .title-decoration {
@@ -198,6 +207,7 @@
 
 .start-screen.mobile .game-subtitle {
   font-size: 1rem;
+  min-height: 1rem; /* Adjust for mobile */
 }
 
 .start-screen.mobile .start-screen-content {
@@ -292,6 +302,17 @@
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Optional: Blinking cursor animation */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }
 
