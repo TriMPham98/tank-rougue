@@ -78,6 +78,7 @@ const GameUI = () => {
     playerHealthRegen,
     playerTurretDamage,
     playerBulletVelocity,
+    playerPenetration,
     showWeaponSelection,
     availableWeapons,
     selectedWeapons,
@@ -652,6 +653,10 @@ const GameUI = () => {
           <div className="stat-line">
             <span>Muzzle Vel:</span>
             <span>{playerBulletVelocity} m/s</span>
+          </div>
+          <div className="stat-line">
+            <span>Penetration:</span>
+            <span>{playerPenetration} Tanks</span>
           </div>
           <div className="stat-line">
             <span>Mobility:</span>

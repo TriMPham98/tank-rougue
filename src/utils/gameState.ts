@@ -26,7 +26,8 @@ export type UpgradeableStat =
   | "maxHealth"
   | "healthRegen"
   | "turretDamage"
-  | "bulletVelocity";
+  | "bulletVelocity"
+  | "penetration";
 
 // Define the type for a secondary weapon
 export interface SecondaryWeapon {
@@ -52,6 +53,7 @@ interface GameState {
   playerCameraRange: number; // Camera zoom range
   playerHealthRegen: number; // Health regenerated per second
   playerBulletVelocity: number; // Speed of bullets
+  playerPenetration: number; // Number of enemies a bullet can pass through
   playerLevel: number; // Player's current level
   score: number;
   level: number;
@@ -154,6 +156,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerCameraRange: 8, // Default camera distance
   playerHealthRegen: 0, // No health regen at start
   playerBulletVelocity: 15, // Initial bullet velocity
+  playerPenetration: 0, // No penetration at start
   playerLevel: 1, // Initial player level
   score: 0,
   level: 1,
@@ -421,10 +424,11 @@ export const useGameState = create<GameState>((set, get) => ({
           "healthRegen",
           "turretDamage",
           "bulletVelocity",
+          "penetration",
         ];
 
-        // Only add fireRate if not maxed out (3.5 shots/sec)
-        if (state.playerFireRate > 0.286) {
+        // Only add fireRate if not maxed out (3.0 shots/sec)
+        if (state.playerFireRate > 0.333) {
           possibleUpgrades.push("fireRate");
         }
 
@@ -433,8 +437,14 @@ export const useGameState = create<GameState>((set, get) => ({
           possibleUpgrades.push("cameraRange");
         }
 
-        // Filter out any other potentially capped stats here in the future
-        // Example: if (state.playerMaxHealth < 500) { possibleUpgrades.push("maxHealth"); }
+        // Only add penetration if not already at max (5)
+        // The penetration stat is already included in the main possibleUpgrades list above
+        // No need to filter and re-add it, just filter it out if it's at max
+        if (state.playerPenetration >= 3) {
+          possibleUpgrades = possibleUpgrades.filter(
+            (stat) => stat !== "penetration"
+          );
+        }
 
         const shuffled = [...possibleUpgrades].sort(() => 0.5 - Math.random());
         // Ensure we don't try to slice more than available
@@ -691,28 +701,14 @@ export const useGameState = create<GameState>((set, get) => ({
           updates.playerHealthRegen = state.playerHealthRegen + 0.5; // Linear increase by 0.5
           break;
         case "turretDamage":
-          // Calculate upgrade based on the same diminishing percentage of NPC health scaling
-          const baseNpcHealthScaling = 9; // From levelGenerator.ts
-          let turretScalingPercentage = 0.65; // Start at 65% of NPC health scaling
-
-          // Gradually reduce scaling percentage as levels increase
-          if (state.level > 10) {
-            turretScalingPercentage = Math.max(
-              0.55,
-              0.65 - (state.level - 10) * 0.01
-            );
-          }
-
-          const baseUpgrade = 12; // Increase base upgrade to offset diminishing scaling
-          const levelScaling = Math.floor(
-            state.level * baseNpcHealthScaling * turretScalingPercentage
-          );
-          const totalIncrease = baseUpgrade + levelScaling;
-
-          updates.playerTurretDamage = state.playerTurretDamage + totalIncrease;
+          updates.playerTurretDamage = state.playerTurretDamage + 5; // Linear increase by 5
           break;
         case "bulletVelocity":
           updates.playerBulletVelocity = state.playerBulletVelocity + 2; // Linear increase by 2
+          break;
+        case "penetration":
+          // Max value is 5
+          updates.playerPenetration = Math.min(5, state.playerPenetration + 1); // Linear increase by 1, max 5
           break;
       }
 

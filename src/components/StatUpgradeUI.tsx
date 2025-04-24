@@ -28,11 +28,17 @@ const StatUpgradeUI = ({
     playerHealthRegen,
     playerTurretDamage,
     playerBulletVelocity,
+    playerPenetration,
   } = useGameState();
 
   // Filter out Sensor Range upgrade if it's already at or above 14
   const filteredEnhancements = availableEnhancements.filter(
     (stat) => !(stat === "cameraRange" && playerCameraRange >= 14)
+  );
+
+  // Additional filtering for maxed out stats
+  const finalEnhancements = filteredEnhancements.filter(
+    (stat) => !(stat === "penetration" && playerPenetration >= 5)
   );
 
   const handleEnhancementSelect = useCallback(
@@ -51,15 +57,11 @@ const StatUpgradeUI = ({
       if (isUpgrading) return;
 
       const keyNum = parseInt(event.key);
-      if (
-        !isNaN(keyNum) &&
-        keyNum > 0 &&
-        keyNum <= filteredEnhancements.length
-      ) {
-        handleEnhancementSelect(filteredEnhancements[keyNum - 1]);
+      if (!isNaN(keyNum) && keyNum > 0 && keyNum <= finalEnhancements.length) {
+        handleEnhancementSelect(finalEnhancements[keyNum - 1]);
       }
     },
-    [filteredEnhancements, handleEnhancementSelect, isUpgrading]
+    [finalEnhancements, handleEnhancementSelect, isUpgrading]
   );
 
   // Add keyboard event listener
@@ -79,6 +81,7 @@ const StatUpgradeUI = ({
     playerHealthRegen,
     playerTurretDamage,
     playerBulletVelocity,
+    playerPenetration,
   };
 
   return (
@@ -88,7 +91,7 @@ const StatUpgradeUI = ({
           FIELD PROMOTION: SELECT ENHANCEMENT
         </h2>
         <div className="enhancement-options">
-          {filteredEnhancements.map((stat, index) => (
+          {finalEnhancements.map((stat, index) => (
             <div
               key={stat}
               className="enhancement-card"

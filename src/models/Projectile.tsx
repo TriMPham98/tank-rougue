@@ -11,6 +11,7 @@ interface ProjectileProps {
   rotation: number;
   damage: number;
   onRemove: (id: string) => void;
+  penetrationPower?: number; // Number of enemies the bullet can pass through
 }
 
 const Projectile = ({
@@ -19,15 +20,19 @@ const Projectile = ({
   rotation,
   damage,
   onRemove,
+  penetrationPower = 0, // Default to 0 (no penetration)
 }: ProjectileProps) => {
   const projectileRef = useRef<Mesh>(null);
   const hasCollidedRef = useRef(false);
+  const penetrationsLeftRef = useRef(penetrationPower);
+  const hitEnemiesRef = useRef<Set<string>>(new Set());
 
   // Access only the damageEnemy function and bullet velocity
   const damageEnemy = useGameState((state) => state.damageEnemy);
   const playerBulletVelocity = useGameState(
     (state) => state.playerBulletVelocity
   );
+  const playerPenetration = useGameState((state) => state.playerPenetration);
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
@@ -35,11 +40,17 @@ const Projectile = ({
   // Get direct store access
   const getState = useRef(useGameState.getState).current;
 
+  // Set initial penetration power from either prop or player stat
+  useRef(() => {
+    // Use the higher of the two values - either the explicit penetrationPower or player stat
+    penetrationsLeftRef.current = Math.max(penetrationPower, playerPenetration);
+  }).current;
+
   // Projectile movement and collision detection
   useFrame((_, delta) => {
     if (
       !projectileRef.current ||
-      hasCollidedRef.current ||
+      (hasCollidedRef.current && penetrationsLeftRef.current <= 0) ||
       isPaused ||
       isGameOver
     )
@@ -88,20 +99,16 @@ const Projectile = ({
         obstacle.type === "rock" ? obstacle.size : obstacle.size * 1.5;
 
       if (distanceToObstacle < collisionRadius) {
-        if (!hasCollidedRef.current) {
-          hasCollidedRef.current = true;
-          debug.log(
-            `Projectile hit terrain obstacle at distance ${distanceToObstacle.toFixed(
-              2
-            )}`
-          );
-          onRemove(id);
-          break;
-        }
+        // Terrain always stops bullets regardless of penetration
+        debug.log(
+          `Projectile hit terrain obstacle at distance ${distanceToObstacle.toFixed(
+            2
+          )}`
+        );
+        onRemove(id);
+        return;
       }
     }
-
-    if (hasCollidedRef.current) return;
 
     // Get fresh enemies data
     const enemies = getState().enemies;
@@ -113,6 +120,9 @@ const Projectile = ({
 
     // Check for collisions with enemies
     for (const enemy of enemies) {
+      // Skip enemies we've already hit
+      if (hitEnemiesRef.current.has(enemy.id)) continue;
+
       const enemyPos = new Vector3(...enemy.position);
       const distanceToEnemy = enemyPos.distanceTo(projectilePos);
 
@@ -121,43 +131,51 @@ const Projectile = ({
 
       // If hit detection range is smaller than visual size, log it
       if (distanceToEnemy < collisionRadius) {
-        if (!hasCollidedRef.current) {
-          hasCollidedRef.current = true;
+        // Track this hit enemy
+        hitEnemiesRef.current.add(enemy.id);
+
+        debug.log(
+          `Projectile hit enemy ${
+            enemy.id
+          } at distance ${distanceToEnemy.toFixed(2)} - Penetrations left: ${
+            penetrationsLeftRef.current
+          }`
+        );
+
+        // Apply damage to the enemy
+        damageEnemy(enemy.id, damage);
+
+        // Check if enemy was destroyed
+        const updatedEnemies = getState().enemies;
+        const enemyStillExists = updatedEnemies.some((e) => e.id === enemy.id);
+
+        if (!enemyStillExists) {
+          debug.log(`Enemy ${enemy.id} was destroyed!`);
+        }
+
+        // Reduce penetration counter
+        penetrationsLeftRef.current--;
+
+        // Remove the projectile if it has no more penetration power
+        if (penetrationsLeftRef.current < 0) {
           debug.log(
-            `Projectile hit enemy ${
-              enemy.id
-            } at distance ${distanceToEnemy.toFixed(2)}`
+            `Projectile ${id} stopped after hitting ${hitEnemiesRef.current.size} enemies`
           );
-
-          // Apply damage to the enemy
-          damageEnemy(enemy.id, damage);
-
-          // Check if enemy was destroyed
-          const updatedEnemies = getState().enemies;
-          const enemyStillExists = updatedEnemies.some(
-            (e) => e.id === enemy.id
-          );
-
-          if (!enemyStillExists) {
-            debug.log(`Enemy ${enemy.id} was destroyed!`);
-          }
-
-          // Remove the projectile
           onRemove(id);
+          return;
+        }
 
-          // Log enemy damage application
-          debug.log(
-            `Applied ${damage} damage to enemy ${
-              enemy.id
-            }, destroyed: ${!enemyStillExists}`
-          );
-          break;
-        }
-      } else {
-        // Log near misses for debugging
-        if (distanceToEnemy < 3 && Math.random() < 0.05) {
-          debug.log(`Enemy ${enemy.id} not found after hit`);
-        }
+        // Log enemy damage application
+        debug.log(
+          `Applied ${damage} damage to enemy ${
+            enemy.id
+          }, destroyed: ${!enemyStillExists}, continuing: ${
+            penetrationsLeftRef.current >= 0
+          }`
+        );
+
+        // We only process one collision per frame, so break
+        break;
       }
     }
   });

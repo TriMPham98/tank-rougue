@@ -11,12 +11,13 @@ export const STAT_UPGRADE_INCREMENTS: Record<
   StatUpgradeIncrement
 > = {
   tankSpeed: { amount: 0.5 },
-  fireRate: { amount: 0.1, maxValue: 3.5 }, // This is RPS, so fireRate is reduced
+  fireRate: { amount: 0.1, maxValue: 3.0 }, // This is RPS, so fireRate is reduced
   cameraRange: { amount: 2 },
   maxHealth: { amount: 25 },
   healthRegen: { amount: 0.5 },
   turretDamage: { amount: 5 },
   bulletVelocity: { amount: 2 },
+  penetration: { amount: 1, maxValue: 3 },
 };
 
 // Get human-readable display name for each stat
@@ -36,6 +37,8 @@ export const getStatDisplayName = (stat: UpgradeableStat): string => {
       return "Firepower";
     case "bulletVelocity":
       return "Muzzle Velocity";
+    case "penetration":
+      return "Shell Penetration";
   }
 };
 
@@ -50,6 +53,7 @@ export const getStatCurrentValue = (
     playerHealthRegen: number;
     playerTurretDamage: number;
     playerBulletVelocity: number;
+    playerPenetration: number;
   }
 ): string => {
   const {
@@ -60,6 +64,7 @@ export const getStatCurrentValue = (
     playerHealthRegen,
     playerTurretDamage,
     playerBulletVelocity,
+    playerPenetration,
   } = values;
 
   switch (stat) {
@@ -77,6 +82,8 @@ export const getStatCurrentValue = (
       return `${playerTurretDamage} DMG`;
     case "bulletVelocity":
       return `${playerBulletVelocity} m/s`;
+    case "penetration":
+      return `${playerPenetration} Targets`;
   }
 };
 
@@ -91,6 +98,7 @@ export const getStatPostUpgradeValue = (
     playerHealthRegen: number;
     playerTurretDamage: number;
     playerBulletVelocity: number;
+    playerPenetration: number;
   }
 ): string => {
   const {
@@ -101,6 +109,7 @@ export const getStatPostUpgradeValue = (
     playerHealthRegen,
     playerTurretDamage,
     playerBulletVelocity,
+    playerPenetration,
   } = values;
 
   const increment = STAT_UPGRADE_INCREMENTS[stat];
@@ -125,6 +134,11 @@ export const getStatPostUpgradeValue = (
       return `${playerTurretDamage + increment.amount} DMG`;
     case "bulletVelocity":
       return `${playerBulletVelocity + increment.amount} m/s`;
+    case "penetration":
+      return `${Math.min(
+        increment.maxValue || Infinity,
+        playerPenetration + increment.amount
+      )} Targets`;
   }
 };
 
@@ -145,6 +159,8 @@ export const getStatDescription = (stat: UpgradeableStat): string => {
       return "Calibrate main gun for higher impact kinetic energy.";
     case "bulletVelocity":
       return "Improve projectile propulsion for faster target engagement.";
+    case "penetration":
+      return "Enhance shell core density for penetration through multiple targets.";
   }
 };
 
@@ -159,6 +175,7 @@ export const applyStatUpgrade = (
     playerHealthRegen: number;
     playerTurretDamage: number;
     playerBulletVelocity: number;
+    playerPenetration: number;
   }
 ): Partial<typeof currentValues> => {
   const increment = STAT_UPGRADE_INCREMENTS[stat];
@@ -195,6 +212,13 @@ export const applyStatUpgrade = (
       return {
         playerBulletVelocity:
           currentValues.playerBulletVelocity + increment.amount,
+      };
+    case "penetration":
+      return {
+        playerPenetration: Math.min(
+          increment.maxValue || Infinity,
+          currentValues.playerPenetration + increment.amount
+        ),
       };
   }
 };

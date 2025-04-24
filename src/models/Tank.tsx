@@ -72,6 +72,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     playerSpeed,
     playerFireRate,
     playerHealthRegen,
+    playerPenetration,
     isPaused,
     isGameOver,
     updatePlayerPosition,
@@ -628,6 +629,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           position={projectile.position}
           rotation={projectile.rotation}
           damage={playerTurretDamage}
+          penetrationPower={playerPenetration}
           onRemove={removeProjectile}
         />
       ))}
