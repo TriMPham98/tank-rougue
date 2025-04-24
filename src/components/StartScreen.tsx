@@ -33,7 +33,19 @@ const StartScreen: React.FC = () => {
       return () => clearInterval(typingInterval); // Cleanup interval
     }, 1500); // 1.5s delay before typing starts
 
-    return () => clearTimeout(typingTimeout); // Cleanup timeout on unmount
+    // Add keyboard event listener for SPACEBAR and ENTER
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === " " || event.key === "Enter") {
+        handleStartGame();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      clearTimeout(typingTimeout); // Cleanup timeout on unmount
+      window.removeEventListener("keydown", handleKeyPress); // Cleanup event listener
+    };
   }, []);
 
   const handleStartGame = () => {
