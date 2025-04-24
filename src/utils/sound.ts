@@ -88,6 +88,7 @@ class SoundManager {
     this.registerSound("healthPickUp", "./assets/sounds/healthPickUp.mp3");
     this.registerSound("zoneWarning", "./assets/sounds/zoneWarning.mp3");
     this.registerSound("teslaZap", "./assets/sounds/teslaZap.mp3");
+    this.registerSound("deployTank", "./assets/sounds/deployTank.mp3");
     // Add more sounds here as needed
   }
 

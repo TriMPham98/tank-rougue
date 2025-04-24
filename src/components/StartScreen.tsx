@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import "./StartScreen.css";
 import { useGameState } from "../utils/gameState";
 import { generateLevel } from "../utils/levelGenerator";
+import { useSound } from "../utils/sound";
 
 const StartScreen: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { startGame, restartGame } = useGameState();
   const [subtitleText, setSubtitleText] = useState("");
   const fullSubtitle = "TACTICAL COMBAT SIMULATOR";
+  const sound = useSound();
 
   useEffect(() => {
     // Check if the device is mobile
@@ -49,6 +51,7 @@ const StartScreen: React.FC = () => {
   }, []);
 
   const handleStartGame = () => {
+    sound.play("deployTank");
     restartGame();
     generateLevel();
     startGame();
