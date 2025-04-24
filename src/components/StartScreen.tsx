@@ -19,19 +19,21 @@ const StartScreen: React.FC = () => {
       window.matchMedia("(max-width: 768px)").matches;
     setIsMobile(checkMobile());
 
-    // Typewriter effect for subtitle
     let charIndex = 0;
     setSubtitleText(""); // Reset subtitle text on mount
-    const typingInterval = setInterval(() => {
-      if (charIndex < fullSubtitle.length) {
-        setSubtitleText(fullSubtitle.slice(0, charIndex + 1));
-        charIndex++;
-      } else {
-        clearInterval(typingInterval);
-      }
-    }, 100);
+    const typingTimeout = setTimeout(() => {
+      const typingInterval = setInterval(() => {
+        if (charIndex < fullSubtitle.length) {
+          setSubtitleText(fullSubtitle.slice(0, charIndex + 1));
+          charIndex++;
+        } else {
+          clearInterval(typingInterval);
+        }
+      }, 100);
+      return () => clearInterval(typingInterval); // Cleanup interval
+    }, 1500); // 1.5s delay before typing starts
 
-    return () => clearInterval(typingInterval); // Cleanup on unmount
+    return () => clearTimeout(typingTimeout); // Cleanup timeout on unmount
   }, []);
 
   const handleStartGame = () => {
