@@ -1,0 +1,282 @@
+.start-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-background-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Higher than game UI */
+  font-family: var(--font-primary);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}
+
+.start-screen:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(60, 180, 60, 0.03) 50%,
+    rgba(0, 0, 0, 0) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  animation: scanlines 2s linear infinite;
+  z-index: 2;
+}
+
+.start-screen-content {
+  background-color: rgba(30, 35, 30, 0.8);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
+  padding: 40px 50px;
+  max-width: 700px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 3; /* Ensure it's above the overlay */
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Add a radar sweep animation to the content box */
+.start-screen-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    rgba(95, 220, 95, 0.15) 5%,
+    transparent 30%
+  );
+  border-radius: 5px;
+  z-index: -1;
+  opacity: 0.5;
+  animation: radarSweep 4s linear infinite;
+}
+
+.game-title {
+  font-size: 3.5rem;
+  color: #5fdc5f;
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  margin: 0;
+  letter-spacing: 1px;
+  line-height: 1.2;
+  animation: glowText 2s ease-in-out infinite alternate;
+}
+
+.game-subtitle {
+  font-size: 1.4rem;
+  color: #a0d0a0;
+  margin: 10px 0 20px;
+  letter-spacing: 3px;
+  font-weight: normal;
+}
+
+.title-decoration {
+  display: flex;
+  align-items: center;
+  width: 80%;
+  margin: 10px 0 25px;
+}
+
+.title-decoration .line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: #2f7c2f;
+}
+
+.title-decoration .circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #2f7c2f;
+  margin: 0 15px;
+  background-color: #5fdc5f;
+  box-shadow: 0 0 8px rgba(95, 220, 95, 0.7);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.game-description {
+  margin: 5px 0 30px;
+  line-height: 1.5;
+}
+
+.game-description p {
+  color: #a0d0a0;
+  margin: 10px 0;
+  letter-spacing: 1px;
+  font-size: 1.1rem;
+}
+
+.game-description p:first-child {
+  animation: fadeFromRight 0.8s ease-out 0.4s both;
+}
+
+.game-description p:last-child {
+  animation: fadeFromRight 0.8s ease-out 0.6s both;
+}
+
+.start-button {
+  background-color: transparent;
+  color: #5fdc5f;
+  border: 2px solid #5fdc5f;
+  border-radius: 4px;
+  padding: 15px 35px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-primary);
+  letter-spacing: 2px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  margin: 15px 0;
+  animation: fadeIn 0.8s ease-out 0.8s both, pulseButton 2s infinite 1.5s;
+}
+
+.start-button:hover {
+  background-color: rgba(95, 220, 95, 0.1);
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
+  text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
+  transform: translateY(-2px);
+  animation: none;
+}
+
+.controls-info {
+  margin-top: 25px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  line-height: 1.5;
+  animation: fadeIn 0.8s ease-out 1s both;
+}
+
+.controls-info span {
+  color: var(--color-text-highlight);
+  margin: 0 5px;
+}
+
+/* Add a version number badge */
+.version-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(47, 124, 47, 0.3);
+  border: 1px solid #2f7c2f;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  color: #a0d0a0;
+}
+
+/* Mobile adjustments */
+.start-screen.mobile .game-title {
+  font-size: 2.2rem;
+}
+
+.start-screen.mobile .game-subtitle {
+  font-size: 1rem;
+}
+
+.start-screen.mobile .start-screen-content {
+  padding: 25px;
+}
+
+.start-screen.mobile .game-description p {
+  font-size: 0.9rem;
+}
+
+.start-screen.mobile .start-button {
+  font-size: 1.1rem;
+  padding: 12px 25px;
+}
+
+.start-screen.mobile .controls-info {
+  font-size: 0.8rem;
+}
+
+/* Animations */
+@keyframes scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(95, 220, 95, 0.7);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(95, 220, 95, 0.9);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes glowText {
+  from {
+    text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
+  }
+  to {
+    text-shadow: 0 0 15px rgba(95, 220, 95, 0.8);
+  }
+}
+
+@keyframes pulseButton {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(95, 220, 95, 0.6);
+  }
+}
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

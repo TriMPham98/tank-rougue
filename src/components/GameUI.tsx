@@ -426,7 +426,7 @@ const GameUI = () => {
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (isGameOver && event.key === "Enter") {
-        restartGame();
+        handleRestartGame();
       }
     };
 
@@ -435,6 +435,18 @@ const GameUI = () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
   }, [isGameOver, restartGame]);
+
+  // Handle game restart
+  const handleRestartGame = useCallback(() => {
+    restartGame();
+    try {
+      // Generate a new level
+      const { generateLevel } = require("../utils/levelGenerator");
+      generateLevel();
+    } catch (error) {
+      console.error("Error generating level:", error);
+    }
+  }, [restartGame]);
 
   const renderTacticalDisplay = useCallback(() => {
     const mapSize = 150;
@@ -681,7 +693,9 @@ const GameUI = () => {
             <h2 className="game-over-title">MISSION FAILED</h2>
             <p>Combat Score: {score}</p>
             <p>Highest Rank Achieved: {rank}</p>
-            <button className="ui-button restart-button" onClick={restartGame}>
+            <button
+              className="ui-button restart-button"
+              onClick={handleRestartGame}>
               RE-DEPLOY
             </button>
           </div>

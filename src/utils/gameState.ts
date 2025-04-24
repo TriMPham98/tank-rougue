@@ -81,6 +81,7 @@ interface GameState {
   // Game state flags
   isGameOver: boolean;
   isPaused: boolean;
+  isGameStarted: boolean; // New flag to track if the game has started
 
   // Terrain obstacles
   terrainObstacles: Array<{
@@ -138,6 +139,7 @@ interface GameState {
     turretRotation?: number | null;
     isFiring?: boolean;
   }) => void;
+  startGame: () => void; // New action to start the game
 }
 
 // Create the game state store
@@ -181,6 +183,7 @@ export const useGameState = create<GameState>((set, get) => ({
   // Initial game state flags
   isGameOver: false,
   isPaused: false,
+  isGameStarted: false,
 
   // Terrain obstacles
   terrainObstacles: [],
@@ -302,6 +305,7 @@ export const useGameState = create<GameState>((set, get) => ({
       powerUps: [],
       isGameOver: false,
       isPaused: false,
+      isGameStarted: true, // Keep it started after restart
       enemiesDefeated: 0,
       enemiesRequiredForNextLevel: 1,
       showUpgradeUI: false,
@@ -324,6 +328,11 @@ export const useGameState = create<GameState>((set, get) => ({
   togglePause: () =>
     set((state) => ({
       isPaused: !state.isPaused,
+    })),
+
+  startGame: () =>
+    set(() => ({
+      isGameStarted: true,
     })),
 
   incrementEnemyDefeatCount: () => {

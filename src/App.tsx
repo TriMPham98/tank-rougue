@@ -6,6 +6,7 @@ import { useGameState } from "./utils/gameState";
 import { generateLevel } from "./utils/levelGenerator";
 import { debug } from "./utils/debug";
 import AudioUnlock from "./components/AudioUnlock";
+import StartScreen from "./components/StartScreen";
 
 function App() {
   // Use a ref to ensure initialization only happens once
@@ -22,28 +23,27 @@ function App() {
     level,
     showUpgradeUI,
     advanceLevel,
+    isGameStarted,
   } = useGameState();
 
-  // Initialize game on first render
+  // Initialize game state on first render, but don't start the game automatically
   useEffect(() => {
-    // Only run initialization once
+    // Only run basic initialization once, without starting the game
     if (!initialized.current) {
-      // Set game to initial state
-      restartGame();
-
-      // Generate initial enemies and power-ups based on level 1
       try {
-        generateLevel();
         initialized.current = true;
       } catch (error) {
         debug.error("Error initializing game:", error);
       }
     }
-  }, [restartGame]);
+  }, []);
 
   // Handle escape key for pausing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Only respond to keyboard controls if the game has started
+      if (!isGameStarted) return;
+
       if (e.key === "Escape" && !showUpgradeUI) {
         // Prevent multiple toggles within 200ms
         const now = Date.now();
@@ -75,10 +75,20 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [togglePause, showUpgradeUI, isPaused, level, advanceLevel]);
+  }, [
+    togglePause,
+    showUpgradeUI,
+    isPaused,
+    level,
+    advanceLevel,
+    isGameStarted,
+  ]);
 
   // Only pause the game when upgrade UI is shown, but don't keep it paused after
   useEffect(() => {
+    // Only process this logic if the game has started
+    if (!isGameStarted) return;
+
     // Store the current pause state when upgrade UI changes
     if (showUpgradeUI) {
       wasPaused.current = isPaused;
@@ -92,15 +102,22 @@ function App() {
         togglePause();
       }
     }
-  }, [showUpgradeUI]); // Only run when showUpgradeUI changes
+  }, [showUpgradeUI, isGameStarted, isPaused, togglePause]); // Added dependencies
 
   return (
     <div
       className="app"
       style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       <AudioUnlock />
-      <GameScene />
-      <GameUI />
+
+      {isGameStarted ? (
+        <>
+          <GameScene />
+          <GameUI />
+        </>
+      ) : (
+        <StartScreen />
+      )}
     </div>
   );
 }
