@@ -656,7 +656,9 @@ const GameUI = () => {
           </div>
           <div className="stat-line">
             <span>Penetration:</span>
-            <span>{playerPenetration} Tanks</span>
+            <span>
+              {playerPenetration} {playerPenetration === 1 ? "Tank" : "Tanks"}
+            </span>
           </div>
           <div className="stat-line">
             <span>Mobility:</span>
