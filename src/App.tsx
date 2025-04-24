@@ -89,35 +89,32 @@ function App() {
     // Only process this logic if the game has started
     if (!isGameStarted) return;
 
-    // Store the current pause state when upgrade UI changes
+    // Store the current pause state when upgrade UI appears
     if (showUpgradeUI) {
       wasPaused.current = isPaused;
       if (!isPaused) {
         // Only pause if not already paused
         togglePause();
       }
-    } else if (!wasPaused.current) {
-      // Only unpause if we were the ones who paused it
-      if (isPaused) {
-        togglePause();
-      }
+    } else if (wasPaused.current === false && isPaused) {
+      // If we were NOT paused before the upgrade UI appeared,
+      // and we're still paused after it disappeared, unpause the game
+      togglePause();
+      // Reset the wasPaused state
+      wasPaused.current = false;
     }
-  }, [showUpgradeUI, isGameStarted, isPaused, togglePause]); // Added dependencies
+  }, [showUpgradeUI, isGameStarted, isPaused, togglePause]);
+
+  // Only render start screen if game not started
+  if (!isGameStarted) {
+    return <StartScreen />;
+  }
 
   return (
-    <div
-      className="app"
-      style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
+    <div className="app">
+      <GameScene />
+      <GameUI />
       <AudioUnlock />
-
-      {isGameStarted ? (
-        <>
-          <GameScene />
-          <GameUI />
-        </>
-      ) : (
-        <StartScreen />
-      )}
     </div>
   );
 }

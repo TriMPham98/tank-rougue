@@ -661,6 +661,7 @@ export const useGameState = create<GameState>((set, get) => ({
       // Apply the upgrade based on stat type
       const updates: Partial<GameState> = {
         showUpgradeUI: false, // Hide the upgrade UI after selection
+        isPaused: false, // Explicitly unpause the game after upgrading
       };
 
       switch (stat) {
