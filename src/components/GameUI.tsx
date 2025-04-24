@@ -6,6 +6,7 @@ import WeaponSelection from "./WeaponSelection";
 import "./WeaponSelection.css";
 import { useSound } from "../utils/sound";
 import StatUpgradeUI from "./StatUpgradeUI";
+import { generateLevel } from "../utils/levelGenerator";
 
 // Define BASE_TARGETS constant for enemy count calculation
 const BASE_TARGETS = 1;
@@ -441,7 +442,6 @@ const GameUI = () => {
     restartGame();
     try {
       // Generate a new level
-      const { generateLevel } = require("../utils/levelGenerator");
       generateLevel();
     } catch (error) {
       console.error("Error generating level:", error);

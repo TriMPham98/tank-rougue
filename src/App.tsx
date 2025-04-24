@@ -17,7 +17,6 @@ function App() {
   const lastToggleTime = useRef(0);
 
   const {
-    restartGame,
     togglePause,
     isPaused,
     level,
