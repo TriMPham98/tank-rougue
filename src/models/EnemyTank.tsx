@@ -60,10 +60,11 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       const terrainObstacles = getState().terrainObstacles;
 
       // If there are no terrain obstacles, don't block movement
-      if (terrainObstacles.length === 0) {
+      if (terrainObstacles.length === 0 && getState().enemies.length === 0) {
         return false;
       }
 
+      // Check collision with terrain obstacles
       for (const obstacle of terrainObstacles) {
         if (obstacle.type === "rock") {
           const obstaclePos = new Vector3(
@@ -82,9 +83,33 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           }
         }
       }
+
+      // Check collision with blue turrets (enemy type "turret")
+      const enemies = getState().enemies;
+      for (const otherEnemy of enemies) {
+        // Skip checking collision with self
+        if (otherEnemy.id === enemy.id) continue;
+
+        // Only check for turrets
+        if (otherEnemy.type === "turret") {
+          const turretPos = new Vector3(
+            otherEnemy.position[0],
+            0,
+            otherEnemy.position[2]
+          );
+          const distance = turretPos.distanceTo(tankPosition);
+          const turretRadius = 1.5; // Blue turret collision radius
+          const safetyMargin = 0.2;
+
+          if (distance < tankRadius + turretRadius + safetyMargin) {
+            return true;
+          }
+        }
+      }
+
       return false;
     },
-    [tankRadius, getState]
+    [tankRadius, getState, enemy.id]
   );
 
   useFrame((state, delta) => {
@@ -195,6 +220,8 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       // Compute sum of repulsive forces from obstacles
       const sumRepulsive = new Vector3(0, 0, 0);
       const terrainObstacles = getState().terrainObstacles;
+
+      // Add repulsion from terrain obstacles
       for (const obstacle of terrainObstacles) {
         const obstaclePos = new Vector3(
           obstacle.position[0],
@@ -211,6 +238,35 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           const repulsiveForce =
             repulsiveDirection.multiplyScalar(repulsiveMagnitude);
           sumRepulsive.add(repulsiveForce);
+        }
+      }
+
+      // Add repulsion from blue turrets (enemy type "turret")
+      for (const otherEnemy of enemies) {
+        // Skip applying repulsion from self
+        if (otherEnemy.id === enemy.id) continue;
+
+        // Only consider turrets as obstacles
+        if (otherEnemy.type === "turret") {
+          const turretPos = new Vector3(
+            otherEnemy.position[0],
+            0,
+            otherEnemy.position[2]
+          );
+          const vectorToTank = currentPositionVec.clone().sub(turretPos);
+          const distance = vectorToTank.length();
+          const turretRadius = 1.5; // Blue turret collision radius
+          const effectiveDistance = distance - (tankRadius + turretRadius);
+
+          // Apply a stronger repulsion from turrets than from rocks
+          if (effectiveDistance < max_distance) {
+            const repulsiveDirection = vectorToTank.normalize();
+            // Use a stronger magnitude for turrets
+            const repulsiveMagnitude = 1.5 / (effectiveDistance + epsilon);
+            const repulsiveForce =
+              repulsiveDirection.multiplyScalar(repulsiveMagnitude);
+            sumRepulsive.add(repulsiveForce);
+          }
         }
       }
 
