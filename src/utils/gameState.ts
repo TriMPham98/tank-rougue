@@ -84,6 +84,7 @@ interface GameState {
   isGameOver: boolean;
   isPaused: boolean;
   isGameStarted: boolean; // New flag to track if the game has started
+  shouldResetCameraAnimation: boolean; // Flag to reset camera animation on game start
 
   // Terrain obstacles
   terrainObstacles: Array<{
@@ -187,6 +188,7 @@ export const useGameState = create<GameState>((set, get) => ({
   isGameOver: false,
   isPaused: false,
   isGameStarted: false,
+  shouldResetCameraAnimation: true,
 
   // Terrain obstacles
   terrainObstacles: [],
@@ -326,6 +328,7 @@ export const useGameState = create<GameState>((set, get) => ({
       safeZoneDamage: 1,
       safeZoneActive: false,
       isPreZoneChangeLevel: false,
+      shouldResetCameraAnimation: true,
     }),
 
   togglePause: () =>
@@ -336,6 +339,7 @@ export const useGameState = create<GameState>((set, get) => ({
   startGame: () =>
     set(() => ({
       isGameStarted: true,
+      shouldResetCameraAnimation: true,
     })),
 
   incrementEnemyDefeatCount: () => {

@@ -68,8 +68,12 @@ const StartScreen: React.FC = () => {
   const handleStartGame = () => {
     sound.play("deployTank");
     restartGame();
-    generateLevel();
-    startGame();
+    generateLevel(); // Generate level first
+
+    // Short delay to ensure terrain is generated before starting camera animation
+    setTimeout(() => {
+      startGame();
+    }, 100);
   };
 
   return (

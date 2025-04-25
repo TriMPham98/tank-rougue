@@ -17,7 +17,7 @@ import {
   useState,
 } from "react";
 import { useGameState } from "../utils/gameState";
-import { Vector3, SpotLight as ThreeSpotLight } from "three";
+import { Vector3, SpotLight as ThreeSpotLight, PerspectiveCamera } from "three";
 import "./GameScene.css";
 import { useRespawnManager } from "../utils/respawnManager";
 import { debug } from "../utils/debug";
@@ -151,21 +151,116 @@ const FollowCamera = memo(() => {
   const targetPositionRef = useRef(new Vector3());
   const initialPositionSetRef = useRef(false);
 
-  useFrame(() => {
+  // Add state to track the camera animation
+  const [isIntroPanComplete, setIsIntroPanComplete] = useState(false);
+  const introPanTimeRef = useRef(0);
+  const introPanDuration = 5.0; // 5 seconds for the intro pan
+
+  // Initial dramatic offset values (higher and farther away)
+  const initialHeight = 40;
+  const initialDistance = 60;
+  const initialFov = 50; // Narrower field of view for dramatic effect
+
+  // Store animation state in a ref to prevent issues with state updates
+  const animationStateRef = useRef({
+    isRunning: false,
+    hasCompleted: false,
+  });
+
+  useEffect(() => {
+    // Watch for changes to the shouldResetCameraAnimation flag
+    const unsubscribe = useGameState.subscribe((state) => {
+      if (state.shouldResetCameraAnimation) {
+        // Reset animation state
+        setIsIntroPanComplete(false);
+        introPanTimeRef.current = 0;
+        initialPositionSetRef.current = false;
+
+        // Reset the animation state in the ref
+        animationStateRef.current = {
+          isRunning: false,
+          hasCompleted: false,
+        };
+
+        // Reset the flag
+        useGameState.setState({ shouldResetCameraAnimation: false });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useFrame((state, delta) => {
     const playerPosition = getState().playerTankPosition;
     const cameraRange = getState().playerCameraRange;
+    const isGameStarted = getState().isGameStarted;
 
     if (playerPosition) {
       // Set positive distance for camera to stay in front of the tank
       const distanceInFront = cameraRange;
 
-      // Only track rotation changes after initial position is established
-      if (initialPositionSetRef.current) {
+      // Prevent re-running the animation once it's completed
+      if (animationStateRef.current.hasCompleted) {
+        offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
+        offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
+        offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
+      }
+      // Intro camera pan animation - only run if game is started and animation hasn't completed
+      else if (isGameStarted && !isIntroPanComplete) {
+        // Mark animation as running
+        animationStateRef.current.isRunning = true;
+
+        introPanTimeRef.current += delta;
+        const progress = Math.min(
+          introPanTimeRef.current / introPanDuration,
+          1.0
+        );
+
+        // Ease-out function for smooth deceleration
+        const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+
+        // Interpolate camera height and distance
+        const currentHeight =
+          initialHeight + (8 - initialHeight) * easeOutProgress;
+        const currentDistance =
+          initialDistance +
+          (distanceInFront - initialDistance) * easeOutProgress;
+
+        // Update camera position with dramatic pan
+        offsetRef.current.x = Math.sin(camera.rotation.y) * currentDistance;
+        offsetRef.current.y = currentHeight + (cameraRange - 12) * 0.3;
+        offsetRef.current.z = Math.cos(camera.rotation.y) * currentDistance;
+
+        // Camera field of view animation - use type assertion for PerspectiveCamera
+        const perspCamera = camera as PerspectiveCamera;
+        perspCamera.fov = initialFov + (60 - initialFov) * easeOutProgress;
+        perspCamera.updateProjectionMatrix();
+
+        // Additional slight rotation effect
+        const rotationOffset = (1 - easeOutProgress) * (Math.PI / 8);
+        camera.rotation.x = -0.2 - rotationOffset;
+
+        // Mark animation as complete once done
+        if (progress >= 1.0) {
+          setIsIntroPanComplete(true);
+          animationStateRef.current.hasCompleted = true;
+        }
+      }
+      // Normal camera behavior after intro or if intro was skipped
+      else if (initialPositionSetRef.current) {
         offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
         offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
         offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
       } else {
-        // On first frame, maintain the initial position without applying rotation
+        // On first frame, set the initial dramatic camera position
+        if (isGameStarted) {
+          // Start with camera high and far away
+          camera.position.set(
+            playerPosition[0],
+            playerPosition[1] + initialHeight,
+            playerPosition[2] + initialDistance
+          );
+        }
         initialPositionSetRef.current = true;
       }
 
@@ -176,7 +271,9 @@ const FollowCamera = memo(() => {
       );
 
       // Use a slower lerp for smoother camera movement
-      camera.position.lerp(targetPositionRef.current, 0.05);
+      // Faster lerp during intro animation for more dramatic effect
+      const lerpFactor = !isIntroPanComplete ? 0.03 : 0.05;
+      camera.position.lerp(targetPositionRef.current, lerpFactor);
       camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
     }
   });
@@ -219,6 +316,76 @@ const SpotlightUpdater = () => {
       penumbra={spotlightPenumbra}
       intensity={spotlightIntensity}
       distance={spotlightDistance}
+      castShadow
+      shadow-bias={-0.001}
+    />
+  );
+};
+
+// Additional spotlight for the intro sequence
+const IntroSpotlight = () => {
+  const { camera } = useThree();
+  const getState = useRef(useGameState.getState).current;
+  const spotLightRef = useRef<ThreeSpotLight>(null);
+  const [isIntroDone, setIsIntroDone] = useState(false);
+  const timeRef = useRef(0);
+  const introDuration = 5.0; // Match the camera pan duration
+
+  useEffect(() => {
+    // Watch for changes to the shouldResetCameraAnimation flag
+    const unsubscribe = useGameState.subscribe((state) => {
+      if (state.shouldResetCameraAnimation) {
+        // Reset animation state
+        setIsIntroDone(false);
+        timeRef.current = 0;
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useFrame((state, delta) => {
+    const isGameStarted = getState().isGameStarted;
+
+    if (isGameStarted && !isIntroDone) {
+      timeRef.current += delta;
+      const progress = Math.min(timeRef.current / introDuration, 1.0);
+
+      if (spotLightRef.current) {
+        // Position spotlight above and slightly behind camera to create dramatic lighting
+        const cameraPos = camera.position;
+        spotLightRef.current.position.set(
+          cameraPos.x - Math.sin(camera.rotation.y) * 5,
+          cameraPos.y + 10,
+          cameraPos.z - Math.cos(camera.rotation.y) * 5
+        );
+
+        // Fade out the spotlight as the intro completes
+        const fadeOutStart = 0.7; // Start fading at 70% of intro
+        if (progress > fadeOutStart) {
+          const fadeProgress = (progress - fadeOutStart) / (1 - fadeOutStart);
+          spotLightRef.current.intensity = 2.0 * (1 - fadeProgress);
+        }
+
+        if (progress >= 1.0) {
+          setIsIntroDone(true);
+        }
+      }
+    }
+  });
+
+  // Don't render the spotlight once the intro is done
+  if (isIntroDone) return null;
+
+  return (
+    <spotLight
+      ref={spotLightRef}
+      position={[0, 50, 0]}
+      angle={0.4}
+      penumbra={0.4}
+      intensity={2.0}
+      distance={100}
+      color="#ffffff"
       castShadow
       shadow-bias={-0.001}
     />
@@ -280,6 +447,7 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
         shadow-camera-bottom={-20}
       />
       <SpotlightUpdater />
+      <IntroSpotlight />
       <SafeZone />
       {playerTank}
       {enemies.map((enemy) => (
@@ -307,9 +475,14 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 const TerrainObstacleGenerator = () => {
   const addTerrainObstacle = useGameState((state) => state.addTerrainObstacle);
   const isGameOver = useGameState((state) => state.isGameOver);
+  const isGameStarted = useGameState((state) => state.isGameStarted);
   const [isTerrainReady, setIsTerrainReady] = useState(false);
+  const terrainGeneratedRef = useRef(false);
 
   useEffect(() => {
+    // Only generate terrain if not already generated or game was restarted
+    if (terrainGeneratedRef.current && !isGameOver) return;
+
     debug.log("TerrainObstacleGenerator: Starting obstacle generation");
     try {
       const obstacleCount = 20;
@@ -377,6 +550,7 @@ const TerrainObstacleGenerator = () => {
       debug.log(
         `TerrainObstacleGenerator: Placed ${successfulPlacements} obstacles after ${totalAttempts} attempts`
       );
+      terrainGeneratedRef.current = true;
       setIsTerrainReady(true);
       debug.log(
         "TerrainObstacleGenerator: All obstacles generated successfully"
@@ -389,14 +563,16 @@ const TerrainObstacleGenerator = () => {
     }
   }, [addTerrainObstacle, isGameOver]);
 
+  // Reset terrain state when game is restarted
+  useEffect(() => {
+    if (isGameOver) {
+      terrainGeneratedRef.current = false;
+    }
+  }, [isGameOver]);
+
   if (!isTerrainReady) {
     debug.log("TerrainObstacleGenerator: Not ready, showing loading indicator");
-    return (
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="red" />
-      </mesh>
-    );
+    return null; // Return null instead of placeholder to avoid visual artifacts
   }
 
   debug.log("TerrainObstacleGenerator: Ready");
@@ -431,7 +607,7 @@ const GameScene = () => {
         style={{ width: "100vw", height: "100vh" }}>
         <Canvas
           shadows
-          camera={{ position: [0, 8, 12], fov: 60 }}
+          camera={{ position: [0, 40, 60], fov: 60 }}
           style={{ width: "100vw", height: "100vh" }}
           onCreated={() => debug.log("Canvas created")}>
           <color attach="background" args={[skyColor]} />
