@@ -49,27 +49,6 @@
   animation: fadeIn 0.8s ease-out;
 }
 
-/* Add a radar sweep animation to the content box */
-.start-screen-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-    circle at center,
-    transparent 0%,
-    rgba(95, 220, 95, 0.15) 5%,
-    transparent 30%
-  );
-  border-radius: 5px;
-  z-index: -1;
-  opacity: 0.5;
-  animation: radarSweep 4s linear infinite;
-  pointer-events: none;
-}
-
 .game-title {
   font-size: 3.5rem;
   color: #5fdc5f;
@@ -344,15 +323,6 @@
     transform: scale(1);
     box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
     opacity: 1;
-  }
-}
-
-@keyframes radarSweep {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
   }
 }
 
