@@ -9,7 +9,7 @@ const StartScreen: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { startGame, restartGame } = useGameState();
   const [subtitleText, setSubtitleText] = useState("");
-  const fullSubtitle = "Upgrade, Evade, Survive";
+  const fullSubtitle = "Evade, Upgrade, Survive";
   const sound = useSound();
 
   useEffect(() => {
