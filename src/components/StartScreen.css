@@ -214,28 +214,66 @@
 /* Mobile adjustments */
 .start-screen.mobile .game-title {
   font-size: 2.2rem;
+  margin-bottom: 5px; /* Reduce space below title */
 }
 
 .start-screen.mobile .game-subtitle {
   font-size: 1rem;
   min-height: 1rem; /* Adjust for mobile */
+  margin: 5px 0 10px; /* Reduce margins */
 }
 
 .start-screen.mobile .start-screen-content {
-  padding: 25px;
+  padding: 20px 15px; /* Reduce overall padding */
+  width: 95%; /* Take up more width */
+}
+
+.start-screen.mobile .title-decoration {
+  margin: 5px 0 15px; /* Reduce spacing around decoration */
 }
 
 .start-screen.mobile .game-description p {
   font-size: 0.9rem;
+  margin: 5px 0; /* Reduce margins between paragraphs */
 }
 
 .start-screen.mobile .start-button {
   font-size: 1.1rem;
   padding: 12px 25px;
+  margin: 10px 0; /* Reduce margin around button */
+  margin-top: 5px; /* Further reduce top margin */
 }
 
 .start-screen.mobile .controls-info {
   font-size: 0.8rem;
+  margin-top: 15px; /* Reduce margin */
+}
+
+.start-screen.mobile .tank-wireframe-container {
+  margin: 5px auto 10px; /* Reduce margins around tank */
+  width: 20%; /* Adjust width for mobile */
+}
+
+/* Mobile portrait specific adjustments */
+@media (max-width: 480px) and (orientation: portrait) {
+  .start-screen.mobile .start-screen-content {
+    padding: 15px 10px;
+  }
+
+  .start-screen.mobile .tank-wireframe-container {
+    margin: 5px auto;
+  }
+
+  .start-screen.mobile .game-title {
+    font-size: 1.8rem;
+  }
+
+  .start-screen.mobile .version-badge {
+    bottom: 5px;
+    right: 5px;
+    padding: 3px 6px;
+    font-size: 0.7rem;
+  }
 }
 
 /* Animations */
@@ -359,7 +397,12 @@
 
 @media (max-width: 768px) {
   .tank-wireframe-container {
-    width: 30%;
+    width: 50%;
     margin: 10px auto 15px;
+  }
+
+  /* Additional space optimizations for small screens */
+  .start-screen-content {
+    padding: 30px 25px;
   }
 }

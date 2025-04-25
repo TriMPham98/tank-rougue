@@ -9,18 +9,31 @@ const StartScreen: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { startGame, restartGame } = useGameState();
   const [subtitleText, setSubtitleText] = useState("");
-  const fullSubtitle = "TACTICAL COMBAT SIMULATOR";
+  const fullSubtitle = "Upgrade, Evade, Survive";
   const sound = useSound();
 
   useEffect(() => {
-    // Check if the device is mobile
-    const checkMobile = () =>
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) ||
-      "ontouchstart" in window ||
-      window.matchMedia("(max-width: 768px)").matches;
-    setIsMobile(checkMobile());
+    // Check if the device is mobile with improved detection
+    const checkMobile = () => {
+      const isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        ) || "ontouchstart" in window;
+
+      const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
+
+      return isMobileDevice || isSmallScreen;
+    };
+
+    const updateMobileState = () => {
+      setIsMobile(checkMobile());
+    };
+
+    // Set initial mobile state
+    updateMobileState();
+
+    // Update on resize events
+    window.addEventListener("resize", updateMobileState);
 
     let charIndex = 0;
     setSubtitleText(""); // Reset subtitle text on mount
@@ -48,6 +61,7 @@ const StartScreen: React.FC = () => {
     return () => {
       clearTimeout(typingTimeout); // Cleanup timeout on unmount
       window.removeEventListener("keydown", handleKeyPress); // Cleanup event listener
+      window.removeEventListener("resize", updateMobileState); // Cleanup resize listener
     };
   }, []);
 
@@ -76,7 +90,7 @@ const StartScreen: React.FC = () => {
 
         {/* Tank Wireframe Display */}
         <div className="tank-wireframe-container">
-          <TankWireframeDisplay height={isMobile ? "75px" : "200px"} />
+          <TankWireframeDisplay height={isMobile ? "60px" : "200px"} />
         </div>
 
         <button className="start-button" onClick={handleStartGame}>
