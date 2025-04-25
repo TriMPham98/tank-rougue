@@ -577,13 +577,19 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
         const playerLevel = getState().playerLevel;
         let damage = 5; // Default damage for early game
         if (playerLevel > 15) {
-          damage = 10; // Mid game damage
+          damage = 10;
         }
         if (playerLevel > 25) {
-          damage = 15; // Late mid game damage
+          damage = 15;
         }
         if (playerLevel > 40) {
-          damage = 20; // Late game damage
+          damage = 20;
+        }
+        if (playerLevel > 50) {
+          damage = 25;
+        }
+        if (playerLevel > 60) {
+          damage = 30; // End game damage
         }
         return (
           <EnemyProjectile
