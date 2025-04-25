@@ -337,3 +337,29 @@
 .start-screen:before {
   pointer-events: none;
 }
+
+.tank-wireframe-container {
+  margin: 15px auto 20px;
+  width: 70%;
+  max-width: 450px;
+  position: relative;
+}
+
+.tank-wireframe-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .tank-wireframe-container {
+    width: 30%;
+    margin: 10px auto 15px;
+  }
+}

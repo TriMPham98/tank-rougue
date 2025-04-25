@@ -3,6 +3,7 @@ import "./StartScreen.css";
 import { useGameState } from "../utils/gameState";
 import { generateLevel } from "../utils/levelGenerator";
 import { useSound } from "../utils/sound";
+import TankWireframeDisplay from "./TankWireframeDisplay";
 
 const StartScreen: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -72,6 +73,12 @@ const StartScreen: React.FC = () => {
           <div className="circle"></div>
           <div className="line"></div>
         </div>
+
+        {/* Tank Wireframe Display */}
+        <div className="tank-wireframe-container">
+          <TankWireframeDisplay height={isMobile ? "75px" : "200px"} />
+        </div>
+
         <button className="start-button" onClick={handleStartGame}>
           DEPLOY UNIT
         </button>
