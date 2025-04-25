@@ -146,23 +146,36 @@ const EnemyRespawnManager = () => {
 const FollowCamera = memo(() => {
   const { camera } = useThree();
   const getState = useRef(useGameState.getState).current;
-  const offsetRef = useRef(new Vector3(0, 8, -12));
+  // Initialize the camera offset to match initial camera position in the Canvas (in front of the tank)
+  const offsetRef = useRef(new Vector3(0, 8, 12));
   const targetPositionRef = useRef(new Vector3());
+  const initialPositionSetRef = useRef(false);
 
   useFrame(() => {
     const playerPosition = getState().playerTankPosition;
     const cameraRange = getState().playerCameraRange;
 
     if (playerPosition) {
-      const distanceBehind = -cameraRange;
-      offsetRef.current.x = -Math.sin(camera.rotation.y) * distanceBehind;
-      offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
-      offsetRef.current.z = -Math.cos(camera.rotation.y) * distanceBehind;
+      // Set positive distance for camera to stay in front of the tank
+      const distanceInFront = cameraRange;
+
+      // Only track rotation changes after initial position is established
+      if (initialPositionSetRef.current) {
+        offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
+        offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
+        offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
+      } else {
+        // On first frame, maintain the initial position without applying rotation
+        initialPositionSetRef.current = true;
+      }
+
       targetPositionRef.current.set(
         playerPosition[0] + offsetRef.current.x,
         playerPosition[1] + offsetRef.current.y,
         playerPosition[2] + offsetRef.current.z
       );
+
+      // Use a slower lerp for smoother camera movement
       camera.position.lerp(targetPositionRef.current, 0.05);
       camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
     }
@@ -418,7 +431,7 @@ const GameScene = () => {
         style={{ width: "100vw", height: "100vh" }}>
         <Canvas
           shadows
-          camera={{ position: [0, 8, -12], fov: 60 }}
+          camera={{ position: [0, 8, 12], fov: 60 }}
           style={{ width: "100vw", height: "100vh" }}
           onCreated={() => debug.log("Canvas created")}>
           <color attach="background" args={[skyColor]} />
