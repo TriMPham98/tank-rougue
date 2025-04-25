@@ -86,7 +86,7 @@ button:focus-visible {
   }
 
   body:not(.tablet-device)::before {
-    content: "ALERT: ROTATE DEVICE TO LANDSCAPE MODE FOR OPTIMAL DISPLAY";
+    content: "ROTATE DEVICE TO LANDSCAPE MODE FOR OPTIMAL DISPLAY";
     position: fixed;
     top: 50%;
     left: 50%;
