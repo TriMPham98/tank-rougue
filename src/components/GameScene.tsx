@@ -190,7 +190,7 @@ const FollowCamera = memo(() => {
     return () => unsubscribe();
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((delta) => {
     const playerPosition = getState().playerTankPosition;
     const cameraRange = getState().playerCameraRange;
     const isGameStarted = getState().isGameStarted;
@@ -344,7 +344,7 @@ const IntroSpotlight = () => {
     return () => unsubscribe();
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     const isGameStarted = getState().isGameStarted;
 
     if (isGameStarted && !isIntroDone) {
@@ -475,7 +475,6 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 const TerrainObstacleGenerator = () => {
   const addTerrainObstacle = useGameState((state) => state.addTerrainObstacle);
   const isGameOver = useGameState((state) => state.isGameOver);
-  const isGameStarted = useGameState((state) => state.isGameStarted);
   const [isTerrainReady, setIsTerrainReady] = useState(false);
   const terrainGeneratedRef = useRef(false);
 
