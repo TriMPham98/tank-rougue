@@ -223,12 +223,16 @@
 }
 
 .start-screen.mobile .start-screen-content {
-  padding: 20px 15px; /* Reduce overall padding */
+  padding: 10px 15px; /* Further reduced padding to show top/bottom borders */
   width: 95%; /* Take up more width */
 }
 
 .start-screen.mobile .title-decoration {
   margin: 5px 0 15px; /* Reduce spacing around decoration */
+}
+
+.start-screen.mobile .game-description {
+  margin: 5px 0 10px; /* Reduced bottom margin to bring button closer */
 }
 
 .start-screen.mobile .game-description p {
@@ -239,7 +243,7 @@
 .start-screen.mobile .start-button {
   font-size: 1.1rem;
   padding: 12px 25px;
-  margin: 5px 0; /* Reduced margin to decrease space between title and button */
+  margin: 5px 0; /* Already reduced in previous change */
 }
 
 .start-screen.mobile .controls-info {
@@ -248,14 +252,14 @@
 }
 
 .start-screen.mobile .tank-wireframe-container {
-  margin: 5px auto 10px; /* Reduce margins around tank */
+  margin: 5px auto; /* Simplified margin to reduce vertical space */
   width: 20%; /* Adjust width for mobile */
 }
 
 /* Mobile portrait specific adjustments */
 @media (max-width: 480px) and (orientation: portrait) {
   .start-screen.mobile .start-screen-content {
-    padding: 15px 10px;
+    padding: 10px 10px; /* Further reduce padding for portrait */
   }
 
   .start-screen.mobile .tank-wireframe-container {
@@ -396,7 +400,7 @@
 @media (max-width: 768px) {
   .tank-wireframe-container {
     width: 50%;
-    margin: 10px auto 15px;
+    margin: 5px auto 15px; /* Adjusted to match mobile */
   }
 
   /* Additional space optimizations for small screens */
