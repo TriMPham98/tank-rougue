@@ -190,7 +190,7 @@ const FollowCamera = memo(() => {
     return () => unsubscribe();
   }, []);
 
-  useFrame((delta) => {
+  useFrame((_, delta) => {
     const playerPosition = getState().playerTankPosition;
     const cameraRange = getState().playerCameraRange;
     const isGameStarted = getState().isGameStarted;
