@@ -503,7 +503,7 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               </Box>
               <Box
                 args={[0.2, 0.1, 0.1]}
-                position={[0, 0.4, isTank ? 0.4 : 0.5]}
+                position={[0, isTank ? 0.4 : 0.41, isTank ? 0.4 : 0.5]} // Increased y-position for blue turret to fix z-flickering
                 castShadow
                 onClick={() => handleHit(25)}>
                 <meshStandardMaterial color="black" />
