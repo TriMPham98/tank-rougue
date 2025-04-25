@@ -296,7 +296,7 @@ const MobileJoysticks = () => {
       // Important: Keep the last turret rotation but stop firing
       setInput({
         isFiring: false,
-        // Don't modify turretRotation
+        turretRotation: null, // Set to null to allow keyboard controls to take over
       });
     }
   };

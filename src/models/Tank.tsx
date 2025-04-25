@@ -247,6 +247,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
           turretRotationRef.current += Math.PI * 2;
         while (turretRotationRef.current >= Math.PI * 2)
           turretRotationRef.current -= Math.PI * 2;
+      } else if (keyTurretLeft || keyTurretRight) {
+        while (turretRotationRef.current < 0)
+          turretRotationRef.current += Math.PI * 2;
+        while (turretRotationRef.current >= Math.PI * 2)
+          turretRotationRef.current -= Math.PI * 2;
       }
 
       turretRef.current.rotation.y = turretRotationRef.current;
