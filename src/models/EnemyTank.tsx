@@ -59,6 +59,11 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
       const tankPosition = new Vector3(newX, 0, newZ);
       const terrainObstacles = getState().terrainObstacles;
 
+      // If there are no terrain obstacles, don't block movement
+      if (terrainObstacles.length === 0) {
+        return false;
+      }
+
       for (const obstacle of terrainObstacles) {
         if (obstacle.type === "rock") {
           const obstaclePos = new Vector3(
@@ -69,7 +74,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           const distance = obstaclePos.distanceTo(tankPosition);
           const obstacleRadius = obstacle.size * 0.75;
 
-          if (distance < tankRadius + obstacleRadius) {
+          // Small safety margin added to prevent getting too close
+          const safetyMargin = 0.1;
+
+          if (distance < tankRadius + obstacleRadius + safetyMargin) {
             return true;
           }
         }

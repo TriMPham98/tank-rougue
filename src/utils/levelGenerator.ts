@@ -306,11 +306,40 @@ export const generatePowerUps = (): Omit<PowerUp, "id">[] => {
 
 // Generate a complete level
 export const generateLevel = () => {
-  const { spawnEnemy } = useGameState.getState();
+  const { spawnEnemy, terrainObstacles } = useGameState.getState();
+
+  // Check if terrain obstacles have been generated yet
+  if (terrainObstacles.length === 0) {
+    debug.warn(
+      "generateLevel: No terrain obstacles found. Enemy spawning may be less reliable."
+    );
+  }
+
   const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
   const powerUps: Omit<PowerUp, "id">[] = [];
 
-  enemies.forEach((enemy) => spawnEnemy(enemy));
+  enemies.forEach((enemy) => {
+    // Additional check to ensure enemy position is valid
+    const position = enemy.position;
+    let isValid = true;
+
+    // Check for collision with terrain obstacles
+    if (terrainObstacles.length > 0) {
+      isValid = isPositionClear(position[0], position[2], terrainObstacles, 3);
+    }
+
+    // If position is not valid, try to find a better one
+    if (!isValid) {
+      const newPosition = generateRandomPosition(70, [position], 5, 500);
+      enemy.position = newPosition;
+      debug.log("Adjusted enemy spawn position due to terrain collision", {
+        original: position,
+        new: newPosition,
+      });
+    }
+
+    spawnEnemy(enemy);
+  });
 
   return { enemies, powerUps };
 };

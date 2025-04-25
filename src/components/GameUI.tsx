@@ -442,8 +442,11 @@ const GameUI = () => {
   const handleRestartGame = useCallback(() => {
     restartGame();
     try {
-      // Generate a new level
-      generateLevel();
+      // Add delay to ensure terrain obstacles are generated first
+      setTimeout(() => {
+        // Generate a new level
+        generateLevel();
+      }, 500); // 500ms delay gives time for terrain to initialize
     } catch (error) {
       console.error("Error generating level:", error);
     }
