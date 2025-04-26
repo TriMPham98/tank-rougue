@@ -317,7 +317,11 @@ const SpotlightUpdater = () => {
       intensity={spotlightIntensity}
       distance={spotlightDistance}
       castShadow
-      shadow-bias={-0.001}
+      shadow-bias={-0.0005}
+      shadow-mapSize-width={4096}
+      shadow-mapSize-height={4096}
+      shadow-radius={2}
+      shadow-blurSamples={25}
     />
   );
 };
@@ -438,13 +442,14 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
         position={[10, 20, 10]}
         intensity={directionalIntensity}
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={50}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        shadow-mapSize-width={4096}
+        shadow-mapSize-height={4096}
+        shadow-camera-far={100}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+        shadow-bias={-0.0005}
       />
       <SpotlightUpdater />
       <IntroSpotlight />
