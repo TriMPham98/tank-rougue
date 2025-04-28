@@ -45,6 +45,7 @@ const TankWireframe: React.FC = () => {
     antennaTop: new Vector3(0.4, 35, -0.4),
     sight: new Vector3(0, 20, 0.5),
     dome: new Vector3(0, 30, 0.2),
+    turretConnector: new Vector3(0, 28, 0), // Start position for the connector
   };
 
   // Define the target positions (final positions)
@@ -72,6 +73,7 @@ const TankWireframe: React.FC = () => {
     antennaTop: new Vector3(0.4, 1.0, -0.4),
     sight: new Vector3(0, 0.4, 0.5),
     dome: new Vector3(0, 0.6, 0.2),
+    turretConnector: new Vector3(0, 0.4, 0), // Target position below the turret group
   };
 
   // Animation timing for each part (when they start moving, between 0 and 1)
@@ -90,6 +92,7 @@ const TankWireframe: React.FC = () => {
     leftTrackTop: 0.28,
     rightTrackTop: 0.28,
     rollers: 0.32,
+    turretConnector: 0.43, // Start slightly before the turret base
     turretBase: 0.45,
     turretTop: 0.5,
     cannon: 0.55,
@@ -289,7 +292,14 @@ const TankWireframe: React.FC = () => {
         </Cylinder>
       ))}
 
-      {/* Tank Turret */}
+      {/* Turret Connecting Cylinder */}
+      <Cylinder
+        args={[0.6, 0.6, 0.2, 12]} // Slightly smaller than turret base
+        position={getPosition("turretConnector", animationProgress).toArray()}>
+        <meshBasicMaterial color="#00FF00" wireframe={true} />
+      </Cylinder>
+
+      {/* Tank Turret Group */}
       <group position={[0, 0.5, 0]} ref={turretRef}>
         <Cylinder
           args={[0.7, 0.8, 0.5, 12]}

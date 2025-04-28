@@ -533,6 +533,16 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         ))}
         <group position={[0, 0.5, 0]} ref={turretRef}>
           <Cylinder
+            args={[0.6, 0.6, 0.2, 20]}
+            position={[0, 0.1, 0]}
+            castShadow>
+            <meshStandardMaterial
+              color="darkolivegreen"
+              metalness={0.4}
+              roughness={0.6}
+            />
+          </Cylinder>
+          <Cylinder
             args={[0.7, 0.8, 0.5, 20]}
             position={[0, 0.25, 0]}
             castShadow>

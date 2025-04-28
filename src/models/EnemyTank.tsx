@@ -505,6 +505,16 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
               <meshStandardMaterial color={isTank ? "red" : "darkblue"} />
             </Box>
             <group position={[0, 0.5, 0]} ref={turretRef}>
+              {/* Turret Connecting Cylinder */}
+              <Cylinder
+                args={isTank ? [0.5, 0.5, 0.15, 16] : [0.6, 0.6, 0.2, 16]}
+                position={[0, isTank ? 0.075 : 0.1, 0]}
+                castShadow
+                onClick={() => handleHit(25)}>
+                <meshStandardMaterial
+                  color={isTank ? "darkred" : "royalblue"}
+                />
+              </Cylinder>
               <Cylinder
                 args={isTank ? [0.6, 0.7, 0.4, 16] : [0.7, 0.8, 0.5, 16]}
                 position={[0, 0.2, 0]}
