@@ -460,8 +460,8 @@ export const useGameState = create<GameState>((set, get) => ({
       const linearHealthScale = 9; // From levelGenerator.ts
       const tankHealth = tankBaseHealth + newLevel * linearHealthScale;
 
-      // Set turret damage to be ~70% of tank health - enough to kill in 2 shots without upgrades
-      const baseTurretDamage = Math.floor(tankHealth * 0.7);
+      // Set turret damage to be ~85% of tank health - enough to kill in 2 shots without upgrades
+      const baseTurretDamage = Math.floor(tankHealth * 0.85);
 
       // We don't automatically increase damage with level - player must choose upgrades
       // Just set initial value if it's level 1
