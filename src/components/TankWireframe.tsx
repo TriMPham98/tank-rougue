@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Group, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
