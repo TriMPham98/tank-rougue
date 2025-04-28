@@ -220,13 +220,13 @@ export const generateEnemies = (
       turretCount < maxTurrets
     ) {
       type = "turret";
-      const turretBaseHealth = 50;
+      const turretBaseHealth = 75;
       const linearScale = level * 9;
       health = turretBaseHealth + linearScale;
       turretCount++;
     } else {
       type = "tank";
-      const tankBaseHealth = 75;
+      const tankBaseHealth = 50;
       const linearScale = level * 9;
       health = tankBaseHealth + linearScale;
       speed = 1.3;
