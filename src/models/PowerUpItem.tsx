@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Box, Sphere } from "@react-three/drei";
-import { Mesh, Vector3, MeshStandardMaterial } from "three";
+import { Vector3, MeshStandardMaterial, Group } from "three";
 import { PowerUp, useGameState } from "../utils/gameState";
 
 interface PowerUpItemProps {
@@ -9,7 +9,7 @@ interface PowerUpItemProps {
 }
 
 const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
-  const powerUpRef = useRef<Mesh>(null);
+  const powerUpRef = useRef<Group>(null);
   const rotationRef = useRef(0);
   const materialRef = useRef<MeshStandardMaterial>(null);
   const lifeTimeRef = useRef(0);
