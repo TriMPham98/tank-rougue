@@ -100,7 +100,6 @@ const StartScreen: React.FC = () => {
         <button className="start-button" onClick={handleStartGame}>
           DEPLOY UNIT
         </button>
-        <div className="version-badge">v1.0.0</div>
       </div>
     </div>
   );
