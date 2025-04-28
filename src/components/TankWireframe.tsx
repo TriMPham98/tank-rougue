@@ -159,7 +159,7 @@ const TankWireframe: React.FC = () => {
   useFrame((_, delta) => {
     if (animState === AnimState.ASSEMBLING) {
       setAnimationProgress((prev) => {
-        const newProgress = prev + delta * 0.2; // Control speed of assembly
+        const newProgress = prev + delta * 0.1; // Control speed of assembly (halved from 0.2)
         if (newProgress >= 1) {
           // Assembly complete, start rotation
           setAnimState(AnimState.ROTATING);
@@ -170,7 +170,7 @@ const TankWireframe: React.FC = () => {
     } else if (animState === AnimState.ROTATING) {
       // Rotate the tank 360 degrees
       setRotationAngle((prev) => {
-        const newAngle = prev + delta * 0.2; // Match assembly animation speed
+        const newAngle = prev + delta * 0.1; // Match assembly animation speed (halved from 0.2)
         if (newAngle >= Math.PI * 2) {
           // Full rotation complete, pause before restarting
           setAnimState(AnimState.PAUSED);
