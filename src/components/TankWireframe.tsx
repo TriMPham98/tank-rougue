@@ -3,11 +3,19 @@ import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Group, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 
+// Animation states
+enum AnimState {
+  ASSEMBLING,
+  ROTATING,
+  PAUSED,
+}
+
 const TankWireframe: React.FC = () => {
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
-  const [assembling, setAssembling] = useState(true);
+  const [animState, setAnimState] = useState<AnimState>(AnimState.ASSEMBLING);
+  const [rotationAngle, setRotationAngle] = useState(0);
 
   // Define the starting positions for each piece (far away)
   const startingPositions = {
@@ -149,23 +157,41 @@ const TankWireframe: React.FC = () => {
 
   // Animation loop using useFrame
   useFrame((_, delta) => {
-    if (assembling) {
+    if (animState === AnimState.ASSEMBLING) {
       setAnimationProgress((prev) => {
         const newProgress = prev + delta * 0.2; // Control speed of assembly
         if (newProgress >= 1) {
-          // After assembly completes, wait a moment then start again
-          setTimeout(() => {
-            setAnimationProgress(0);
-          }, 2000);
+          // Assembly complete, start rotation
+          setAnimState(AnimState.ROTATING);
           return 1;
         }
         return newProgress;
+      });
+    } else if (animState === AnimState.ROTATING) {
+      // Rotate the tank 360 degrees
+      setRotationAngle((prev) => {
+        const newAngle = prev + delta * 0.2; // Match assembly animation speed
+        if (newAngle >= Math.PI * 2) {
+          // Full rotation complete, pause before restarting
+          setAnimState(AnimState.PAUSED);
+          setTimeout(() => {
+            setAnimationProgress(0);
+            setRotationAngle(0);
+            setAnimState(AnimState.ASSEMBLING);
+          }, 1000);
+          return Math.PI * 2;
+        }
+        return newAngle;
       });
     }
   });
 
   return (
-    <group ref={tankRef} position={[0, 0, 0]} scale={1.2}>
+    <group
+      ref={tankRef}
+      position={[0, 0, 0]}
+      scale={1.2}
+      rotation={[0, rotationAngle, 0]}>
       {/* Tank Body */}
       <Box
         args={[1.8, 0.6, 2.2]}
