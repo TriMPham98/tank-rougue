@@ -294,13 +294,15 @@ const TankWireframe: React.FC = () => {
 
       {/* Turret Connecting Cylinder */}
       <Cylinder
-        args={[0.6, 0.6, 0.2, 12]} // Slightly smaller than turret base
+        args={[0.6, 0.6, 0.15, 12]} // Reduced height from 0.2 to 0.15
         position={getPosition("turretConnector", animationProgress).toArray()}>
         <meshBasicMaterial color="#00FF00" wireframe={true} />
       </Cylinder>
 
       {/* Tank Turret Group */}
-      <group position={[0, 0.5, 0]} ref={turretRef}>
+      <group position={[0, 0.475, 0]} ref={turretRef}>
+        {" "}
+        // Lowered y-position from 0.5 to 0.475
         <Cylinder
           args={[0.7, 0.8, 0.5, 12]}
           position={getPosition("turretBase", animationProgress).toArray()}>
