@@ -10,6 +10,9 @@ enum AnimState {
   PAUSED,
 }
 
+// Easing function (ease-out cubic)
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
 const TankWireframe: React.FC = () => {
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
@@ -125,12 +128,13 @@ const TankWireframe: React.FC = () => {
     // If part is fully assembled, return end position
     if (progress > partStartTime + 0.2) return end;
 
-    // Otherwise, calculate interpolated position
+    // Otherwise, calculate interpolated position with easing
     const partProgress = (progress - partStartTime) / 0.2;
+    const easedProgress = easeOutCubic(partProgress);
     return new Vector3(
-      start.x + (end.x - start.x) * partProgress,
-      start.y + (end.y - start.y) * partProgress,
-      start.z + (end.z - start.z) * partProgress
+      start.x + (end.x - start.x) * easedProgress,
+      start.y + (end.y - start.y) * easedProgress,
+      start.z + (end.z - start.z) * easedProgress
     );
   };
 
@@ -148,10 +152,11 @@ const TankWireframe: React.FC = () => {
     if (progress > rollerStartTime + 0.15) return end;
 
     const partProgress = (progress - rollerStartTime) / 0.15;
+    const easedProgress = easeOutCubic(partProgress); // Apply easing
     return new Vector3(
-      start.x + (end.x - start.x) * partProgress,
-      start.y + (end.y - start.y) * partProgress,
-      start.z + (end.z - start.z) * partProgress
+      start.x + (end.x - start.x) * easedProgress,
+      start.y + (end.y - start.y) * easedProgress,
+      start.z + (end.z - start.z) * easedProgress
     );
   };
 
