@@ -6,6 +6,12 @@ const AudioUnlock = () => {
   const sound = useSound();
 
   useEffect(() => {
+    // If SoundManager already handled the unlock, we don't need to do anything
+    if (sound.isAudioUnlocked()) {
+      setUnlocked(true);
+      return;
+    }
+
     const handleUserInteraction = () => {
       if (unlocked) return;
 

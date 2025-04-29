@@ -39,19 +39,8 @@ class SoundManager {
           console.warn("Could not unlock audio automatically:", error);
         });
 
-      // Also try to unlock all registered sounds
-      this.sounds.forEach((sound) => {
-        sound.load();
-        sound
-          .play()
-          .then(() => {
-            sound.pause();
-            sound.currentTime = 0;
-          })
-          .catch(() => {
-            // Ignore errors, this is just an attempt
-          });
-      });
+      // Don't try to play all sounds at once as this can cause them to load simultaneously
+      // Just unlock the audio context with a single operation
     };
 
     // Listen for various user interaction events to unlock audio
@@ -160,6 +149,10 @@ class SoundManager {
       sound.loop = false;
     }
   }
+
+  public isAudioUnlocked(): boolean {
+    return this.audioUnlocked;
+  }
 }
 
 // Hook for components to access the sound manager
@@ -174,6 +167,7 @@ export const useSound = () => {
     playLoop: (id: string, volume = 1) =>
       soundManager.current.playLoop(id, volume),
     stopLoop: (id: string) => soundManager.current.stopLoop(id),
+    isAudioUnlocked: () => soundManager.current.isAudioUnlocked(),
   };
 };
 
