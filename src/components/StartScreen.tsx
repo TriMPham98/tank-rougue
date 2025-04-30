@@ -78,6 +78,11 @@ const StartScreen: React.FC = () => {
 
   return (
     <div className={`start-screen military-theme ${isMobile ? "mobile" : ""}`}>
+      {/* Tank wireframe as background */}
+      <div className="tank-wireframe-background">
+        <TankWireframeDisplay width="100%" height="100%" isBackground={true} />
+      </div>
+
       <div className="start-screen-content">
         <h1 className="game-title">ROGUE TANK ROYALE</h1>
         <h2 className="game-subtitle">
@@ -90,11 +95,6 @@ const StartScreen: React.FC = () => {
           <div className="line"></div>
           <div className="circle"></div>
           <div className="line"></div>
-        </div>
-
-        {/* Tank Wireframe Display */}
-        <div className="tank-wireframe-container">
-          <TankWireframeDisplay height={isMobile ? "60px" : "200px"} />
         </div>
 
         <button className="start-button" onClick={handleStartGame}>

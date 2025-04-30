@@ -33,7 +33,7 @@
 }
 
 .start-screen-content {
-  background-color: rgba(30, 35, 30, 0.8);
+  background-color: rgba(30, 35, 30, 0.85);
   border: 2px solid #2f7c2f;
   border-radius: 5px;
   padding: 40px 50px;
@@ -45,7 +45,7 @@
   flex-direction: column;
   align-items: center;
   position: relative;
-  z-index: 3; /* Ensure it's above the overlay */
+  z-index: 3; /* Ensure it's above the background */
   animation: fadeIn 0.8s ease-out;
 }
 
@@ -364,4 +364,17 @@
   .start-screen-content {
     padding: 30px 25px;
   }
+}
+
+/* Add the following styles for the tank wireframe background */
+
+.tank-wireframe-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Above base screen, below content */
+  opacity: 0.4; /* Make it subtle */
+  pointer-events: none; /* Allow clicking through to buttons */
 }
