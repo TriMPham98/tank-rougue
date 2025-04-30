@@ -204,72 +204,137 @@ const TankWireframe: React.FC = () => {
       <Box
         args={[1.8, 0.6, 2.2]}
         position={getPosition("body", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[1.2, 0.4, 0.5]}
         position={getPosition("frontPart", animationProgress).toArray()}
         rotation={[Math.PI / 6, 0, 0]}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.5, 0.1, 0.3]}
         position={getPosition("leftDetail", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.5, 0.1, 0.3]}
         position={getPosition("rightDetail", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.8, 0.1, 0.25]}
         position={getPosition("rearDetail", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
 
       {/* Lights (front and back) */}
       <Box
         args={[0.15, 0.1, 0.05]}
         position={getPosition("frontLeftLight", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.15, 0.1, 0.05]}
         position={getPosition("frontRightLight", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.15, 0.1, 0.05]}
         position={getPosition("rearLeftLight", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.15, 0.1, 0.05]}
         position={getPosition("rearRightLight", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
 
       {/* Tank Tracks */}
       <Box
         args={[0.4, 0.25, 2.4]}
         position={getPosition("leftTrack", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.4, 0.25, 2.4]}
         position={getPosition("rightTrack", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.2, 0.1, 2.2]}
         position={getPosition("leftTrackTop", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
       <Box
         args={[0.2, 0.1, 2.2]}
         position={getPosition("rightTrackTop", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Box>
 
       {/* Tank Rollers */}
@@ -279,7 +344,12 @@ const TankWireframe: React.FC = () => {
           args={[0.12, 0.12, 0.1, 6]}
           position={getRollerPosition(true, i, animationProgress).toArray()}
           rotation={[0, 0, Math.PI / 2]}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
       ))}
       {[...Array(6)].map((_, i) => (
@@ -288,7 +358,12 @@ const TankWireframe: React.FC = () => {
           args={[0.12, 0.12, 0.1, 6]}
           position={getRollerPosition(false, i, animationProgress).toArray()}
           rotation={[0, 0, Math.PI / 2]}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
       ))}
 
@@ -296,7 +371,12 @@ const TankWireframe: React.FC = () => {
       <Cylinder
         args={[0.6, 0.6, 0.15, 12]} // Reduced height from 0.2 to 0.15
         position={getPosition("turretConnector", animationProgress).toArray()}>
-        <meshBasicMaterial color="#00FF00" wireframe={true} />
+        <meshBasicMaterial
+          color="#00FF00"
+          wireframe={true}
+          opacity={0.8}
+          transparent={true}
+        />
       </Cylinder>
 
       {/* Tank Turret Group */}
@@ -306,54 +386,104 @@ const TankWireframe: React.FC = () => {
         <Cylinder
           args={[0.7, 0.8, 0.5, 12]}
           position={getPosition("turretBase", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
         <Cylinder
           args={[0.35, 0.35, 0.15, 8]}
           position={getPosition("turretTop", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
         <Cylinder
           args={[0.12, 0.12, 1.8, 8]}
           position={getPosition("cannon", animationProgress).toArray()}
           rotation={[Math.PI / 2, 0, 0]}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
         <Cylinder
           args={[0.18, 0.18, 0.3, 8]}
           position={getPosition("cannonTip", animationProgress).toArray()}
           rotation={[Math.PI / 2, 0, 0]}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
         <Box
           args={[0.25, 0.35, 1]}
           position={getPosition("leftArmor", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Box>
         <Box
           args={[0.25, 0.35, 1]}
           position={getPosition("rightArmor", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Box>
         <Cylinder
           args={[0.05, 0.05, 0.2, 6]}
           position={getPosition("antenna", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
         <Cylinder
           args={[0.02, 0.02, 1.0, 6]}
           position={getPosition("antennaTop", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Cylinder>
         <Box
           args={[0.25, 0.15, 0.15]}
           position={getPosition("sight", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Box>
         <Sphere
           args={[0.15, 8, 8]}
           position={getPosition("dome", animationProgress).toArray()}>
-          <meshBasicMaterial color="#00FF00" wireframe={true} />
+          <meshBasicMaterial
+            color="#00FF00"
+            wireframe={true}
+            opacity={0.8}
+            transparent={true}
+          />
         </Sphere>
       </group>
     </group>
