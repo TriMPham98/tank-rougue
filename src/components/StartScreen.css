@@ -179,7 +179,7 @@
 /* Mobile adjustments */
 .start-screen.mobile .game-title {
   font-size: 2.2rem;
-  margin: 10px 0 10px; /* Add top and bottom margin */
+  margin: 5px 0 8px; /* Moderate margin values */
 }
 
 .start-screen.mobile .game-subtitle {
@@ -189,10 +189,10 @@
 }
 
 .start-screen.mobile .start-screen-content {
-  padding: 20px 15px; /* Increased padding from 10px to 20px vertical */
-  width: 95%; /* Take up more width */
-  min-height: 250px; /* Add minimum height to maintain container size */
-  justify-content: space-between; /* Better spacing of elements */
+  padding: 15px 15px; /* Moderate padding between original 10px and edited 20px */
+  width: 95%; /* Keep the width */
+  min-height: 220px; /* Slightly reduced min-height for a more compact look */
+  justify-content: center; /* Center content vertically */
 }
 
 .start-screen.mobile .title-decoration {
@@ -211,7 +211,7 @@
 .start-screen.mobile .start-button {
   font-size: 1.1rem;
   padding: 12px 25px;
-  margin: 15px 0 10px; /* Increase margin to help fill space */
+  margin: 10px 0 8px; /* Moderate margin between original 5px and edited 15px */
 }
 
 .start-screen.mobile .controls-info {
@@ -227,13 +227,13 @@
 /* Mobile portrait specific adjustments */
 @media (max-width: 480px) and (orientation: portrait) {
   .start-screen.mobile .start-screen-content {
-    padding: 20px 15px; /* Increase padding from 10px to 20px */
-    min-height: 220px; /* Slightly smaller min-height for smallest screens */
+    padding: 15px 12px; /* Moderate padding */
+    min-height: 200px; /* More compact for smallest screens */
   }
-  
+
   .start-screen.mobile .game-title {
     font-size: 1.8rem;
-    margin: 5px 0 5px;
+    margin: 3px 0 5px; /* Smaller margins for portrait */
   }
 
   .start-screen.mobile .version-badge {
