@@ -315,31 +315,48 @@ export const generateLevel = () => {
     );
   }
 
-  const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
-  const powerUps: Omit<PowerUp, "id">[] = [];
+  // Use requestAnimationFrame to ensure this work is scheduled
+  // with lower priority than the wireframe animation
+  const startGenerationTime = performance.now();
+  requestAnimationFrame(() => {
+    const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
+    const powerUps: Omit<PowerUp, "id">[] = [];
 
-  enemies.forEach((enemy) => {
-    // Additional check to ensure enemy position is valid
-    const position = enemy.position;
-    let isValid = true;
+    enemies.forEach((enemy) => {
+      // Additional check to ensure enemy position is valid
+      const position = enemy.position;
+      let isValid = true;
 
-    // Check for collision with terrain obstacles
-    if (terrainObstacles.length > 0) {
-      isValid = isPositionClear(position[0], position[2], terrainObstacles, 3);
-    }
+      // Check for collision with terrain obstacles
+      if (terrainObstacles.length > 0) {
+        isValid = isPositionClear(
+          position[0],
+          position[2],
+          terrainObstacles,
+          3
+        );
+      }
 
-    // If position is not valid, try to find a better one
-    if (!isValid) {
-      const newPosition = generateRandomPosition(70, [position], 5, 500);
-      enemy.position = newPosition;
-      debug.log("Adjusted enemy spawn position due to terrain collision", {
-        original: position,
-        new: newPosition,
-      });
-    }
+      // If position is not valid, try to find a better one
+      if (!isValid) {
+        const newPosition = generateRandomPosition(70, [position], 5, 500);
+        enemy.position = newPosition;
+        debug.log("Adjusted enemy spawn position due to terrain collision", {
+          original: position,
+          new: newPosition,
+        });
+      }
 
-    spawnEnemy(enemy);
+      spawnEnemy(enemy);
+    });
+
+    const generationTime = performance.now() - startGenerationTime;
+    debug.log(
+      `Level generation completed in ${generationTime.toFixed(2)}ms with ${
+        enemies.length
+      } enemies`
+    );
   });
 
-  return { enemies, powerUps };
+  return { enemies: [], powerUps: [] }; // Return empty arrays immediately, actual content will be added to state asynchronously
 };

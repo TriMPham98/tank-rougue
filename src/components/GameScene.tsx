@@ -550,89 +550,95 @@ const TerrainObstacleGenerator = () => {
     if (terrainGeneratedRef.current && !isGameOver) return;
 
     debug.log("TerrainObstacleGenerator: Starting obstacle generation");
-    try {
-      const obstacleCount = 20;
-      const spawnClearanceRadius = 15;
-      let totalAttempts = 0;
-      const maxAttempts = 500;
-      const generatedObstacles: Array<{
-        // Define local array type
-        id: string;
-        position: [number, number, number];
-        type: "rock";
-        size: number;
-      }> = [];
 
-      while (
-        generatedObstacles.length < obstacleCount && // Check generated length
-        totalAttempts < maxAttempts
-      ) {
-        totalAttempts++;
-        let x = (Math.random() - 0.5) * 75;
-        let z = (Math.random() - 0.5) * 75;
-        const distanceFromSpawn = Math.sqrt(x * x + z * z);
-        if (distanceFromSpawn < spawnClearanceRadius) {
-          const angle = Math.atan2(z, x);
-          x = Math.cos(angle) * spawnClearanceRadius;
-          z = Math.sin(angle) * spawnClearanceRadius;
-          // debug.log("Adjusted obstacle position away from spawn area", { x, z }); // Less noisy log
-        }
-        const size = 1 + Math.random() * 1.2;
-        // Check against the locally generated obstacles in this run
-        let isTooClose = false;
-        const minObstacleSpacing = 8;
+    // Use requestAnimationFrame to defer heavy computation
+    // This allows the wireframe animation to run smoothly while terrain is being generated
+    const startGenerationTime = performance.now();
+    requestAnimationFrame(() => {
+      try {
+        const obstacleCount = 20;
+        const spawnClearanceRadius = 15;
+        let totalAttempts = 0;
+        const maxAttempts = 500;
+        const generatedObstacles: Array<{
+          // Define local array type
+          id: string;
+          position: [number, number, number];
+          type: "rock";
+          size: number;
+        }> = [];
 
-        for (const existing of generatedObstacles) {
-          const dx = existing.position[0] - x;
-          const dz = existing.position[2] - z;
-          const distance = Math.sqrt(dx * dx + dz * dz);
-          const requiredSpace =
-            (existing.size + size) * 1.2 + minObstacleSpacing;
+        while (
+          generatedObstacles.length < obstacleCount && // Check generated length
+          totalAttempts < maxAttempts
+        ) {
+          totalAttempts++;
+          let x = (Math.random() - 0.5) * 75;
+          let z = (Math.random() - 0.5) * 75;
+          const distanceFromSpawn = Math.sqrt(x * x + z * z);
+          if (distanceFromSpawn < spawnClearanceRadius) {
+            const angle = Math.atan2(z, x);
+            x = Math.cos(angle) * spawnClearanceRadius;
+            z = Math.sin(angle) * spawnClearanceRadius;
+          }
+          const size = 1 + Math.random() * 1.2;
+          // Check against the locally generated obstacles in this run
+          let isTooClose = false;
+          const minObstacleSpacing = 8;
 
-          if (distance < requiredSpace) {
-            isTooClose = true;
-            break;
+          for (const existing of generatedObstacles) {
+            const dx = existing.position[0] - x;
+            const dz = existing.position[2] - z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            const requiredSpace =
+              (existing.size + size) * 1.2 + minObstacleSpacing;
+
+            if (distance < requiredSpace) {
+              isTooClose = true;
+              break;
+            }
+          }
+
+          if (!isTooClose) {
+            const newObstacle = {
+              id: `rock-${generatedObstacles.length}-${Date.now()}`,
+              position: [x, 0, z] as [number, number, number],
+              type: "rock" as const, // Ensure type safety
+              size,
+            };
+            // Add to local array first
+            generatedObstacles.push(newObstacle);
           }
         }
 
-        if (!isTooClose) {
-          const newObstacle = {
-            id: `rock-${generatedObstacles.length}-${Date.now()}`,
-            position: [x, 0, z] as [number, number, number],
-            type: "rock" as const, // Ensure type safety
-            size,
-          };
-          // Add to local array first
-          generatedObstacles.push(newObstacle);
-          // debug.log( // Only log final counts
-          //   `TerrainObstacleGenerator: Adding obstacle ${generatedObstacles.length}/${obstacleCount}`,
-          //   newObstacle
-          // );
-        }
+        const generationTime = performance.now() - startGenerationTime;
+        debug.log(
+          `TerrainObstacleGenerator: Generated ${
+            generatedObstacles.length
+          } obstacles in ${generationTime.toFixed(
+            2
+          )}ms after ${totalAttempts} attempts`
+        );
+
+        // Set the entire array in the state at once
+        setTerrainObstacles(generatedObstacles);
+        // THEN set the ready flag
+        useGameState.setState({ isTerrainReady: true });
+
+        // Mark generation as complete for this instance
+        terrainGeneratedRef.current = true;
+        setIsTerrainReadyInternal(true); // Update internal state for rendering logic
+
+        debug.log(
+          "TerrainObstacleGenerator: Set obstacles and isTerrainReady flag."
+        );
+      } catch (error) {
+        debug.error(
+          "TerrainObstacleGenerator: Failed to generate obstacles:",
+          error
+        );
       }
-
-      debug.log(
-        `TerrainObstacleGenerator: Generated ${generatedObstacles.length} obstacles locally after ${totalAttempts} attempts`
-      );
-
-      // Set the entire array in the state at once
-      setTerrainObstacles(generatedObstacles);
-      // THEN set the ready flag
-      useGameState.setState({ isTerrainReady: true });
-
-      // Mark generation as complete for this instance
-      terrainGeneratedRef.current = true;
-      setIsTerrainReadyInternal(true); // Update internal state for rendering logic
-
-      debug.log(
-        "TerrainObstacleGenerator: Set obstacles and isTerrainReady flag."
-      );
-    } catch (error) {
-      debug.error(
-        "TerrainObstacleGenerator: Failed to generate obstacles:",
-        error
-      );
-    }
+    });
     // Update dependencies: only need setTerrainObstacles and isGameOver
   }, [setTerrainObstacles, isGameOver]);
 
@@ -647,11 +653,9 @@ const TerrainObstacleGenerator = () => {
 
   // Use internal state for the component's own readiness logic
   if (!isTerrainReadyInternal) {
-    // debug.log("TerrainObstacleGenerator: Not ready internally, showing loading indicator");
     return null; // Return null instead of placeholder to avoid visual artifacts
   }
 
-  // debug.log("TerrainObstacleGenerator: Ready internally");
   return null;
 };
 

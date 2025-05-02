@@ -111,6 +111,12 @@ const StartScreen: React.FC = () => {
 
     // Setup game state immediately
     restartGame();
+
+    // Generate level concurrently with animation
+    // This will trigger terrain and enemy generation while the tank assembles
+    console.log(
+      "handleStartGame: Generating level concurrently with animation"
+    );
     generateLevel();
   };
 
