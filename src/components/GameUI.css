@@ -1391,6 +1391,77 @@
   margin-bottom: 10px;
 }
 
+/* Mobile Pause Button */
+.military-theme .mobile-pause-button {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(30, 35, 30, 0.75);
+  border: 2px solid #2f7c2f;
+  border-radius: 8px;
+  color: #5fdc5f;
+  width: 60px;
+  height: 60px;
+  font-family: "Courier New", monospace;
+  font-size: 1.8rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 0 15px rgba(95, 220, 95, 0.3);
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  position: relative;
+  animation: pulse-button 3s infinite ease-in-out;
+}
+
+.military-theme .mobile-pause-button .pause-icon {
+  letter-spacing: -3px;
+  line-height: 1;
+  position: relative;
+  top: -2px;
+}
+
+.military-theme .mobile-pause-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(60, 180, 60, 0.03) 50%,
+    rgba(0, 0, 0, 0) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  animation: scanlines 2s linear infinite;
+  z-index: 2;
+}
+
+.military-theme .mobile-pause-button:hover,
+.military-theme .mobile-pause-button:active {
+  background-color: rgba(47, 124, 47, 0.2);
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.5);
+}
+
+@keyframes pulse-button {
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(95, 220, 95, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(95, 220, 95, 0.5);
+  }
+}
+
 /* Pause Specific Styles */
 .pause-overlay .overlay-content {
   border-color: var(--color-rank-medium);
@@ -1426,4 +1497,75 @@
 
 .ui-button:active {
   transform: translateY(0);
+}
+
+/* Mobile-specific adjustments */
+.game-ui.military-theme.mobile .combat-zone-warning {
+  bottom: 180px;
+  width: 80%;
+  max-width: 300px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+}
+
+.game-ui.military-theme.mobile .combat-score {
+  min-width: 0;
+  flex: 1;
+  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-ui.military-theme.mobile .hull-integrity {
+  min-width: 80px;
+  flex: 1;
+}
+
+.game-ui.military-theme.mobile .rank-progression {
+  min-width: 100px;
+  flex: 1;
+}
+
+.game-ui.military-theme.mobile .mobile-pause-button {
+  bottom: 25px;
+  width: 60px;
+  height: 60px;
+  font-size: 1.8rem;
+}
+
+/* Ensure the enhancement grid is responsive for all screen sizes */
+@media (max-width: 480px) {
+  .game-ui.military-theme.mobile .enhancement-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .game-ui.military-theme.mobile .mobile-pause-button {
+    bottom: 15px;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .game-ui.military-theme.mobile .enhancement-card {
+    padding: 10px 6px;
+  }
+}
+
+@media (max-width: 350px) {
+  .game-ui.military-theme.mobile .enhancement-options {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .game-ui.military-theme.mobile .mobile-pause-button {
+    bottom: 10px;
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
 }

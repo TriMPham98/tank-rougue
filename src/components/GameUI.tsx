@@ -776,6 +776,18 @@ const GameUI = () => {
           )}
         </div>
       )}
+      {isMobile &&
+        !isGameOver &&
+        !isPaused &&
+        !showEnhancementUI &&
+        !showWeaponSelection && (
+          <button
+            className="mobile-pause-button"
+            onClick={togglePause}
+            aria-label="Pause Game">
+            <span className="pause-icon">||</span>
+          </button>
+        )}
     </div>
   );
 };
