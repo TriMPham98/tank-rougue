@@ -11,8 +11,6 @@ export enum AnimState {
   ROTATING, // Looping rotation
   PAUSED, // Looping pause
   ASSEMBLING_ONCE, // DEPRECATED (Assemble once and then stop)
-
-  // New states for transition animation
   ASSEMBLING_TRANSITION,
   ROTATING_TRANSITION,
   PAUSED_TRANSITION,
@@ -42,7 +40,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     setAnimState(animationMode);
     setAnimationProgress(0);
     setRotationAngle(0);
-    // If starting in a non-animating state, ensure progress is 1
     if (
       animationMode === AnimState.IDLE ||
       animationMode === AnimState.PAUSED
@@ -58,11 +55,10 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
         clearTimeout(restartLoopTimeoutRef.current);
       }
     };
-  }, []); // Run only on mount/unmount
+  }, []);
 
   // Cleanup timeout if animState changes away from PAUSED
   useEffect(() => {
-    // Clear timeout if state changes away from either PAUSED or PAUSED_TRANSITION
     if (
       animState !== AnimState.PAUSED &&
       animState !== AnimState.PAUSED_TRANSITION &&
@@ -98,7 +94,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     antennaTop: new Vector3(0.4, 35, -0.4),
     sight: new Vector3(0, 20, 0.5),
     dome: new Vector3(0, 30, 0.2),
-    turretConnector: new Vector3(0, 28, 0), // Start position for the connector
+    turretConnector: new Vector3(0, 28, 0),
   };
 
   // Define the target positions (final positions)
@@ -126,7 +122,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     antennaTop: new Vector3(0.4, 1.0, -0.4),
     sight: new Vector3(0, 0.4, 0.5),
     dome: new Vector3(0, 0.6, 0.2),
-    turretConnector: new Vector3(0, 0.4, 0), // Target position below the turret group
+    turretConnector: new Vector3(0, 0.4, 0),
   };
 
   // Animation timing for each part (when they start moving, between 0 and 1)
@@ -145,7 +141,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     leftTrackTop: 0.28,
     rightTrackTop: 0.28,
     rollers: 0.32,
-    turretConnector: 0.43, // Start slightly before the turret base
+    turretConnector: 0.43,
     turretBase: 0.45,
     turretTop: 0.5,
     cannon: 0.55,
@@ -162,7 +158,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
   const rollerPositionsLeft = [...Array(6)].map((_, i) => ({
     start: new Vector3(-30, -0.3, -0.8 + i * 0.36),
     end: new Vector3(-0.8, -0.3, -0.8 + i * 0.36),
-    delay: i * 0.01, // Slight delay between each roller
+    delay: i * 0.01,
   }));
 
   const rollerPositionsRight = [...Array(6)].map((_, i) => ({
@@ -173,7 +169,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
   // Calculate position based on animation progress
   const getPosition = (partName: string, progress: number) => {
-    // Special handling for IDLE state - always return end position
     if (animState === AnimState.IDLE) {
       return targetPositions[partName as keyof typeof targetPositions];
     }
@@ -183,13 +178,9 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     const partStartTime =
       animationStarts[partName as keyof typeof animationStarts];
 
-    // If animation hasn't reached this part yet, return start position
     if (progress < partStartTime) return start;
-
-    // If part is fully assembled, return end position
     if (progress > partStartTime + 0.2) return end;
 
-    // Otherwise, calculate interpolated position with easing
     const partProgress = (progress - partStartTime) / 0.2;
     const easedProgress = easeOutCubic(partProgress);
     return new Vector3(
@@ -205,7 +196,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     index: number,
     progress: number
   ) => {
-    // Special handling for IDLE state - always return end position
     if (animState === AnimState.IDLE) {
       const positions = isLeft ? rollerPositionsLeft : rollerPositionsRight;
       return positions[index].end;
@@ -219,7 +209,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     if (progress > rollerStartTime + 0.15) return end;
 
     const partProgress = (progress - rollerStartTime) / 0.15;
-    const easedProgress = easeOutCubic(partProgress); // Apply easing
+    const easedProgress = easeOutCubic(partProgress);
     return new Vector3(
       start.x + (end.x - start.x) * easedProgress,
       start.y + (end.y - start.y) * easedProgress,
@@ -229,109 +219,95 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
   // Animation loop using useFrame
   useFrame((_, delta) => {
-    const assemblySpeed = 0.25; // Reverted speed
-    const rotationSpeed = 0.25; // Reverted speed
+    const assemblySpeed = 0.25;
+    const rotationSpeed = 0.25;
 
-    // Handle ASSEMBLING_LOOP state (original behavior)
     if (animState === AnimState.ASSEMBLING_LOOP) {
       setAnimationProgress((prev) => {
         const newProgress = prev + delta * assemblySpeed;
         if (newProgress >= 1) {
-          setAnimState(AnimState.ROTATING); // Transition to rotating
+          setAnimState(AnimState.ROTATING);
           return 1;
         }
         return newProgress;
       });
-    }
-    // Handle ASSEMBLING_ONCE state - DEPRECATED but kept for reference
-    else if (animState === AnimState.ASSEMBLING_ONCE) {
+    } else if (animState === AnimState.ASSEMBLING_ONCE) {
       setAnimationProgress((prev) => {
         const newProgress = prev + delta * assemblySpeed;
         if (newProgress >= 1) {
-          setAnimState(AnimState.IDLE); // Transition to IDLE
-          onAnimationComplete?.(AnimState.IDLE); // Notify parent
+          setAnimState(AnimState.IDLE);
+          onAnimationComplete?.(AnimState.IDLE);
           return 1;
         }
         return newProgress;
       });
-    }
-    // Handle ROTATING state (part of the loop)
-    else if (animState === AnimState.ROTATING) {
+    } else if (animState === AnimState.ROTATING) {
       setRotationAngle((prev) => {
         const newAngle = prev + delta * rotationSpeed;
-        const targetRotation = Math.PI * 2; // Full 360 degrees rotation
+        const targetRotation = Math.PI * 2;
         if (newAngle >= targetRotation) {
-          setAnimState(AnimState.PAUSED); // Pause after full rotation
-          // Clear any previous timeout just in case
+          setAnimState(AnimState.PAUSED);
           if (restartLoopTimeoutRef.current) {
             clearTimeout(restartLoopTimeoutRef.current);
           }
           restartLoopTimeoutRef.current = setTimeout(() => {
-            // Only restart if we are still in the PAUSED state
             setAnimState((currentState) => {
               if (currentState === AnimState.PAUSED) {
                 setAnimationProgress(0);
-                // Don't reset rotation angle here for the loop
-                return AnimState.ASSEMBLING_LOOP; // Restart the loop
+                return AnimState.ASSEMBLING_LOOP;
               }
-              return currentState; // Remain in the current state if it changed
+              return currentState;
             });
-          }, 1000); // 1 second pause for loop
-          return targetRotation % (Math.PI * 2); // Reset angle smoothly if overshot
+          }, 1000);
+          return targetRotation % (Math.PI * 2);
         }
         return newAngle;
       });
-    }
-    // Handle ASSEMBLING_TRANSITION state
-    else if (animState === AnimState.ASSEMBLING_TRANSITION) {
+    } else if (animState === AnimState.ASSEMBLING_TRANSITION) {
       setAnimationProgress((prev) => {
         const newProgress = prev + delta * assemblySpeed;
         if (newProgress >= 1) {
-          onAnimationComplete?.(AnimState.IDLE); // Notify parent immediately
-          useGameState.setState({ isWireframeAssembled: true }); // Set flag on completion
-          setAnimState(AnimState.IDLE); // Go straight to IDLE
+          onAnimationComplete?.(AnimState.IDLE);
+          useGameState.setState({ isWireframeAssembled: true });
+          setAnimState(AnimState.IDLE);
           return 1;
         }
         return newProgress;
       });
-    }
-    // Handle ROTATING_TRANSITION state
-    else if (animState === AnimState.ROTATING_TRANSITION) {
+    } else if (animState === AnimState.ROTATING_TRANSITION) {
       setRotationAngle((prev) => {
         const newAngle = prev + delta * rotationSpeed;
-        const targetRotation = Math.PI * 2; // Full 360 degrees rotation
+        const targetRotation = Math.PI * 2;
         if (newAngle >= targetRotation) {
-          setAnimState(AnimState.PAUSED_TRANSITION); // Transition to transition pause
-          // Clear previous timeout just in case
+          setAnimState(AnimState.PAUSED_TRANSITION);
           if (restartLoopTimeoutRef.current) {
             clearTimeout(restartLoopTimeoutRef.current);
           }
-          const transitionPauseDuration = 500; // Define here if needed only for this block
+          const transitionPauseDuration = 500;
           restartLoopTimeoutRef.current = setTimeout(() => {
-            // This timeout only serves to transition to IDLE and notify parent
-            onAnimationComplete?.(AnimState.IDLE); // Notify parent FIRST
-            setAnimState(AnimState.IDLE); // THEN set state
-            // Don't set isWireframeAssembled here, as ROTATING_TRANSITION implies it was already assembled
-            setRotationAngle(0); // Reset rotation after transition complete
+            onAnimationComplete?.(AnimState.IDLE);
+            setAnimState(AnimState.IDLE);
+            setRotationAngle(0);
           }, transitionPauseDuration);
-          return targetRotation % (Math.PI * 2); // Reset angle smoothly if overshot
+          return targetRotation % (Math.PI * 2);
         }
         return newAngle;
       });
     }
-    // PAUSED, IDLE, PAUSED_TRANSITION states do nothing active in the loop
   });
 
   // Determine current positions based on progress or IDLE state
   const currentProgress = animState === AnimState.IDLE ? 1 : animationProgress;
-  // Keep rotation for ROTATING_TRANSITION and PAUSED_TRANSITION
   const currentRotation = animState === AnimState.IDLE ? 0 : rotationAngle;
+
+  // Dynamic scale: 1.0 for IDLE, 1.5 for animation states
+  const tankScale = animState === AnimState.IDLE ? 1.0 : 1.5;
 
   return (
     <group
       ref={tankRef}
       position={[0, 0, 0]}
-      scale={1.3} // Reverted scale
+      scale={tankScale}
       rotation={[0, currentRotation, 0]}>
       {/* Tank Body */}
       <Box
@@ -502,7 +478,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
       {/* Turret Connecting Cylinder */}
       <Cylinder
-        args={[0.6, 0.6, 0.15, 12]} // Reduced height from 0.2 to 0.15
+        args={[0.6, 0.6, 0.15, 12]}
         position={getPosition("turretConnector", currentProgress).toArray()}>
         <meshBasicMaterial
           color="#00FF00"
@@ -514,8 +490,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
       {/* Tank Turret Group */}
       <group position={[0, 0.475, 0]} ref={turretRef}>
-        {" "}
-        // Lowered y-position from 0.5 to 0.475
         <Cylinder
           args={[0.7, 0.8, 0.5, 12]}
           position={getPosition("turretBase", currentProgress).toArray()}>

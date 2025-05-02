@@ -8,7 +8,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000; /* Higher than game UI */
+  z-index: 2000;
   font-family: var(--font-primary);
   color: var(--color-text-primary);
   overflow: hidden;
@@ -34,16 +34,16 @@
 
 .start-screen-content {
   position: relative;
-  z-index: 2; /* Ensure content is above background */
+  z-index: 2;
   text-align: center;
   padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-height: 100vh; /* Prevent exceeding viewport height */
-  overflow-y: auto; /* Allow scrolling if needed */
-  transition: opacity 0.5s ease-out; /* Add transition for smooth fade */
+  max-height: 100vh;
+  overflow-y: auto;
+  transition: opacity 0.5s ease-out;
   background-color: rgba(30, 35, 30, 0.85);
   border: 2px solid #2f7c2f;
   border-radius: 5px;
@@ -51,13 +51,12 @@
   width: 90%;
   box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
   animation: fadeIn 0.8s ease-out;
-  box-sizing: border-box; /* Include padding and border in height */
+  box-sizing: border-box;
 }
 
-/* Style for fading out the content */
 .start-screen-content.fading-out {
   opacity: 0;
-  pointer-events: none; /* Prevent interaction during fade */
+  pointer-events: none;
 }
 
 .game-title {
@@ -76,11 +75,10 @@
   margin: 10px 0 20px;
   letter-spacing: 3px;
   font-weight: normal;
-  min-height: 1.4rem; /* Prevent layout shift during typing */
-  white-space: pre; /* Ensure spaces are preserved */
+  min-height: 1.4rem;
+  white-space: pre;
 }
 
-/* Optional: Style for the blinking cursor */
 .typing-cursor {
   animation: blink 0.7s infinite;
   margin-left: 2px;
@@ -131,14 +129,9 @@
 }
 
 .start-button {
-  background-color: rgba(
-    30,
-    35,
-    30,
-    0.8
-  ); /* Darker background to match the theme */
+  background-color: rgba(30, 35, 30, 0.8);
   color: #5fdc5f;
-  border: 2px solid #2f7c2f; /* Darker green border */
+  border: 2px solid #2f7c2f;
   border-radius: 4px;
   padding: 15px 35px;
   cursor: pointer;
@@ -148,11 +141,11 @@
   font-size: 1.3rem;
   font-weight: bold;
   text-transform: uppercase;
-  box-shadow: 0 0 10px rgba(95, 220, 95, 0.3); /* Softer green glow */
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   margin: 15px 0;
   position: relative;
-  z-index: 20; /* Increased z-index */
+  z-index: 20;
   opacity: 1;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -160,15 +153,10 @@
 }
 
 .start-button:hover {
-  background-color: rgba(
-    95,
-    220,
-    95,
-    0.2
-  ); /* Light green background on hover */
-  border-color: #5fdc5f; /* Brighter green border on hover */
-  box-shadow: 0 0 20px rgba(95, 220, 95, 0.6); /* Stronger green glow */
-  text-shadow: 0 0 15px rgba(95, 220, 95, 0.8); /* Enhanced green text shadow */
+  background-color: rgba(95, 220, 95, 0.2);
+  border-color: #5fdc5f;
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.6);
+  text-shadow: 0 0 15px rgba(95, 220, 95, 0.8);
   transform: translateY(-2px);
   opacity: 1;
 }
@@ -190,61 +178,61 @@
 /* Mobile adjustments */
 .start-screen.mobile .game-title {
   font-size: 2.2rem;
-  margin: 5px 0 8px; /* Moderate margin values */
+  margin: 5px 0 8px;
 }
 
 .start-screen.mobile .game-subtitle {
   font-size: 1rem;
-  min-height: 1rem; /* Adjust for mobile */
-  margin: 5px 0 10px; /* Reduce margins */
+  min-height: 1rem;
+  margin: 5px 0 10px;
 }
 
 .start-screen.mobile .start-screen-content {
-  padding: 15px 15px; /* Moderate padding between original 10px and edited 20px */
-  width: 95%; /* Keep the width */
-  min-height: 220px; /* Slightly reduced min-height for a more compact look */
-  justify-content: center; /* Center content vertically */
+  padding: 15px 15px;
+  width: 95%;
+  min-height: 220px;
+  justify-content: center;
 }
 
 .start-screen.mobile .title-decoration {
-  margin: 5px 0 15px; /* Reduce spacing around decoration */
+  margin: 5px 0 15px;
 }
 
 .start-screen.mobile .game-description {
-  margin: 5px 0 10px; /* Reduced bottom margin to bring button closer */
+  margin: 5px 0 10px;
 }
 
 .start-screen.mobile .game-description p {
   font-size: 0.9rem;
-  margin: 5px 0; /* Reduce margins between paragraphs */
+  margin: 5px 0;
 }
 
 .start-screen.mobile .start-button {
   font-size: 1.1rem;
   padding: 12px 25px;
-  margin: 10px 0 8px; /* Moderate margin between original 5px and edited 15px */
+  margin: 10px 0 8px;
 }
 
 .start-screen.mobile .controls-info {
   font-size: 0.8rem;
-  margin-top: 15px; /* Reduce margin */
+  margin-top: 15px;
 }
 
 .start-screen.mobile .tank-wireframe-container {
-  margin: 5px auto; /* Simplified margin to reduce vertical space */
-  width: 20%; /* Adjust width for mobile */
+  margin: 5px auto;
+  width: 20%;
 }
 
 /* Mobile portrait specific adjustments */
 @media (max-width: 480px) and (orientation: portrait) {
   .start-screen.mobile .start-screen-content {
-    padding: 15px 12px; /* Moderate padding */
-    min-height: 200px; /* More compact for smallest screens */
+    padding: 15px 12px;
+    min-height: 200px;
   }
 
   .start-screen.mobile .game-title {
     font-size: 1.8rem;
-    margin: 3px 0 5px; /* Smaller margins for portrait */
+    margin: 3px 0 5px;
   }
 
   .start-screen.mobile .version-badge {
@@ -324,7 +312,6 @@
   }
 }
 
-/* Optional: Blinking cursor animation */
 @keyframes blink {
   0%,
   100% {
@@ -335,7 +322,6 @@
   }
 }
 
-/* Ensure the button is always visible */
 .start-screen-content .start-button {
   visibility: visible !important;
   opacity: 1 !important;
@@ -368,16 +354,13 @@
 @media (max-width: 768px) {
   .tank-wireframe-container {
     width: 50%;
-    margin: 5px auto 15px; /* Adjusted to match mobile */
+    margin: 5px auto 15px;
   }
 
-  /* Additional space optimizations for small screens */
   .start-screen-content {
     padding: 30px 25px;
   }
 }
-
-/* Add the following styles for the tank wireframe background */
 
 .tank-wireframe-background {
   position: absolute;
@@ -385,23 +368,23 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1; /* Above base screen, below content */
-  opacity: 1; /* Increased from 0.4 to make it more visible */
-  pointer-events: none; /* Allow clicking through to buttons */
+  z-index: 1;
+  opacity: 1;
+  pointer-events: none;
 }
 
 /* Loading text styling */
 .loading-text {
   position: absolute;
-  bottom: 20%; /* Moved lower from 25% to match larger wireframe */
+  bottom: 15%; /* Adjusted from 20% to compensate for larger tank */
   left: 50%;
   transform: translateX(-50%);
-  color: #a0d0a0; /* Use a suitable color from the theme */
-  font-family: "Courier New", monospace; /* Match theme */
-  font-size: 1.5rem; /* Increased from 1.2rem to match larger wireframe */
+  color: #a0d0a0;
+  font-family: "Courier New", monospace;
+  font-size: 1.5rem;
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
-  z-index: 5; /* Ensure it's above the wireframe but below content */
-  opacity: 0; /* Start hidden */
+  z-index: 5;
+  opacity: 0;
   animation: fadeInOut 1.5s ease-in-out infinite;
 }
 
@@ -417,6 +400,6 @@
 
 /* Adjust position for mobile */
 .start-screen.mobile .loading-text {
-  bottom: 15%; /* Moved lower from 20% to match larger wireframe on mobile */
-  font-size: 1.2rem; /* Increased from 1rem to match larger wireframe on mobile */
+  bottom: 10%; /* Adjusted from 15% to compensate for larger tank on mobile */
+  font-size: 1.2rem;
 }
