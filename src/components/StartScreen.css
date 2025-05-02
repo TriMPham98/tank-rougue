@@ -389,3 +389,34 @@
   opacity: 1; /* Increased from 0.4 to make it more visible */
   pointer-events: none; /* Allow clicking through to buttons */
 }
+
+/* Loading text styling */
+.loading-text {
+  position: absolute;
+  bottom: 25%; /* Adjusted position */
+  left: 50%;
+  transform: translateX(-50%);
+  color: #a0d0a0; /* Use a suitable color from the theme */
+  font-family: "Courier New", monospace; /* Match theme */
+  font-size: 1.2rem;
+  text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
+  z-index: 5; /* Ensure it's above the wireframe but below content */
+  opacity: 0; /* Start hidden */
+  animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Adjust position for mobile */
+.start-screen.mobile .loading-text {
+  bottom: 20%;
+  font-size: 1rem;
+}

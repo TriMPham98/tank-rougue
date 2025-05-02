@@ -180,6 +180,10 @@ const StartScreen: React.FC = () => {
           DEPLOY UNIT
         </button>
       </div>
+      {/* Conditionally render Loading text during fade/assembly */}
+      {transitionStep === "fading" && (
+        <div className="loading-text">Loading...</div>
+      )}
     </div>
   );
 };
