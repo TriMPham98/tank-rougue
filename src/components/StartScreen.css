@@ -33,20 +33,29 @@
 }
 
 .start-screen-content {
-  background-color: rgba(30, 35, 30, 0.85);
-  border: 2px solid #2f7c2f;
-  border-radius: 5px;
-  padding: 40px 50px;
-  max-width: 700px;
-  width: 90%;
+  position: relative;
+  z-index: 2; /* Ensure content is above background */
   text-align: center;
-  box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
-  z-index: 3; /* Ensure it's above the background */
+  justify-content: center;
+  height: 100%;
+  transition: opacity 0.5s ease-out; /* Add transition for smooth fade */
+  background-color: rgba(30, 35, 30, 0.85);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
   animation: fadeIn 0.8s ease-out;
+}
+
+/* Style for fading out the content */
+.start-screen-content.fading-out {
+  opacity: 0;
+  pointer-events: none; /* Prevent interaction during fade */
 }
 
 .game-title {

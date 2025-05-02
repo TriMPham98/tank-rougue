@@ -1,18 +1,22 @@
 import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import TankWireframe from "./TankWireframe";
+import TankWireframe, { AnimState } from "./TankWireframe";
 
 interface TankWireframeDisplayProps {
   width?: string;
   height?: string;
   isBackground?: boolean;
+  animationMode?: AnimState;
+  onAnimationComplete?: (finalState: AnimState) => void;
 }
 
 const TankWireframeDisplay: React.FC<TankWireframeDisplayProps> = ({
   width = "100%",
   height = "300px",
   isBackground = false,
+  animationMode,
+  onAnimationComplete,
 }) => {
   return (
     <div style={{ width, height }}>
@@ -31,7 +35,10 @@ const TankWireframeDisplay: React.FC<TankWireframeDisplayProps> = ({
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
         <group position={[0, -0.7, 0]}>
-          <TankWireframe />
+          <TankWireframe
+            animationMode={animationMode}
+            onAnimationComplete={onAnimationComplete}
+          />
         </group>
         <OrbitControls
           enableZoom={false}

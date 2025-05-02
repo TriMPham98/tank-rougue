@@ -310,7 +310,6 @@ export const useGameState = create<GameState>((set, get) => ({
       powerUps: [],
       isGameOver: false,
       isPaused: false,
-      isGameStarted: true, // Keep it started after restart
       enemiesDefeated: 0,
       enemiesRequiredForNextLevel: 1,
       showUpgradeUI: false,
