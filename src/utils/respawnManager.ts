@@ -6,6 +6,33 @@ import * as THREE from "three"; // Import THREE for Vector2
 
 const SPAWN_STATS_DEBUG = false;
 
+// Helper function to keep entities within map boundaries (copied from gameState.ts)
+const enforceMapBoundaries = (
+  position: [number, number, number]
+): [number, number, number] => {
+  const mapSize = 100; // Ground plane size
+  const halfMapSize = mapSize / 2;
+  const buffer = 2; // Buffer from edge
+
+  const constrainedPosition: [number, number, number] = [...position];
+
+  // Constrain X position
+  if (constrainedPosition[0] < -halfMapSize + buffer) {
+    constrainedPosition[0] = -halfMapSize + buffer;
+  } else if (constrainedPosition[0] > halfMapSize - buffer) {
+    constrainedPosition[0] = halfMapSize - buffer;
+  }
+
+  // Constrain Z position
+  if (constrainedPosition[2] < -halfMapSize + buffer) {
+    constrainedPosition[2] = -halfMapSize + buffer;
+  } else if (constrainedPosition[2] > halfMapSize - buffer) {
+    constrainedPosition[2] = halfMapSize - buffer;
+  }
+
+  return constrainedPosition;
+};
+
 const BASE_ENEMIES = 1;
 const getMaxEnemies = (level: number) => {
   if (level === 1) return 1;
@@ -50,7 +77,7 @@ export const useRespawnManager = () => {
         enemies, // Get current enemies list
       } = freshState;
 
-      let position: [number, number, number];
+      let position: [number, number, number] = [0, 0.5, 0]; // Initialize with default values
       let type: "tank" | "turret" | "bomber";
       let health: number;
       let speed: number = 1;
@@ -106,6 +133,9 @@ export const useRespawnManager = () => {
             400
           );
 
+          // Apply map boundaries right after generating random position
+          position = enforceMapBoundaries(position);
+
           // Extra validation for distance from terrain obstacles (already in generateRandomPosition, but good failsafe)
           let isClear = true;
           for (const obstacle of terrainObstacles) {
@@ -153,6 +183,9 @@ export const useRespawnManager = () => {
                   0.5,
                   safeZoneCenter[1] + Math.sin(angle) * radiusOffset,
                 ];
+                // Apply map boundaries to the fallback position
+                position = enforceMapBoundaries(position);
+
                 // Basic check for fallback position
                 let fallbackClear = true;
                 for (const obstacle of terrainObstacles) {
@@ -165,6 +198,8 @@ export const useRespawnManager = () => {
                 }
                 if (!fallbackClear) {
                   position = [safeZoneCenter[0], 0.5, safeZoneCenter[1]];
+                  // Apply map boundaries to the center position as well
+                  position = enforceMapBoundaries(position);
                   debug.warn(
                     `Fallback ${type} RESPAWN position also obstructed. Placing AT center.`
                   );
@@ -187,13 +222,25 @@ export const useRespawnManager = () => {
           finalState.enemies.length < maxEnemies &&
           positionFound // Ensure a valid position was actually found/assigned
         ) {
-          freshState.spawnEnemy({
-            // @ts-ignore - position will be assigned
-            position,
+          // Ensure position is properly initialized and typecast appropriately
+          const finalPosition: [number, number, number] = [
+            position[0],
+            position[1],
+            position[2],
+          ];
+
+          // Apply map boundaries to ensure the position is constrained before spawning
+          const constrainedPosition = enforceMapBoundaries(finalPosition);
+
+          // Create the complete enemy object before spawning to ensure no recalculation
+          const enemyToSpawn = {
+            position: constrainedPosition,
             health,
             type,
             speed,
-          });
+          };
+
+          freshState.spawnEnemy(enemyToSpawn);
 
           enemiesSpawnedThisRoundRef.current++;
           if (SPAWN_STATS_DEBUG) {
