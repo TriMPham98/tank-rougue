@@ -1401,8 +1401,8 @@
   border: 2px solid #2f7c2f;
   border-radius: 8px;
   color: #5fdc5f;
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   font-family: "Courier New", monospace;
   font-size: 1.8rem;
   font-weight: bold;
@@ -1416,7 +1416,6 @@
   pointer-events: auto;
   transition: all 0.2s ease;
   overflow: hidden;
-  position: relative;
   animation: pulse-button 3s infinite ease-in-out;
 }
 
@@ -1529,10 +1528,7 @@
 }
 
 .game-ui.military-theme.mobile .mobile-pause-button {
-  bottom: 25px;
-  width: 60px;
-  height: 60px;
-  font-size: 1.8rem;
+  bottom: 20px; /* Consistent position for mobile */
 }
 
 /* Ensure the enhancement grid is responsive for all screen sizes */
@@ -1545,8 +1541,8 @@
 
   .game-ui.military-theme.mobile .mobile-pause-button {
     bottom: 15px;
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     font-size: 1.5rem;
   }
 
@@ -1564,8 +1560,8 @@
 
   .game-ui.military-theme.mobile .mobile-pause-button {
     bottom: 10px;
-    width: 45px;
-    height: 45px;
+    width: 35px;
+    height: 35px;
     font-size: 1.3rem;
   }
 }

@@ -38,7 +38,7 @@ export const getStatDisplayName = (stat: UpgradeableStat): string => {
     case "bulletVelocity":
       return "Muzzle Velocity";
     case "penetration":
-      return "Shell Penetration";
+      return "Piercing Power";
   }
 };
 
