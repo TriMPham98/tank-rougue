@@ -1165,7 +1165,7 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(30, 35, 30, 0.75);
+  background-color: rgba(30, 35, 30, 0.25); /* Increased transparency */
   border: 2px solid #2f7c2f;
   border-radius: 8px;
   color: #5fdc5f;
@@ -1184,14 +1184,16 @@
   pointer-events: auto;
   transition: all 0.2s ease;
   overflow: hidden;
-  animation: pulse-button 3s infinite ease-in-out;
+  /* animation: pulse-button 3s infinite ease-in-out; */ /* Animation removed */
 }
 
 .military-theme .mobile-pause-button .pause-icon {
-  letter-spacing: -3px;
   line-height: 1;
   position: relative;
-  top: -2px;
+  top: 0; /* Removed the -2px offset to center vertically */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .military-theme .mobile-pause-button::before {
@@ -1214,19 +1216,9 @@
 
 .military-theme .mobile-pause-button:hover,
 .military-theme .mobile-pause-button:active {
-  background-color: rgba(47, 124, 47, 0.2);
+  background-color: rgba(47, 124, 47, 0.3); /* Increased transparency */
   transform: translateX(-50%) scale(1.05);
   box-shadow: 0 0 20px rgba(95, 220, 95, 0.5);
-}
-
-@keyframes pulse-button {
-  0%,
-  100% {
-    box-shadow: 0 0 15px rgba(95, 220, 95, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(95, 220, 95, 0.5);
-  }
 }
 
 /* Pause Specific Styles */
