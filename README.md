@@ -18,29 +18,18 @@ A roguelike tank game built with React and Three.js where you control a tank in 
 ## Controls
 
 - **W/A/S/D** - Move the tank forward, left, backward, right
-- **Q/E** - Rotate the turret left/right
-- **Space** - Shoot
+- **J/K** - Rotate the turret left/right
 - **ESC** - Pause game
 
 ## Power-ups
 
 - **Red (Health)** - Restore health
-- **Blue (Speed)** - Increase movement speed
-- **Orange (Damage)** - Increase weapon damage
 
 ## Enemies
 
-- **Red Tanks** - Mobile enemies that chase the player
-- **Dark Red Turrets** - Stationary enemies that rotate to aim at the player
-
-## Recent Improvements
-
-- Fixed state management issues that caused performance problems
-- Implemented centralized player position tracking in the game state
-- Added proper enemy damage handling through the game state
-- Improved camera following mechanics
-- Enhanced lighting and shadows for better visuals
-- Fixed initialization of enemies and power-ups
+- **Red Tanks** - Standard enemies that chase the player
+- **Blue Turrets** - Stationary enemies that rotate to aim at the player
+- **Yellow Bombers** - Fast explosive enemies that explode on contact
 
 ## Architecture
 
