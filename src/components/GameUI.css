@@ -1169,10 +1169,10 @@
   border: 2px solid #2f7c2f;
   border-radius: 8px;
   color: #5fdc5f;
-  width: 40px;
-  height: 40px;
+  width: 30px; /* Reduced from 40px to 30px (75%) */
+  height: 30px; /* Reduced from 40px to 30px (75%) */
   font-family: "Courier New", monospace;
-  font-size: 1.8rem;
+  font-size: 1.35rem; /* Reduced from 1.8rem to 1.35rem (75%) */
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -1189,8 +1189,6 @@
 
 .military-theme .mobile-pause-button .pause-icon {
   line-height: 1;
-  position: relative;
-  top: 0; /* Removed the -2px offset to center vertically */
   display: flex;
   align-items: center;
   justify-content: center;
