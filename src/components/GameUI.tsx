@@ -7,6 +7,7 @@ import "./WeaponSelection.css";
 import { useSound } from "../utils/sound";
 import StatUpgradeUI from "./StatUpgradeUI";
 import { generateLevel } from "../utils/levelGenerator";
+import TacticalDisplay from "./TacticalDisplay";
 
 // Define BASE_TARGETS constant for enemy count calculation
 const BASE_TARGETS = 1;
@@ -381,15 +382,6 @@ const GameUI = () => {
     setShowMainMenuConfirm(false);
   };
 
-  // Format time as MM:SS
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
   useEffect(() => {
     let animationFrameId: number;
     if (
@@ -468,126 +460,6 @@ const GameUI = () => {
     }
   }, [restartGame]);
 
-  const renderTacticalDisplay = useCallback(() => {
-    const mapSize = 150;
-    const gameWorldSize = 100;
-    const scale = mapSize / gameWorldSize;
-
-    const playerXRaw = playerTankPosition
-      ? playerTankPosition[0] * scale + mapSize / 2
-      : mapSize / 2;
-    const playerYRaw = playerTankPosition
-      ? playerTankPosition[2] * scale + mapSize / 2
-      : mapSize / 2;
-    const playerX = Math.max(3, Math.min(mapSize - 3, playerXRaw));
-    const playerY = Math.max(3, Math.min(mapSize - 3, playerYRaw));
-
-    const zoneCenterX = combatZoneCenter[0] * scale + mapSize / 2;
-    const zoneCenterY = combatZoneCenter[1] * scale + mapSize / 2;
-    const zoneRadiusPixels = combatZoneRadius * scale;
-    const zoneTargetRadiusPixels = combatZoneTargetRadius * scale;
-
-    const zoneTier = Math.floor(rank / 5);
-    const isPreShiftRank = rank % 5 === 4 && rank >= 4;
-
-    const nextZoneRadius = Math.max(5, 50 - (zoneTier + 1) * 4);
-    const nextZoneRadiusPixels = nextZoneRadius * scale;
-
-    return (
-      <>
-        <div className="elapsed-time-display">{formatTime(elapsedTime)}</div>
-        <div className="tactical-display">
-          <div className="radar-bg">
-            <div className="grid-overlay"></div>
-            <div className="grid-sections"></div>
-          </div>
-
-          {combatZoneActive && (
-            <>
-              <div
-                className="zone-circle current-zone"
-                style={{
-                  left: `${zoneCenterX - zoneRadiusPixels}px`,
-                  top: `${zoneCenterY - zoneRadiusPixels}px`,
-                  width: `${zoneRadiusPixels * 2}px`,
-                  height: `${zoneRadiusPixels * 2}px`,
-                }}
-              />
-
-              {combatZoneTargetRadius < combatZoneRadius &&
-                combatZoneRadius - combatZoneTargetRadius > 0.1 && (
-                  <div
-                    className="zone-circle target-zone"
-                    style={{
-                      left: `${zoneCenterX - zoneTargetRadiusPixels}px`,
-                      top: `${zoneCenterY - zoneTargetRadiusPixels}px`,
-                      width: `${zoneTargetRadiusPixels * 2}px`,
-                      height: `${zoneTargetRadiusPixels * 2}px`,
-                    }}
-                  />
-                )}
-
-              {isPreShiftRank && (
-                <div
-                  className="zone-circle next-zone-preview"
-                  style={{
-                    left: `${zoneCenterX - nextZoneRadiusPixels}px`,
-                    top: `${zoneCenterY - nextZoneRadiusPixels}px`,
-                    width: `${nextZoneRadiusPixels * 2}px`,
-                    height: `${nextZoneRadiusPixels * 2}px`,
-                  }}
-                />
-              )}
-            </>
-          )}
-
-          {hostiles.map((hostile) => {
-            const hostileXRaw = hostile.position[0] * scale + mapSize / 2;
-            const hostileYRaw = hostile.position[2] * scale + mapSize / 2;
-            const hostileX = Math.max(2, Math.min(mapSize - 2, hostileXRaw));
-            const hostileY = Math.max(2, Math.min(mapSize - 2, hostileYRaw));
-
-            let hostileClass = "hostile-marker tank";
-            if (hostile.type === "turret")
-              hostileClass = "hostile-marker turret";
-            else if (hostile.type === "bomber")
-              hostileClass = "hostile-marker bomber";
-
-            return (
-              <div
-                key={`tacmap-hostile-${hostile.id}`}
-                className={hostileClass}
-                style={{
-                  left: `${hostileX}px`,
-                  top: `${hostileY}px`,
-                }}
-              />
-            );
-          })}
-
-          <div
-            className="player-marker"
-            style={{
-              left: `${playerX}px`,
-              top: `${playerY}px`,
-            }}
-          />
-        </div>
-      </>
-    );
-  }, [
-    playerTankPosition,
-    combatZoneRadius,
-    combatZoneCenter,
-    combatZoneActive,
-    hostiles,
-    combatZoneTargetRadius,
-    rank,
-    isPreContainmentShiftRank,
-    elapsedTime,
-    formatTime,
-  ]);
-
   return (
     <div
       className={`game-ui military-theme ${
@@ -608,7 +480,19 @@ const GameUI = () => {
           <div className="warning-icon">☢️</div>
         </div>
       )}
-      {!isGameOver && !isPaused && !isMobile && renderTacticalDisplay()}
+      {!isGameOver && !isPaused && !isMobile && (
+        <TacticalDisplay
+          playerTankPosition={playerTankPosition}
+          combatZoneRadius={combatZoneRadius}
+          combatZoneCenter={combatZoneCenter}
+          combatZoneActive={combatZoneActive}
+          hostiles={hostiles}
+          combatZoneTargetRadius={combatZoneTargetRadius}
+          rank={rank}
+          isPreContainmentShiftRank={isPreContainmentShiftRank}
+          elapsedTime={elapsedTime}
+        />
+      )}
       <div className="top-hud">
         <div className="hud-element hull-integrity">
           <div className="hud-label">HULL INTEGRITY</div>

@@ -1,0 +1,206 @@
+/* TacticalDisplay.css - Extracted from GameUI.css */
+
+:root {
+  --color-radar-background: rgba(10, 25, 10, 0.75);
+  --color-radar-lines: rgba(80, 180, 80, 0.3);
+  --color-radar-player: #4caf50; /* Bright Green */
+  --color-radar-hostile-tank: #ff6666; /* Red */
+  --color-radar-hostile-turret: #88aaff; /* Blue */
+  --color-radar-hostile-bomber: #ffd700; /* Gold */
+  --color-radar-text: #a0e0a0; /* Phosphor Green */
+  --color-border-light: rgba(180, 190, 180, 0.3);
+
+  /* Safe/Combat Zone */
+  --color-zone-current: rgba(60, 180, 220, 0.7); /* Cyan border */
+  --color-zone-current-bg: rgba(60, 180, 220, 0.15);
+  --color-zone-target: rgba(255, 100, 80, 0.8); /* Red/Orange dashed */
+  --color-zone-target-bg: rgba(255, 100, 80, 0.1);
+  --color-zone-preview: rgba(255, 165, 0, 0.9); /* Orange dashed */
+  --color-zone-preview-bg: rgba(255, 165, 0, 0.15);
+}
+
+/* --- Tactical Display / Minimap --- */
+.tactical-display {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 150px;
+  height: 150px;
+  background-color: rgba(30, 35, 30, 0.5);
+  border: 2px solid #2f7c2f;
+  border-radius: 5px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tactical-info {
+  display: none;
+}
+
+.radar-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      to right,
+      var(--color-radar-lines) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--color-radar-lines) 1px, transparent 1px);
+  background-size: calc(100% / 20) calc(100% / 20);
+  background-position: center center;
+  opacity: 0.4;
+}
+
+.grid-sections {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      to right,
+      var(--color-radar-sections, #2c5e1e) 2px,
+      transparent 2px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--color-radar-sections, #2c5e1e) 2px,
+      transparent 2px
+    );
+  background-size: calc(100% / 4) calc(100% / 4);
+  background-position: center center;
+  opacity: 0.9;
+}
+
+.zone-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.zone-circle.current-zone {
+  border: 2px solid var(--color-zone-current);
+  background-color: var(--color-zone-current-bg);
+}
+
+.zone-circle.target-zone {
+  border: 1px dashed var(--color-zone-target);
+  background-color: var(--color-zone-target-bg);
+}
+
+.zone-circle.next-zone-preview {
+  border: 2px dashed var(--color-zone-preview);
+  background-color: var(--color-zone-preview-bg);
+  animation: pulse-warning 2s infinite ease-in-out;
+}
+
+@keyframes pulse-warning {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.player-marker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--color-radar-player);
+  transform: translate(-50%, -50%);
+  z-index: 101;
+}
+
+.hostile-marker {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 102;
+}
+
+.hostile-marker.tank {
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-radar-hostile-tank);
+}
+
+.hostile-marker.turret {
+  width: 5px;
+  height: 5px;
+  background-color: var(--color-radar-hostile-turret);
+  border-radius: 0;
+}
+
+.hostile-marker.bomber {
+  width: 7px;
+  height: 7px;
+  background-color: var(--color-radar-hostile-bomber);
+  border-radius: 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.elapsed-time-display {
+  position: absolute;
+  bottom: 190px;
+  right: 20px;
+  width: 150px;
+  text-align: center;
+  font-family: "Courier New", monospace;
+  font-size: 1.2rem;
+  color: #a0d0a0;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
+  z-index: 102;
+  pointer-events: none;
+  background-color: rgba(20, 30, 20, 0.5);
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 2px solid #2f7c2f;
+}
+
+/* Mobile Class */
+.mobile .tactical-display {
+  bottom: 10px;
+  right: 10px;
+  width: 120px;
+  height: 120px;
+}
+
+.mobile .elapsed-time-display {
+  bottom: 150px;
+  right: 10px;
+  width: 120px;
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .tactical-display {
+    width: 100px;
+    height: 100px;
+  }
+
+  .elapsed-time-display {
+    bottom: 130px;
+    width: 100px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .tactical-display {
+    width: 80px;
+    height: 80px;
+  }
+
+  .elapsed-time-display {
+    bottom: 110px;
+    width: 80px;
+    font-size: 0.8rem;
+  }
+}
