@@ -235,11 +235,10 @@ const FollowCamera = memo(() => {
 
       // Prevent re-running the animation once it's completed
       if (animationStateRef.current.hasCompleted) {
-        // Camera will now smoothly follow using lerp below
-        // No need to manually set offset here anymore
-        // offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
-        // offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
-        // offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
+        // Update the camera offset based on current cameraRange when animation is completed
+        offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
+        offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
+        offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
       }
       // Intro camera pan animation - trigger when wireframe AND terrain are ready and animation hasn't completed
       else if (isWireframeAssembled && isTerrainReady && !isIntroPanComplete) {
