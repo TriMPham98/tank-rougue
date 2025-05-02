@@ -910,107 +910,7 @@
 }
 
 /* --- Weapon Selection --- */
-.military-theme .weapon-selection-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-background-overlay);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1001;
-  pointer-events: auto;
-  backdrop-filter: blur(4px);
-}
-
-.military-theme .weapon-selection-content {
-  background-color: var(--color-background-panel);
-  border: 1px solid var(--color-border-medium);
-  border-radius: 4px;
-  padding: 25px 30px;
-  max-width: 850px;
-  width: 90%;
-  color: var(--color-text-primary);
-}
-
-.military-theme .weapon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  margin-bottom: 25px;
-}
-
-.military-theme .weapon-card {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border-light);
-  border-radius: 3px;
-  padding: 15px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  pointer-events: all;
-}
-
-.military-theme .weapon-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: var(--color-border-medium);
-}
-
-.military-theme .weapon-card.selected {
-  border-color: var(--color-text-warning);
-  background-color: rgba(255, 204, 0, 0.1);
-}
-
-.military-theme .weapon-key {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background-color: var(--color-text-warning);
-  color: var(--color-background-main);
-  width: 22px;
-  height: 22px;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 0.9em;
-}
-
-.military-theme .weapon-card h3 {
-  margin: 0 0 8px 0;
-  margin-top: 20px;
-  color: var(--color-text-warning);
-  font-family: var(--font-primary);
-  font-size: 1.1em;
-}
-
-.military-theme .weapon-card p {
-  margin: 0 0 12px 0;
-  font-size: 0.8em;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
-}
-
-.military-theme .weapon-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  font-size: 0.75em;
-  color: var(--color-text-secondary);
-}
-
-.military-theme .weapon-stats div {
-  text-align: center;
-  padding: 3px;
-  background-color: var(--color-progress-background);
-  border-radius: 2px;
-  border: 1px solid var(--color-border-light);
-}
+/* Styles for weapon selection have been moved to WeaponSelection.css */
 
 /* Pause Menu Specific Styling */
 .military-theme .pause-overlay {
@@ -1472,31 +1372,7 @@
   transform: translateY(-2px);
 }
 
-/* Weapon Selection Modal */
-.weapon-selection-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  pointer-events: auto;
-}
-
-.weapon-selection-content {
-  background-color: rgba(30, 30, 30, 0.9);
-  padding: 30px 40px;
-  border-radius: 8px;
-  border: 2px solid var(--color-accent);
-  text-align: center;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-  color: var(--color-text-light);
-  max-width: 400px;
-}
+/* Weapon selection styles moved to WeaponSelection.css */
 
 /* Game Over Specific Styles */
 .game-over-overlay .overlay-content {

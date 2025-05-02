@@ -21,12 +21,15 @@
   background-color: rgba(30, 35, 30, 0.95);
   width: 95%;
   max-width: 1200px;
-  max-height: 90vh;
-  overflow-y: auto;
+  height: auto;
+  overflow: visible;
   color: #c2e8c5;
   pointer-events: auto;
   z-index: 1001;
   box-shadow: 0 0 25px rgba(0, 255, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
 }
 
 /* --- Tactical Panel Base --- */
@@ -37,6 +40,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 /* Scan line animation effect */
@@ -187,10 +191,13 @@
 /* --- Weapon Grid --- */
 .weapon-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Default to 4 columns */
-  gap: 15px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   padding: 20px;
   background-color: rgba(25, 30, 25, 0.7);
+  width: 100%;
+  box-sizing: border-box;
+  justify-items: center;
 }
 
 /* --- Weapon Card --- */
@@ -202,11 +209,13 @@
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  min-height: 340px; /* Adjusted minimum height */
+  min-height: 340px;
+  max-width: 280px;
+  width: 100%;
   pointer-events: auto;
   position: relative;
-  z-index: 1002; /* Above scanlines */
-  overflow: hidden; /* Hide potential overflows */
+  z-index: 1002;
+  overflow: hidden;
 }
 
 /* Card Header: Designation Tag */
@@ -255,16 +264,16 @@
   display: flex;
   flex-direction: column; /* Stack description, separator, and stats vertically */
   flex-grow: 1; /* Allow this container to fill remaining card space */
-  padding: 10px 15px;
+  padding: 8px 12px; /* Reduced padding */
   min-height: 0; /* Override potential browser defaults for flex items */
 }
 
 /* Weapon Description Text */
 .weapon-description {
-  font-size: 0.95rem;
-  margin: 0 0 15px 0; /* Space below description */
+  font-size: 0.9rem; /* Slightly smaller text */
+  margin: 0 0 10px 0; /* Reduced spacing */
   color: #c2e8c5; /* Light green text */
-  line-height: 1.4;
+  line-height: 1.3; /* Tighter line height */
   flex-grow: 1; /* Allow description to take up available space */
   flex-shrink: 0; /* Prevent description shrinking excessively */
 }
@@ -273,7 +282,7 @@
 .specs-separator {
   display: flex;
   align-items: center;
-  margin-bottom: 12px; /* Space below separator */
+  margin-bottom: 8px; /* Reduced spacing */
 }
 .separator-text {
   font-size: 0.8rem;
@@ -290,8 +299,8 @@
 
 /* --- Stats Section --- */
 .weapon-stats {
-  display: flex !important; /* ADDED !important */
-  flex-direction: column !important; /* ADDED !important - STACK CHILDREN */
+  display: flex;
+  flex-direction: column;
   gap: 6px; /* Vertical space between stat lines */
   width: 100%; /* Ensure container takes full width */
   margin-top: auto; /* Push stats block to the bottom */
@@ -302,19 +311,19 @@
 
 /* Individual Stat Line (DMG, CYCLE, RANGE) */
 .stat {
-  display: flex !important; /* ADDED !important - Ensure flex behavior */
-  justify-content: space-between !important; /* ADDED !important */
-  align-items: center !important; /* ADDED !important */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: rgba(20, 30, 20, 0.6);
-  padding: 6px 10px;
+  padding: 5px 8px; /* Reduced padding */
   border-radius: 3px;
   border: 1px solid rgba(47, 124, 47, 0.4);
-  width: 100% !important; /* ADDED !important - FORCE FULL WIDTH */
-  box-sizing: border-box !important; /* ADDED !important - Include padding/border */
-  /* Reset potential conflicting inline/block styles */
-  float: none !important;
-  clear: both !important;
-  margin-bottom: 0 !important; /* Override default margins if needed */
+  width: 100%;
+  box-sizing: border-box;
+  /* Reset potential conflicting styles */
+  float: none;
+  clear: both;
+  margin-bottom: 0;
 }
 
 /* Stat Label (e.g., "DMG RATING:") */
