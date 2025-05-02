@@ -340,14 +340,18 @@ export const useGameState = create<GameState>((set, get) => ({
   },
 
   togglePause: () =>
-    set((state) => ({
-      isPaused: !state.isPaused,
-    })),
+    set((state) => {
+      console.log(`togglePause called. Current isPaused: ${state.isPaused}`);
+      const newState = { isPaused: !state.isPaused };
+      console.log(`togglePause setting new state:`, newState);
+      return newState;
+    }),
 
   startGame: () =>
     set(() => ({
       isGameStarted: true,
       shouldResetCameraAnimation: true,
+      isPaused: false,
     })),
 
   incrementEnemyDefeatCount: () => {

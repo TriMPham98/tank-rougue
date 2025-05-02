@@ -13,6 +13,8 @@ function App() {
   const initialized = useRef(false);
   // Add the wasPaused ref at the top level
   const wasPaused = useRef(false);
+  // Ref to track if the current pause state was initiated by the upgrade UI effect
+  const pausedByUpgradeUI = useRef(false);
   // Add a ref to track last toggle time
   const lastToggleTime = useRef(0);
 
@@ -50,6 +52,8 @@ function App() {
           return;
         }
         lastToggleTime.current = now;
+        // Log ESC press and current pause state
+        console.log(`ESC pressed, toggling pause. isPaused: ${isPaused}`);
         togglePause();
       }
 
@@ -83,26 +87,32 @@ function App() {
     isGameStarted,
   ]);
 
-  // Only pause the game when upgrade UI is shown, but don't keep it paused after
+  // Effect to automatically pause/unpause ONLY when the upgrade UI appears/disappears
   useEffect(() => {
-    // Only process this logic if the game has started
     if (!isGameStarted) return;
 
-    // Store the current pause state when upgrade UI appears
     if (showUpgradeUI) {
-      wasPaused.current = isPaused;
+      // Upgrade UI is now showing
       if (!isPaused) {
-        // Only pause if not already paused
+        // If game is not paused, pause it and remember we did it.
+        pausedByUpgradeUI.current = true;
+        togglePause();
+      } else {
+        // If game was already paused (manually), ensure our flag is false.
+        pausedByUpgradeUI.current = false;
+      }
+    } else {
+      // Upgrade UI is now hidden
+      if (isPaused && pausedByUpgradeUI.current) {
+        // If the game is paused AND we paused it for the UI, unpause it.
         togglePause();
       }
-    } else if (wasPaused.current === false && isPaused) {
-      // If we were NOT paused before the upgrade UI appeared,
-      // and we're still paused after it disappeared, unpause the game
-      togglePause();
-      // Reset the wasPaused state
-      wasPaused.current = false;
+      // Always reset the flag when UI is hidden.
+      pausedByUpgradeUI.current = false;
     }
-  }, [showUpgradeUI, isGameStarted, isPaused, togglePause]);
+    // Dependencies ONLY include showUpgradeUI and isGameStarted
+    // to prevent running when isPaused changes manually.
+  }, [showUpgradeUI, isGameStarted, togglePause]);
 
   // Only render start screen if game not started
   if (!isGameStarted) {
