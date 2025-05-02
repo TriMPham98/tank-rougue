@@ -39,9 +39,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
   // Reset state when animationMode prop changes
   useEffect(() => {
-    console.log(
-      `TankWireframe: animationMode prop changed to ${AnimState[animationMode]}. Resetting internal state.`
-    );
     setAnimState(animationMode);
     setAnimationProgress(0);
     setRotationAngle(0);
@@ -234,7 +231,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
   useFrame((_, delta) => {
     const assemblySpeed = 0.25; // Reverted speed
     const rotationSpeed = 0.25; // Reverted speed
-    // console.log(`TankWireframe: useFrame running. Current state: ${AnimState[animState]}`); // Can be very noisy
 
     // Handle ASSEMBLING_LOOP state (original behavior)
     if (animState === AnimState.ASSEMBLING_LOOP) {
@@ -291,9 +287,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
       setAnimationProgress((prev) => {
         const newProgress = prev + delta * assemblySpeed;
         if (newProgress >= 1) {
-          console.log(
-            "TankWireframe: ASSEMBLING_TRANSITION complete. Setting state to IDLE and calling onComplete."
-          );
           onAnimationComplete?.(AnimState.IDLE); // Notify parent immediately
           useGameState.setState({ isWireframeAssembled: true }); // Set flag on completion
           setAnimState(AnimState.IDLE); // Go straight to IDLE
@@ -307,7 +300,6 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
       setRotationAngle((prev) => {
         const newAngle = prev + delta * rotationSpeed;
         const targetRotation = Math.PI * 2; // Full 360 degrees rotation
-        // console.log(`TankWireframe: ROTATING_TRANSITION - Angle: ${newAngle.toFixed(2)}, Target: ${targetRotation.toFixed(2)}`); // Keep commented
         if (newAngle >= targetRotation) {
           setAnimState(AnimState.PAUSED_TRANSITION); // Transition to transition pause
           // Clear previous timeout just in case
@@ -339,7 +331,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
     <group
       ref={tankRef}
       position={[0, 0, 0]}
-      scale={1.0} // Reverted scale
+      scale={1.3} // Reverted scale
       rotation={[0, currentRotation, 0]}>
       {/* Tank Body */}
       <Box

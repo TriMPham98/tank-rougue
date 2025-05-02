@@ -393,12 +393,12 @@
 /* Loading text styling */
 .loading-text {
   position: absolute;
-  bottom: 25%; /* Adjusted position */
+  bottom: 20%; /* Moved lower from 25% to match larger wireframe */
   left: 50%;
   transform: translateX(-50%);
   color: #a0d0a0; /* Use a suitable color from the theme */
   font-family: "Courier New", monospace; /* Match theme */
-  font-size: 1.2rem;
+  font-size: 1.5rem; /* Increased from 1.2rem to match larger wireframe */
   text-shadow: 0 0 5px rgba(95, 220, 95, 0.3);
   z-index: 5; /* Ensure it's above the wireframe but below content */
   opacity: 0; /* Start hidden */
@@ -417,6 +417,6 @@
 
 /* Adjust position for mobile */
 .start-screen.mobile .loading-text {
-  bottom: 20%;
-  font-size: 1rem;
+  bottom: 15%; /* Moved lower from 20% to match larger wireframe on mobile */
+  font-size: 1.2rem; /* Increased from 1rem to match larger wireframe on mobile */
 }

@@ -11,7 +11,6 @@ type TransitionStep = "idle" | "fading" | "assembling";
 const StartScreen: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { startGame, restartGame, isGameStarted } = useGameState((state) => {
-    console.log("GameState update: isGameStarted?", state.isGameStarted);
     return {
       startGame: state.startGame,
       restartGame: state.restartGame,
@@ -24,10 +23,6 @@ const StartScreen: React.FC = () => {
   const [transitionStep, setTransitionStep] = useState<TransitionStep>("idle");
   const [wireframeAnimMode, setWireframeAnimMode] = useState<AnimState>(
     AnimState.IDLE
-  );
-
-  console.log(
-    `StartScreen Render: transitionStep=${transitionStep}, wireframeAnimMode=${AnimState[wireframeAnimMode]}`
   );
 
   useEffect(() => {
@@ -93,14 +88,8 @@ const StartScreen: React.FC = () => {
   const handleStartGame = () => {
     // Prevent triggering if already started or transitioning
     if (isGameStarted || transitionStep !== "idle") {
-      console.log(
-        "handleStartGame: Aborted (already started or transitioning)"
-      );
       return;
     }
-    console.log(
-      "handleStartGame: Initiated - Playing sound and starting fade/animation/setup."
-    );
     sound.play("deployTank");
 
     // Start fade-out CSS
@@ -114,39 +103,17 @@ const StartScreen: React.FC = () => {
 
     // Generate level concurrently with animation
     // This will trigger terrain and enemy generation while the tank assembles
-    console.log(
-      "handleStartGame: Generating level concurrently with animation"
-    );
     generateLevel();
   };
 
   // Handler for when the assembly animation completes
   const handleAssemblyComplete = (finalState: AnimState) => {
-    console.log(
-      `handleAssemblyComplete: Called with finalState=${AnimState[finalState]}`
-    );
-    // Log the state values *right before* the check
-    console.log(
-      `handleAssemblyComplete: Checking condition: transitionStep === "${transitionStep}", finalState === AnimState.IDLE (${
-        finalState === AnimState.IDLE
-      }), isGameStarted === ${isGameStarted}`
-    );
-
     // The transitionStep will be 'fading' when the animation completes in this flow
     if (transitionStep === "fading" && finalState === AnimState.IDLE) {
       // Ensure game hasn't already been started somehow
       if (!isGameStarted) {
-        console.log(
-          "handleAssemblyComplete: Condition MET. Calling startGame()"
-        );
         startGame(); // Now start the actual game
-      } else {
-        console.log(
-          "handleAssemblyComplete: Condition MET but game already started."
-        );
       }
-    } else {
-      console.log("handleAssemblyComplete: Condition NOT MET.");
     }
   };
 
