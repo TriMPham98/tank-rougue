@@ -24,7 +24,6 @@ function App() {
     advanceLevel,
     isGameStarted,
     checkOrientation,
-    showOrientationWarning,
   } = useGameState();
 
   // Initialize game state on first render, but don't start the game automatically
