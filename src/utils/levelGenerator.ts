@@ -200,7 +200,7 @@ export const generateEnemies = (
   const turretMaxRegenAttempts = 15; // Max attempts to find position inside safe zone
 
   for (let i = 0; i < config.enemyCount; i++) {
-    let position: [number, number, number];
+    let finalPosition: [number, number, number] | null = null; // Start as null
     let type: "tank" | "turret" | "bomber";
     let health: number;
     let speed: number = 1;
@@ -232,14 +232,20 @@ export const generateEnemies = (
       speed = 1.3;
     }
 
-    // Now generate position, checking safe zone for turrets
+    // Now find the final position, checking safe zone
     let attempts = 0;
-    let positionFound = false;
-    while (attempts < turretMaxRegenAttempts && !positionFound) {
-      position = generateRandomPosition(config.gridSize, existingPositions);
+    while (finalPosition === null && attempts < turretMaxRegenAttempts) {
+      // Loop until finalPosition is assigned
+      let candidatePosition = generateRandomPosition(
+        config.gridSize,
+        existingPositions
+      );
 
       if ((type === "turret" || type === "tank") && safeZoneActive) {
-        const turretPosVec = new THREE.Vector2(position[0], position[2]);
+        const turretPosVec = new THREE.Vector2(
+          candidatePosition[0],
+          candidatePosition[2]
+        );
         const centerVec = new THREE.Vector2(
           safeZoneCenter[0],
           safeZoneCenter[1]
@@ -247,9 +253,9 @@ export const generateEnemies = (
         const distanceToCenter = turretPosVec.distanceTo(centerVec);
 
         if (distanceToCenter <= safeZoneRadius) {
-          positionFound = true; // Position is valid
+          finalPosition = candidatePosition; // Position is valid
         } else {
-          // Position is outside the safe zone, try again
+          // Position is outside the safe zone, try again or fallback
           attempts++;
           if (attempts >= turretMaxRegenAttempts) {
             debug.warn(
@@ -257,37 +263,47 @@ export const generateEnemies = (
             );
             const angle = Math.random() * Math.PI * 2;
             const radiusOffset = Math.min(safeZoneRadius * 0.8, 5);
-            position = [
+            let fallbackPosition: [number, number, number] = [
               safeZoneCenter[0] + Math.cos(angle) * radiusOffset,
               0.5,
               safeZoneCenter[1] + Math.sin(angle) * radiusOffset,
             ];
+            // Check if fallback position is clear
             if (
               !isPositionClear(
-                position[0],
-                position[2],
+                fallbackPosition[0],
+                fallbackPosition[2],
                 gameState.terrainObstacles,
                 3
               )
             ) {
-              position = [safeZoneCenter[0], 0.5, safeZoneCenter[1]];
+              fallbackPosition = [safeZoneCenter[0], 0.5, safeZoneCenter[1]];
               debug.warn(
                 `Fallback ${type} position near center also obstructed. Placing AT center.`
               );
             }
-            positionFound = true;
+            finalPosition = fallbackPosition; // Assign final fallback position
           }
+          // If not max attempts yet, loop continues, finalPosition remains null
         }
       } else {
-        positionFound = true;
+        // Not a turret/tank or safe zone inactive, the candidate position is final
+        finalPosition = candidatePosition;
       }
     }
 
-    // @ts-ignore - position will be assigned within the loop or fallback
-    existingPositions.push(position);
+    // If somehow the loop finished without setting a position (shouldn't happen)
+    if (finalPosition === null) {
+      debug.error(
+        `Failed to determine final position for enemy type ${type}. Using emergency [0, 0.5, 0]`
+      );
+      finalPosition = [0, 0.5, 0]; // Provide an emergency fallback
+    }
+
+    // Use the determined finalPosition
+    existingPositions.push(finalPosition);
     enemies.push({
-      // @ts-ignore - position will be assigned
-      position,
+      position: finalPosition,
       health,
       type,
       speed,
@@ -322,30 +338,7 @@ export const generateLevel = () => {
     const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
 
     enemies.forEach((enemy) => {
-      // Additional check to ensure enemy position is valid
-      const position = enemy.position;
-      let isValid = true;
-
-      // Check for collision with terrain obstacles
-      if (terrainObstacles.length > 0) {
-        isValid = isPositionClear(
-          position[0],
-          position[2],
-          terrainObstacles,
-          3
-        );
-      }
-
-      // If position is not valid, try to find a better one
-      if (!isValid) {
-        const newPosition = generateRandomPosition(70, [position], 5, 500);
-        enemy.position = newPosition;
-        debug.log("Adjusted enemy spawn position due to terrain collision", {
-          original: position,
-          new: newPosition,
-        });
-      }
-
+      // The position generated by generateEnemies should already be valid.
       spawnEnemy(enemy);
     });
 

@@ -11,6 +11,7 @@ interface EnemyTankProps {
 }
 
 const EnemyTank = ({ enemy }: EnemyTankProps) => {
+  const initialPosition = useRef(new Vector3(...enemy.position)).current;
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
   const flashMaterialRef = useRef<MeshStandardMaterial>(null);
@@ -41,12 +42,6 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   useEffect(() => {
     maxHealthRef.current = enemy.health;
-  }, []);
-
-  useEffect(() => {
-    if (tankRef.current) {
-      tankRef.current.position.set(...enemy.position);
-    }
   }, []);
 
   const checkTerrainCollision = useCallback(
@@ -395,7 +390,10 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
 
   return (
     <>
-      <group ref={tankRef} name={`enemy-${enemy.id}-${enemy.type}`}>
+      <group
+        ref={tankRef}
+        position={initialPosition}
+        name={`enemy-${enemy.id}-${enemy.type}`}>
         {isBomber ? (
           <>
             <Cylinder
