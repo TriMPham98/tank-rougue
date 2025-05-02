@@ -1333,3 +1333,126 @@
     font-size: 1.3rem;
   }
 }
+
+/* Orientation Warning */
+.orientation-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1100; /* Higher than anything else */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(4px);
+}
+
+.orientation-warning-content {
+  background-color: rgba(15, 30, 15, 0.95);
+  border: 2px solid #3a853a;
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  max-width: 90%;
+  width: 350px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+  color: #5fdc5f;
+  font-family: "Courier New", monospace;
+}
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.warning-icon {
+  background-color: #5fdc5f;
+  color: #0f1e0f;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.warning-message {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  animation: warningPulse 2s infinite;
+}
+
+.warning-detail {
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.dismiss-button {
+  background-color: rgba(95, 220, 95, 0.2);
+  color: #5fdc5f;
+  border: 1px solid #5fdc5f;
+  padding: 10px 15px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.dismiss-button:hover {
+  background-color: rgba(95, 220, 95, 0.3);
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+}
+
+@keyframes warningPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Mobile adjustments for orientation warning */
+.game-ui.military-theme.mobile .orientation-warning-content {
+  padding: 15px;
+  width: 300px;
+}
+
+.game-ui.military-theme.mobile .warning-header {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.game-ui.military-theme.mobile .warning-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.game-ui.military-theme.mobile .warning-message {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.game-ui.military-theme.mobile .warning-detail {
+  font-size: 0.8rem;
+  margin-bottom: 15px;
+}
+
+.game-ui.military-theme.mobile .dismiss-button {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}

@@ -95,6 +95,8 @@ const GameUI = () => {
     safeZoneShrinkRate: combatZoneShrinkRate,
     isPreZoneChangeLevel: isPreContainmentShiftRank,
     returnToMainMenu,
+    showOrientationWarning,
+    setOrientationWarning,
   } = useGameState();
 
   // Reset elapsed time when game is restarted (level and score reset to initial values)
@@ -460,6 +462,31 @@ const GameUI = () => {
     }
   }, [restartGame]);
 
+  // Render the orientation warning overlay
+  const renderOrientationWarning = () => {
+    if (!showOrientationWarning) return null;
+
+    return (
+      <div className="orientation-warning-overlay">
+        <div className="orientation-warning-content">
+          <div className="warning-header">
+            <div className="warning-icon">!</div>
+            ALERT: DEVICE ORIENTATION
+          </div>
+          <div className="warning-message">ROTATE DEVICE TO LANDSCAPE MODE</div>
+          <div className="warning-detail">
+            Combat systems require landscape orientation for optimal operation
+          </div>
+          <button
+            className="dismiss-button"
+            onClick={() => setOrientationWarning(false)}>
+            DISMISS WARNING
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className={`game-ui military-theme ${
@@ -672,6 +699,9 @@ const GameUI = () => {
             <span className="pause-icon">||</span>
           </button>
         )}
+
+      {/* Device orientation warning overlay */}
+      {renderOrientationWarning()}
     </div>
   );
 };

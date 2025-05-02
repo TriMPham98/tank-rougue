@@ -96,6 +96,10 @@ interface GameState {
   isWireframeAssembled: boolean; // Flag to indicate wireframe assembly completion
   isTerrainReady: boolean; // Flag to indicate terrain generation completion
 
+  // Mobile orientation handling
+  isLandscapeOrientationRequired: boolean; // Flag to indicate if landscape orientation is required
+  showOrientationWarning: boolean; // Flag to control the display of orientation warning
+
   // Terrain obstacles
   terrainObstacles: Array<ObstacleData>;
 
@@ -144,6 +148,8 @@ interface GameState {
   }) => void;
   startGame: () => void; // New action to start the game
   returnToMainMenu: () => void; // New action to return to main menu
+  setOrientationWarning: (show: boolean) => void; // New action to control orientation warning
+  checkOrientation: () => void; // New action to check device orientation
 }
 
 // Create the game state store
@@ -192,6 +198,10 @@ export const useGameState = create<GameState>((set, get) => ({
   shouldResetCameraAnimation: true,
   isWireframeAssembled: false, // Initial state
   isTerrainReady: false, // Initial state
+
+  // Mobile orientation handling
+  isLandscapeOrientationRequired: true, // Landscape orientation is required for mobile
+  showOrientationWarning: false, // Don't show warning initially
 
   // Terrain obstacles
   terrainObstacles: [], // Initial state
@@ -325,6 +335,7 @@ export const useGameState = create<GameState>((set, get) => ({
       showWeaponSelection: false,
       availableWeapons,
       selectedWeapons: [],
+      showOrientationWarning: false, // Reset orientation warning
 
       // Reset safe zone
       safeZoneRadius: 50,
@@ -859,6 +870,7 @@ export const useGameState = create<GameState>((set, get) => ({
       showWeaponSelection: false,
       availableWeapons,
       selectedWeapons: [],
+      showOrientationWarning: false, // Reset orientation warning
       safeZoneRadius: 50,
       safeZoneCenter: [0, 0],
       safeZoneTargetRadius: 50,
@@ -876,6 +888,44 @@ export const useGameState = create<GameState>((set, get) => ({
       turretRotation: null,
       isFiring: false,
     });
+  },
+
+  setOrientationWarning: (show: boolean) => {
+    set(() => ({ showOrientationWarning: show }));
+  },
+
+  checkOrientation: () => {
+    // Only run for mobile devices, not for tablets
+    const isMobileDevice =
+      /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) && !document.body.classList.contains("tablet-device");
+
+    if (!isMobileDevice) return;
+
+    // Check if the device is in portrait mode
+    const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+
+    if (isPortrait) {
+      // Set the orientation warning flag
+      set((state) => {
+        // Only pause the game if it's started and not already paused
+        if (state.isGameStarted && !state.isPaused) {
+          // Pause the game
+          state.togglePause();
+        }
+
+        // Override any weapon selection or upgrade UI
+        return {
+          showOrientationWarning: true,
+          showWeaponSelection: false,
+          showUpgradeUI: false,
+        };
+      });
+    } else {
+      // Hide the orientation warning, but don't automatically unpause
+      set(() => ({ showOrientationWarning: false }));
+    }
   },
 }));
 

@@ -23,6 +23,8 @@ function App() {
     showUpgradeUI,
     advanceLevel,
     isGameStarted,
+    checkOrientation,
+    showOrientationWarning,
   } = useGameState();
 
   // Initialize game state on first render, but don't start the game automatically
@@ -36,6 +38,28 @@ function App() {
       }
     }
   }, []);
+
+  // Handle mobile device orientation changes
+  useEffect(() => {
+    // Set up orientation change detection
+    const handleOrientationChange = () => {
+      // Check orientation and update game state
+      checkOrientation();
+    };
+
+    // Initial check
+    checkOrientation();
+
+    // Add event listeners for orientation changes
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("resize", handleOrientationChange);
+
+    return () => {
+      // Clean up event listeners
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener("resize", handleOrientationChange);
+    };
+  }, [checkOrientation]);
 
   // Handle escape key for pausing
   useEffect(() => {
