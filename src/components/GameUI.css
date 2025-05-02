@@ -530,7 +530,8 @@
   margin: 0 15px;
 }
 
-.military-theme .resume-button {
+.military-theme .resume-button,
+.military-theme .main-menu-button {
   background-color: transparent;
   color: #5fdc5f;
   border: 2px solid #5fdc5f;
@@ -545,14 +546,33 @@
   text-transform: uppercase;
   box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
-  margin: 0;
+  margin: 10px 0;
+  width: 80%;
+  max-width: 300px;
 }
 
-.military-theme .resume-button:hover {
+.military-theme .resume-button:hover,
+.military-theme .main-menu-button:hover {
   background-color: rgba(95, 220, 95, 0.1);
   box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
   text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
   transform: translateY(-2px);
+}
+
+/* Specific style for main menu button to make it less prominent */
+.military-theme .main-menu-button {
+  color: #a0d0a0;
+  border-color: #a0d0a0;
+  box-shadow: 0 0 8px rgba(160, 208, 160, 0.2);
+  text-shadow: 0 0 8px rgba(160, 208, 160, 0.5);
+}
+
+.military-theme .main-menu-button:hover {
+  background-color: rgba(160, 208, 160, 0.1);
+  color: #c2e8c5;
+  border-color: #c2e8c5;
+  box-shadow: 0 0 15px rgba(160, 208, 160, 0.4);
+  text-shadow: 0 0 12px rgba(160, 208, 160, 0.7);
 }
 
 @keyframes scanlines {
@@ -1357,17 +1377,150 @@
 }
 
 /* New styles for the main menu button and confirmation dialog */
+/* Remove previously added generic styles */
+/*
 .main-menu-button {
-  background-color: var(--color-hull-medium); /* A different color */
+  background-color: var(--color-hull-medium); 
   color: var(--color-text-light);
 }
 
 .main-menu-button:hover {
-  background-color: #ffc107; /* Brighter hover */
+  background-color: #ffc107; 
   color: var(--color-text-dark);
 }
+*/
 
 /* Confirmation Dialog Styles */
+/* Apply military theme to confirmation dialog */
+.military-theme .confirm-dialog-overlay .overlay-content {
+  /* Match pause content style */
+  background-color: rgba(20, 25, 20, 0.9);
+  border: 1px solid rgba(80, 120, 80, 0.3);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+  padding: 0; /* Remove padding, handled by inner elements */
+  min-width: 350px; /* Adjusted min-width */
+  max-width: 400px; /* Slightly larger max-width */
+  position: relative; /* Needed for pseudo-element */
+  color: #c2e8c5; /* Default text color */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Add scanlines to confirmation dialog */
+.military-theme .confirm-dialog-overlay .overlay-content:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(60, 180, 60, 0.03) 50%,
+    rgba(0, 0, 0, 0) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  animation: scanlines 2s linear infinite;
+  z-index: 2;
+  border-radius: 5px; /* Match content border-radius */
+}
+
+.military-theme .confirm-title {
+  /* Match pause title style */
+  background-color: transparent;
+  padding: 15px 20px;
+  margin: 0;
+  width: 100%;
+  color: #5fdc5f; /* Bright green title */
+  font-family: "Courier New", monospace;
+  font-size: 1.6rem; /* Slightly smaller than pause */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+  text-align: center;
+  position: relative;
+  border-bottom: 1px solid #2f7c2f; /* Add bottom border */
+}
+
+.military-theme .confirm-title:before,
+.military-theme .confirm-title:after {
+  content: "—";
+  color: #5fdc5f;
+  margin: 0 15px;
+}
+
+.military-theme .confirm-dialog-content p {
+  font-family: "Courier New", monospace;
+  font-size: 1rem; /* Adjusted size */
+  color: #a0d0a0; /* Standard text color */
+  margin: 25px 30px; /* Add padding around text */
+  line-height: 1.5;
+  text-align: center;
+}
+
+.military-theme .confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Space between buttons */
+  margin-bottom: 25px; /* Space below buttons */
+  width: 100%;
+  padding: 0 30px;
+}
+
+/* Apply military theme button style to confirm buttons */
+.military-theme .confirm-buttons .ui-button {
+  background-color: transparent;
+  border-radius: 4px;
+  padding: 10px 25px; /* Adjusted padding */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Courier New", monospace;
+  letter-spacing: 1.5px; /* Adjusted spacing */
+  font-size: 1rem; /* Adjusted size */
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-top: 0;
+  width: auto; /* Allow natural width */
+  flex: 1; /* Make buttons share space */
+  max-width: 150px; /* Limit button width */
+}
+
+.military-theme .yes-button {
+  color: var(--color-hull-low); /* Red text */
+  border: 2px solid var(--color-hull-low);
+  box-shadow: 0 0 8px rgba(217, 83, 79, 0.3);
+  text-shadow: 0 0 8px rgba(217, 83, 79, 0.5);
+}
+
+.military-theme .yes-button:hover {
+  background-color: rgba(217, 83, 79, 0.1);
+  border-color: #ff6666; /* Brighter red border */
+  color: #ff6666;
+  box-shadow: 0 0 15px rgba(217, 83, 79, 0.5);
+  text-shadow: 0 0 12px rgba(217, 83, 79, 0.7);
+  transform: translateY(-2px);
+}
+
+.military-theme .no-button {
+  color: #a0d0a0; /* Muted green text */
+  border: 2px solid #a0d0a0;
+  box-shadow: 0 0 8px rgba(160, 208, 160, 0.2);
+  text-shadow: 0 0 8px rgba(160, 208, 160, 0.5);
+}
+
+.military-theme .no-button:hover {
+  background-color: rgba(160, 208, 160, 0.1);
+  color: #c2e8c5; /* Slightly brighter on hover */
+  border-color: #c2e8c5;
+  box-shadow: 0 0 15px rgba(160, 208, 160, 0.4);
+  text-shadow: 0 0 12px rgba(160, 208, 160, 0.7);
+  transform: translateY(-2px);
+}
+
+/* Remove old generic confirmation styles */
+/*
 .confirm-dialog-overlay .overlay-content {
   border-color: var(--color-rank-medium);
   max-width: 350px;
@@ -1388,24 +1541,22 @@
 .confirm-buttons {
   display: flex;
   justify-content: center;
-  gap: 15px; /* Space between buttons */
+  gap: 15px; 
 }
 
 .confirm-buttons .ui-button {
-  margin-top: 0; /* Remove top margin inside this container */
+  margin-top: 0; 
   padding: 10px 20px;
   font-size: 1em;
 }
 
 .yes-button {
-  background-color: var(
-    --color-hull-low
-  ); /* Red for confirm potentially destructive action */
+  background-color: var(--color-hull-low); 
   color: var(--color-text-light);
 }
 
 .yes-button:hover {
-  background-color: #dc3545; /* Darker red on hover */
+  background-color: #dc3545; 
 }
 
 .no-button {
@@ -1416,6 +1567,7 @@
   background-color: #ffffff;
   color: var(--color-accent);
 }
+*/
 
 /* Weapon Selection Modal */
 .weapon-selection-modal {
@@ -1499,5 +1651,5 @@
 
 /* Button specific margins */
 .resume-button {
-  margin-right: 10px; /* Space between resume and main menu */
+  /* margin-right: 10px; Remove - buttons are stacked */
 }
