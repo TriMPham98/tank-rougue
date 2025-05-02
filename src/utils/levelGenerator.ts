@@ -320,7 +320,6 @@ export const generateLevel = () => {
   const startGenerationTime = performance.now();
   requestAnimationFrame(() => {
     const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
-    const powerUps: Omit<PowerUp, "id">[] = [];
 
     enemies.forEach((enemy) => {
       // Additional check to ensure enemy position is valid
