@@ -231,8 +231,8 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
   // Animation loop using useFrame
   useFrame((_, delta) => {
-    const assemblySpeed = 0.1; // Reverted speed
-    const rotationSpeed = 0.1; // Reverted speed
+    const assemblySpeed = 0.2; // Reverted speed
+    const rotationSpeed = 0.2; // Reverted speed
     // console.log(`TankWireframe: useFrame running. Current state: ${AnimState[animState]}`); // Can be very noisy
 
     // Handle ASSEMBLING_LOOP state (original behavior)
