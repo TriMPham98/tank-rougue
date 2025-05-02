@@ -293,8 +293,12 @@ export const useGameState = create<GameState>((set, get) => ({
       return updates;
     }),
 
-  restartGame: () =>
-    set({
+  restartGame: () => {
+    // Play tank deploy sound when game is restarted
+    SoundManager.setVolume("deployTank", 0.5);
+    SoundManager.play("deployTank");
+
+    return set({
       playerHealth: 100,
       playerMaxHealth: 100,
       playerSpeed: 3,
@@ -332,7 +336,8 @@ export const useGameState = create<GameState>((set, get) => ({
       shouldResetCameraAnimation: true,
       isWireframeAssembled: false, // Reset on restart
       isTerrainReady: false, // Reset on restart
-    }),
+    });
+  },
 
   togglePause: () =>
     set((state) => ({
