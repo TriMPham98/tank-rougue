@@ -41,6 +41,14 @@ export interface SecondaryWeapon {
   projectileSpeed: number;
 }
 
+// Define the type for terrain obstacles
+interface ObstacleData {
+  id: string;
+  position: [number, number, number];
+  type: "rock";
+  size: number;
+}
+
 // Define the game state
 interface GameState {
   // Player stats
@@ -89,12 +97,7 @@ interface GameState {
   isTerrainReady: boolean; // Flag to indicate terrain generation completion
 
   // Terrain obstacles
-  terrainObstacles: Array<{
-    id: string;
-    position: [number, number, number];
-    type: "rock";
-    size: number;
-  }>;
+  terrainObstacles: Array<ObstacleData>;
 
   // Weapon selection system
   showWeaponSelection: boolean;
@@ -125,12 +128,7 @@ interface GameState {
   updateEnemyPosition: (id: string, position: [number, number, number]) => void; // Add function to update enemy position
   incrementEnemyDefeatCount: () => void; // New function to track enemy defeats
   upgradeStat: (stat: UpgradeableStat) => void; // New function to upgrade a stat
-  addTerrainObstacle: (obstacle: {
-    position: [number, number, number];
-    type: "rock";
-    size: number;
-  }) => void;
-  removeTerrainObstacle: (id: string) => void;
+  setTerrainObstacles: (obstacles: Array<ObstacleData>) => void; // ADDED
   selectWeapon: (weapon: SecondaryWeapon) => void;
   closeWeaponSelection: () => void;
   updateEnemyPositions: (
@@ -195,7 +193,7 @@ export const useGameState = create<GameState>((set, get) => ({
   isTerrainReady: false, // Initial state
 
   // Terrain obstacles
-  terrainObstacles: [],
+  terrainObstacles: [], // Initial state
 
   // Weapon selection system
   showWeaponSelection: false,
@@ -318,7 +316,7 @@ export const useGameState = create<GameState>((set, get) => ({
       enemiesRequiredForNextLevel: 1,
       showUpgradeUI: false,
       availableUpgrades: [],
-      terrainObstacles: [],
+      terrainObstacles: [], // Reset on restart
       showWeaponSelection: false,
       availableWeapons,
       selectedWeapons: [],
@@ -733,19 +731,9 @@ export const useGameState = create<GameState>((set, get) => ({
       return updates;
     }),
 
-  addTerrainObstacle: (obstacle) =>
-    set((state) => ({
-      terrainObstacles: [
-        ...state.terrainObstacles,
-        { ...obstacle, id: Math.random().toString(36).substr(2, 9) },
-      ],
-    })),
-
-  removeTerrainObstacle: (id) =>
-    set((state) => ({
-      terrainObstacles: state.terrainObstacles.filter(
-        (obstacle) => obstacle.id !== id
-      ),
+  setTerrainObstacles: (obstacles) =>
+    set(() => ({
+      terrainObstacles: obstacles,
     })),
 
   selectWeapon: (weapon) => {

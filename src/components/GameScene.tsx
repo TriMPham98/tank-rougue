@@ -169,26 +169,59 @@ const FollowCamera = memo(() => {
 
   useEffect(() => {
     // Watch for changes to the shouldResetCameraAnimation flag
-    const unsubscribe = useGameState.subscribe((state) => {
-      if (state.shouldResetCameraAnimation) {
+    const unsubscribe = useGameState.subscribe((state, prevState) => {
+      // Trigger reset only when the flag becomes true
+      if (
+        state.shouldResetCameraAnimation &&
+        !prevState.shouldResetCameraAnimation
+      ) {
+        console.log("FollowCamera: Resetting animation state due to flag.");
         // Reset animation state
         setIsIntroPanComplete(false);
         introPanTimeRef.current = 0;
-        // initialPositionSetRef.current = false; // DO NOT reset this - it tracks first setup only
+        initialPositionSetRef.current = false; // Reset this ref as well
 
-        // Reset the animation state in the ref
+        // Reset the animation state ref
         animationStateRef.current = {
           isRunning: false,
           hasCompleted: false,
         };
 
-        // Reset the flag
+        // FORCE camera back to initial high/far state
+        const playerPosition = state.playerTankPosition;
+        if (playerPosition) {
+          // Need player position to calculate lookAt
+          camera.position.set(
+            playerPosition[0],
+            playerPosition[1] + initialHeight,
+            playerPosition[2] + initialDistance
+          );
+          camera.lookAt(
+            playerPosition[0],
+            playerPosition[1],
+            playerPosition[2]
+          );
+          const perspCamera = camera as PerspectiveCamera;
+          if (perspCamera.fov !== initialFov) {
+            perspCamera.fov = initialFov;
+            perspCamera.updateProjectionMatrix();
+          }
+          camera.rotation.x = -0.2 - Math.PI / 8; // Match initial rotation offset
+          console.log("FollowCamera: Forced camera to initial state.");
+        } else {
+          console.warn(
+            "FollowCamera: Cannot force initial state, player position unknown during reset."
+          );
+        }
+
+        // Reset the flag in global state AFTER applying changes
         useGameState.setState({ shouldResetCameraAnimation: false });
       }
     });
 
     return () => unsubscribe();
-  }, []);
+    // Add camera to dependency array to ensure it's available
+  }, [camera]);
 
   useFrame((_, delta) => {
     const playerPosition = getState().playerTankPosition;
@@ -504,9 +537,12 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
 
 // Move terrain obstacle generation to a separate component
 const TerrainObstacleGenerator = () => {
-  const addTerrainObstacle = useGameState((state) => state.addTerrainObstacle);
+  // Get the new action and the reset flag
+  const setTerrainObstacles = useGameState(
+    (state) => state.setTerrainObstacles
+  );
   const isGameOver = useGameState((state) => state.isGameOver);
-  const [isTerrainReady, setIsTerrainReady] = useState(false);
+  const [isTerrainReadyInternal, setIsTerrainReadyInternal] = useState(false);
   const terrainGeneratedRef = useRef(false);
 
   useEffect(() => {
@@ -519,10 +555,16 @@ const TerrainObstacleGenerator = () => {
       const spawnClearanceRadius = 15;
       let totalAttempts = 0;
       const maxAttempts = 500;
-      let successfulPlacements = 0;
+      const generatedObstacles: Array<{
+        // Define local array type
+        id: string;
+        position: [number, number, number];
+        type: "rock";
+        size: number;
+      }> = [];
 
       while (
-        successfulPlacements < obstacleCount &&
+        generatedObstacles.length < obstacleCount && // Check generated length
         totalAttempts < maxAttempts
       ) {
         totalAttempts++;
@@ -533,17 +575,14 @@ const TerrainObstacleGenerator = () => {
           const angle = Math.atan2(z, x);
           x = Math.cos(angle) * spawnClearanceRadius;
           z = Math.sin(angle) * spawnClearanceRadius;
-          debug.log("Adjusted obstacle position away from spawn area", {
-            x,
-            z,
-          });
+          // debug.log("Adjusted obstacle position away from spawn area", { x, z }); // Less noisy log
         }
         const size = 1 + Math.random() * 1.2;
-        const existingObstacles = useGameState.getState().terrainObstacles;
+        // Check against the locally generated obstacles in this run
         let isTooClose = false;
         const minObstacleSpacing = 8;
 
-        for (const existing of existingObstacles) {
+        for (const existing of generatedObstacles) {
           const dx = existing.position[0] - x;
           const dz = existing.position[2] - z;
           const distance = Math.sqrt(dx * dx + dz * dz);
@@ -557,34 +596,36 @@ const TerrainObstacleGenerator = () => {
         }
 
         if (!isTooClose) {
-          const obstacle = {
-            id: `rock-${successfulPlacements}-${Date.now()}`,
+          const newObstacle = {
+            id: `rock-${generatedObstacles.length}-${Date.now()}`,
             position: [x, 0, z] as [number, number, number],
+            type: "rock" as const, // Ensure type safety
             size,
           };
-          debug.log(
-            `TerrainObstacleGenerator: Adding obstacle ${
-              successfulPlacements + 1
-            }/${obstacleCount}`,
-            obstacle
-          );
-          addTerrainObstacle({
-            position: obstacle.position,
-            type: "rock",
-            size: obstacle.size,
-          });
-          successfulPlacements++;
+          // Add to local array first
+          generatedObstacles.push(newObstacle);
+          // debug.log( // Only log final counts
+          //   `TerrainObstacleGenerator: Adding obstacle ${generatedObstacles.length}/${obstacleCount}`,
+          //   newObstacle
+          // );
         }
       }
 
       debug.log(
-        `TerrainObstacleGenerator: Placed ${successfulPlacements} obstacles after ${totalAttempts} attempts`
+        `TerrainObstacleGenerator: Generated ${generatedObstacles.length} obstacles locally after ${totalAttempts} attempts`
       );
-      terrainGeneratedRef.current = true;
-      setIsTerrainReady(true);
+
+      // Set the entire array in the state at once
+      setTerrainObstacles(generatedObstacles);
+      // THEN set the ready flag
       useGameState.setState({ isTerrainReady: true });
+
+      // Mark generation as complete for this instance
+      terrainGeneratedRef.current = true;
+      setIsTerrainReadyInternal(true); // Update internal state for rendering logic
+
       debug.log(
-        "TerrainObstacleGenerator: All obstacles generated successfully"
+        "TerrainObstacleGenerator: Set obstacles and isTerrainReady flag."
       );
     } catch (error) {
       debug.error(
@@ -592,23 +633,25 @@ const TerrainObstacleGenerator = () => {
         error
       );
     }
-  }, [addTerrainObstacle, isGameOver]);
+    // Update dependencies: only need setTerrainObstacles and isGameOver
+  }, [setTerrainObstacles, isGameOver]);
 
   // Reset terrain state when game is restarted
   useEffect(() => {
     if (isGameOver) {
       terrainGeneratedRef.current = false;
-      setIsTerrainReady(false);
-      // Global state is reset by restartGame in gameState.ts
+      setIsTerrainReadyInternal(false); // Reset internal state
+      // Global state flags (isTerrainReady, terrainObstacles) are reset by restartGame in gameState.ts
     }
   }, [isGameOver]);
 
-  if (!isTerrainReady) {
-    debug.log("TerrainObstacleGenerator: Not ready, showing loading indicator");
+  // Use internal state for the component's own readiness logic
+  if (!isTerrainReadyInternal) {
+    // debug.log("TerrainObstacleGenerator: Not ready internally, showing loading indicator");
     return null; // Return null instead of placeholder to avoid visual artifacts
   }
 
-  debug.log("TerrainObstacleGenerator: Ready");
+  // debug.log("TerrainObstacleGenerator: Ready internally");
   return null;
 };
 
