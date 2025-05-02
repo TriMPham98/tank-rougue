@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Group, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
+import { useGameState } from "../utils/gameState"; // Import gameState hook
 
 // Animation states
 export enum AnimState {
@@ -231,8 +232,8 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
 
   // Animation loop using useFrame
   useFrame((_, delta) => {
-    const assemblySpeed = 0.2; // Reverted speed
-    const rotationSpeed = 0.2; // Reverted speed
+    const assemblySpeed = 0.25; // Reverted speed
+    const rotationSpeed = 0.25; // Reverted speed
     // console.log(`TankWireframe: useFrame running. Current state: ${AnimState[animState]}`); // Can be very noisy
 
     // Handle ASSEMBLING_LOOP state (original behavior)
@@ -294,6 +295,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
             "TankWireframe: ASSEMBLING_TRANSITION complete. Setting state to IDLE and calling onComplete."
           );
           onAnimationComplete?.(AnimState.IDLE); // Notify parent immediately
+          useGameState.setState({ isWireframeAssembled: true }); // Set flag on completion
           setAnimState(AnimState.IDLE); // Go straight to IDLE
           return 1;
         }
@@ -317,6 +319,7 @@ const TankWireframe: React.FC<TankWireframeProps> = ({
             // This timeout only serves to transition to IDLE and notify parent
             onAnimationComplete?.(AnimState.IDLE); // Notify parent FIRST
             setAnimState(AnimState.IDLE); // THEN set state
+            // Don't set isWireframeAssembled here, as ROTATING_TRANSITION implies it was already assembled
             setRotationAngle(0); // Reset rotation after transition complete
           }, transitionPauseDuration);
           return targetRotation % (Math.PI * 2); // Reset angle smoothly if overshot

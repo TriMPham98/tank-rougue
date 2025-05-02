@@ -85,6 +85,8 @@ interface GameState {
   isPaused: boolean;
   isGameStarted: boolean; // New flag to track if the game has started
   shouldResetCameraAnimation: boolean; // Flag to reset camera animation on game start
+  isWireframeAssembled: boolean; // Flag to indicate wireframe assembly completion
+  isTerrainReady: boolean; // Flag to indicate terrain generation completion
 
   // Terrain obstacles
   terrainObstacles: Array<{
@@ -189,6 +191,8 @@ export const useGameState = create<GameState>((set, get) => ({
   isPaused: false,
   isGameStarted: false,
   shouldResetCameraAnimation: true,
+  isWireframeAssembled: false, // Initial state
+  isTerrainReady: false, // Initial state
 
   // Terrain obstacles
   terrainObstacles: [],
@@ -328,6 +332,8 @@ export const useGameState = create<GameState>((set, get) => ({
       safeZoneActive: false,
       isPreZoneChangeLevel: false,
       shouldResetCameraAnimation: true,
+      isWireframeAssembled: false, // Reset on restart
+      isTerrainReady: false, // Reset on restart
     }),
 
   togglePause: () =>

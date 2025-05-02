@@ -174,7 +174,7 @@ const FollowCamera = memo(() => {
         // Reset animation state
         setIsIntroPanComplete(false);
         introPanTimeRef.current = 0;
-        initialPositionSetRef.current = false;
+        // initialPositionSetRef.current = false; // DO NOT reset this - it tracks first setup only
 
         // Reset the animation state in the ref
         animationStateRef.current = {
@@ -193,7 +193,8 @@ const FollowCamera = memo(() => {
   useFrame((_, delta) => {
     const playerPosition = getState().playerTankPosition;
     const cameraRange = getState().playerCameraRange;
-    const isGameStarted = getState().isGameStarted;
+    const isWireframeAssembled = getState().isWireframeAssembled;
+    const isTerrainReady = getState().isTerrainReady;
 
     if (playerPosition) {
       // Set positive distance for camera to stay in front of the tank
@@ -201,12 +202,14 @@ const FollowCamera = memo(() => {
 
       // Prevent re-running the animation once it's completed
       if (animationStateRef.current.hasCompleted) {
-        offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
-        offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
-        offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
+        // Camera will now smoothly follow using lerp below
+        // No need to manually set offset here anymore
+        // offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
+        // offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
+        // offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
       }
-      // Intro camera pan animation - only run if game is started and animation hasn't completed
-      else if (isGameStarted && !isIntroPanComplete) {
+      // Intro camera pan animation - trigger when wireframe AND terrain are ready and animation hasn't completed
+      else if (isWireframeAssembled && isTerrainReady && !isIntroPanComplete) {
         // Mark animation as running
         animationStateRef.current.isRunning = true;
 
@@ -246,35 +249,58 @@ const FollowCamera = memo(() => {
           animationStateRef.current.hasCompleted = true;
         }
       }
-      // Normal camera behavior after intro or if intro was skipped
-      else if (initialPositionSetRef.current) {
-        offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
-        offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
-        offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
-      } else {
-        // On first frame, set the initial dramatic camera position
-        if (isGameStarted) {
-          // Start with camera high and far away
+      // Remove the else if block that handled non-intro camera movement
+      // else if (initialPositionSetRef.current) {
+      //   offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
+      //   offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
+      //   offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
+      // }
+      else if (!initialPositionSetRef.current) {
+        // On first frame (before wireframe/terrain ready), set the initial dramatic camera position
+        if (!isWireframeAssembled || !isTerrainReady) {
+          // Use || condition here
+          // Start with camera high and far away - SET POSITION DIRECTLY
           camera.position.set(
             playerPosition[0],
             playerPosition[1] + initialHeight,
             playerPosition[2] + initialDistance
           );
+          // SET LOOKAT DIRECTLY
+          camera.lookAt(
+            playerPosition[0],
+            playerPosition[1],
+            playerPosition[2]
+          );
+          // Ensure initial FOV is also set here
+          const perspCamera = camera as PerspectiveCamera;
+          if (perspCamera.fov !== initialFov) {
+            // Only set if different
+            perspCamera.fov = initialFov;
+            perspCamera.updateProjectionMatrix();
+          }
+          // Ensure initial rotation is set here too
+          camera.rotation.x = -0.2 - Math.PI / 8; // Match initial rotation offset
         }
         initialPositionSetRef.current = true;
       }
 
-      targetPositionRef.current.set(
-        playerPosition[0] + offsetRef.current.x,
-        playerPosition[1] + offsetRef.current.y,
-        playerPosition[2] + offsetRef.current.z
-      );
+      // Only update target and lerp if the animation is running or completed
+      if (
+        animationStateRef.current.isRunning ||
+        animationStateRef.current.hasCompleted
+      ) {
+        targetPositionRef.current.set(
+          playerPosition[0] + offsetRef.current.x,
+          playerPosition[1] + offsetRef.current.y,
+          playerPosition[2] + offsetRef.current.z
+        );
 
-      // Use a slower lerp for smoother camera movement
-      // Faster lerp during intro animation for more dramatic effect
-      const lerpFactor = !isIntroPanComplete ? 0.03 : 0.05;
-      camera.position.lerp(targetPositionRef.current, lerpFactor);
-      camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
+        // Use a slower lerp for smoother camera movement AFTER intro animation
+        // Faster lerp during intro animation for more dramatic effect
+        const lerpFactor = animationStateRef.current.isRunning ? 0.05 : 0.03;
+        camera.position.lerp(targetPositionRef.current, lerpFactor);
+        camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
+      }
     }
   });
 
@@ -556,6 +582,7 @@ const TerrainObstacleGenerator = () => {
       );
       terrainGeneratedRef.current = true;
       setIsTerrainReady(true);
+      useGameState.setState({ isTerrainReady: true });
       debug.log(
         "TerrainObstacleGenerator: All obstacles generated successfully"
       );
@@ -571,6 +598,8 @@ const TerrainObstacleGenerator = () => {
   useEffect(() => {
     if (isGameOver) {
       terrainGeneratedRef.current = false;
+      setIsTerrainReady(false);
+      // Global state is reset by restartGame in gameState.ts
     }
   }, [isGameOver]);
 
