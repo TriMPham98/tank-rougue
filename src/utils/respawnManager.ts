@@ -57,6 +57,7 @@ export const useRespawnManager = () => {
   const enemiesSpawnedThisRoundRef = useRef<number>(0);
   const currentLevelRef = useRef<number>(1);
   const isSpawningWaveRef = useRef<boolean>(false);
+  const gameRestartedRef = useRef<boolean>(false);
 
   // Helper function to spawn a single enemy
   const spawnEnemy = (maxEnemies: number): boolean => {
@@ -306,7 +307,28 @@ export const useRespawnManager = () => {
     spawnNext();
   };
 
-  // Listen for changes in the enemies array
+  // Add specific effect to monitor game restarts
+  useEffect(() => {
+    const unsubscribeRestart = useGameState.subscribe((state) => {
+      // Detect game restart (level went back to 1)
+      if (currentLevelRef.current > 1 && state.level === 1) {
+        debug.log("Respawn Manager: Game restart detected, resetting state");
+        // Game was restarted, reset state
+        prevEnemyCountRef.current = 0;
+        prevEnemiesRef.current = [];
+        enemiesSpawnedThisRoundRef.current = 0;
+        currentLevelRef.current = 1;
+        gameRestartedRef.current = true;
+      } else if (gameRestartedRef.current && state.isTerrainReady) {
+        // Terrain is ready after restart, reset flag
+        gameRestartedRef.current = false;
+      }
+    });
+
+    return unsubscribeRestart;
+  }, []);
+
+  // Listen for changes in the enemies array (existing effect remains unchanged)
   useEffect(() => {
     const initialState = useGameState.getState();
     prevEnemyCountRef.current = initialState.enemies.length;
@@ -321,6 +343,11 @@ export const useRespawnManager = () => {
     }
 
     const unsubscribe = useGameState.subscribe((state, prevState) => {
+      // Skip if we're in a restarted state waiting for terrain to be ready
+      if (gameRestartedRef.current) {
+        return;
+      }
+
       // Use prevState
       // Check for level change
       if (state.level !== currentLevelRef.current) {

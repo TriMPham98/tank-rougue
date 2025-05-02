@@ -542,12 +542,13 @@ const TerrainObstacleGenerator = () => {
     (state) => state.setTerrainObstacles
   );
   const isGameOver = useGameState((state) => state.isGameOver);
+  const level = useGameState((state) => state.level); // Add level to trigger regeneration on restartGame
   const [isTerrainReadyInternal, setIsTerrainReadyInternal] = useState(false);
   const terrainGeneratedRef = useRef(false);
 
   useEffect(() => {
     // Only generate terrain if not already generated or game was restarted
-    if (terrainGeneratedRef.current && !isGameOver) return;
+    if (terrainGeneratedRef.current && !isGameOver && level > 1) return;
 
     debug.log("TerrainObstacleGenerator: Starting obstacle generation");
 
@@ -639,8 +640,8 @@ const TerrainObstacleGenerator = () => {
         );
       }
     });
-    // Update dependencies: only need setTerrainObstacles and isGameOver
-  }, [setTerrainObstacles, isGameOver]);
+    // Update dependencies to include level which changes on restart
+  }, [setTerrainObstacles, isGameOver, level]);
 
   // Reset terrain state when game is restarted
   useEffect(() => {
