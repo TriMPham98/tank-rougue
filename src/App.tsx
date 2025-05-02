@@ -52,8 +52,6 @@ function App() {
           return;
         }
         lastToggleTime.current = now;
-        // Log ESC press and current pause state
-        console.log(`ESC pressed, toggling pause. isPaused: ${isPaused}`);
         togglePause();
       }
 

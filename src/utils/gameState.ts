@@ -341,9 +341,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
   togglePause: () =>
     set((state) => {
-      console.log(`togglePause called. Current isPaused: ${state.isPaused}`);
       const newState = { isPaused: !state.isPaused };
-      console.log(`togglePause setting new state:`, newState);
       return newState;
     }),
 
