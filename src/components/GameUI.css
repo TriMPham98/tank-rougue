@@ -1355,3 +1355,149 @@
   min-width: auto;
   width: 90%;
 }
+
+/* New styles for the main menu button and confirmation dialog */
+.main-menu-button {
+  background-color: var(--color-hull-medium); /* A different color */
+  color: var(--color-text-light);
+}
+
+.main-menu-button:hover {
+  background-color: #ffc107; /* Brighter hover */
+  color: var(--color-text-dark);
+}
+
+/* Confirmation Dialog Styles */
+.confirm-dialog-overlay .overlay-content {
+  border-color: var(--color-rank-medium);
+  max-width: 350px;
+  padding: 25px 30px;
+}
+
+.confirm-title {
+  color: var(--color-rank-medium);
+  font-size: 2em;
+  margin-bottom: 15px;
+}
+
+.confirm-dialog-content p {
+  font-size: 1.1em;
+  margin-bottom: 20px;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Space between buttons */
+}
+
+.confirm-buttons .ui-button {
+  margin-top: 0; /* Remove top margin inside this container */
+  padding: 10px 20px;
+  font-size: 1em;
+}
+
+.yes-button {
+  background-color: var(
+    --color-hull-low
+  ); /* Red for confirm potentially destructive action */
+  color: var(--color-text-light);
+}
+
+.yes-button:hover {
+  background-color: #dc3545; /* Darker red on hover */
+}
+
+.no-button {
+  background-color: var(--color-accent);
+}
+
+.no-button:hover {
+  background-color: #ffffff;
+  color: var(--color-accent);
+}
+
+/* Weapon Selection Modal */
+.weapon-selection-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.weapon-selection-content {
+  background-color: rgba(30, 30, 30, 0.9);
+  padding: 30px 40px;
+  border-radius: 8px;
+  border: 2px solid var(--color-accent);
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  color: var(--color-text-light);
+  max-width: 400px;
+}
+
+/* Game Over Specific Styles */
+.game-over-overlay .overlay-content {
+  border-color: var(--color-hull-low);
+}
+
+.game-over-title {
+  color: var(--color-hull-low);
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.game-over-content p {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+/* Pause Specific Styles */
+.pause-overlay .overlay-content {
+  border-color: var(--color-rank-medium);
+}
+
+.pause-title {
+  color: var(--color-rank-medium);
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+/* General UI Button */
+.ui-button {
+  background-color: var(--color-accent);
+  color: var(--color-text-dark);
+  border: none;
+  padding: 12px 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 20px; /* Add some space above buttons */
+  text-transform: uppercase;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.ui-button:hover {
+  background-color: #ffffff;
+  color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.ui-button:active {
+  transform: translateY(0);
+}
+
+/* Button specific margins */
+.resume-button {
+  margin-right: 10px; /* Space between resume and main menu */
+}

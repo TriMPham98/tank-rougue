@@ -38,6 +38,7 @@ const GameUI = () => {
   const lastZoneRadiusRef = useRef(0);
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
+  const [showMainMenuConfirm, setShowMainMenuConfirm] = useState(false);
   const sound = useSound();
 
   useEffect(() => {
@@ -92,6 +93,7 @@ const GameUI = () => {
     safeZoneTargetRadius: combatZoneTargetRadius,
     safeZoneShrinkRate: combatZoneShrinkRate,
     isPreZoneChangeLevel: isPreContainmentShiftRank,
+    returnToMainMenu,
   } = useGameState();
 
   // Reset elapsed time when game is restarted (level and score reset to initial values)
@@ -364,6 +366,20 @@ const GameUI = () => {
 
   const [showContainmentWarning, setShowContainmentWarning] = useState(false);
   const containmentWarningOpacityRef = useRef(0);
+
+  // Handle returning to main menu confirmation
+  const handleReturnToMenuClick = () => {
+    setShowMainMenuConfirm(true);
+  };
+
+  const handleConfirmReturn = () => {
+    returnToMainMenu();
+    setShowMainMenuConfirm(false);
+  };
+
+  const handleCancelReturn = () => {
+    setShowMainMenuConfirm(false);
+  };
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -721,9 +737,34 @@ const GameUI = () => {
               <button className="ui-button resume-button" onClick={togglePause}>
                 RESUME OPERATION
               </button>
+              <button
+                className="ui-button main-menu-button"
+                onClick={handleReturnToMenuClick}>
+                RETURN TO MAIN MENU
+              </button>
             </div>
           </div>
         )}
+      {showMainMenuConfirm && (
+        <div className="overlay confirm-dialog-overlay">
+          <div className="overlay-content confirm-dialog-content">
+            <h2 className="confirm-title">Confirm</h2>
+            <p>Are you sure you want to return to the main menu?</p>
+            <div className="confirm-buttons">
+              <button
+                className="ui-button yes-button"
+                onClick={handleConfirmReturn}>
+                Yes
+              </button>
+              <button
+                className="ui-button no-button"
+                onClick={handleCancelReturn}>
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {renderWeaponSelection()}
       {!isGameOver && !isMobile && (
         <div className="controls-info">

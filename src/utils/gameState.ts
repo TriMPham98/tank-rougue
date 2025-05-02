@@ -143,6 +143,7 @@ interface GameState {
     isFiring?: boolean;
   }) => void;
   startGame: () => void; // New action to start the game
+  returnToMainMenu: () => void; // New action to return to main menu
 }
 
 // Create the game state store
@@ -824,6 +825,56 @@ export const useGameState = create<GameState>((set, get) => ({
       }
 
       return newState;
+    });
+  },
+
+  // Action to return to the main menu
+  returnToMainMenu: () => {
+    // Reset the state similar to restartGame, but also set isGameStarted to false
+    set({
+      playerHealth: 100,
+      playerMaxHealth: 100,
+      playerSpeed: 3,
+      playerDamage: 25,
+      playerTurretDamage: 50,
+      playerFireRate: 2,
+      playerCameraRange: 8,
+      playerHealthRegen: 0,
+      playerBulletVelocity: 15,
+      playerPenetration: 0,
+      playerLevel: 1,
+      score: 0,
+      level: 1,
+      playerTankPosition: [0, 0.5, 0],
+      enemies: [],
+      powerUps: [],
+      isGameOver: false,
+      isPaused: false, // Ensure unpaused
+      isGameStarted: false, // Go back to main menu
+      enemiesDefeated: 0,
+      enemiesRequiredForNextLevel: 1,
+      showUpgradeUI: false,
+      availableUpgrades: [],
+      terrainObstacles: [],
+      showWeaponSelection: false,
+      availableWeapons,
+      selectedWeapons: [],
+      safeZoneRadius: 50,
+      safeZoneCenter: [0, 0],
+      safeZoneTargetRadius: 50,
+      safeZoneShrinkRate: 0.05,
+      safeZoneDamage: 1,
+      safeZoneActive: false,
+      isPreZoneChangeLevel: false,
+      shouldResetCameraAnimation: true,
+      isWireframeAssembled: false,
+      isTerrainReady: false,
+      forward: 0, // Reset input states
+      strafe: 0,
+      moveX: 0,
+      moveZ: 0,
+      turretRotation: null,
+      isFiring: false,
     });
   },
 }));
