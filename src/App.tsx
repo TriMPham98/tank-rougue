@@ -11,8 +11,6 @@ import StartScreen from "./components/StartScreen";
 function App() {
   // Use a ref to ensure initialization only happens once
   const initialized = useRef(false);
-  // Add the wasPaused ref at the top level
-  const wasPaused = useRef(false);
   // Ref to track if the current pause state was initiated by the upgrade UI effect
   const pausedByUpgradeUI = useRef(false);
   // Add a ref to track last toggle time
