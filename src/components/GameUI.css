@@ -102,7 +102,6 @@
   align-items: center;
   gap: 20px;
   width: calc(100% - 30px);
-  /* Removed position: relative; z-index: 100; as it was likely not needed */
   color: #5fdc5f;
   pointer-events: none;
   font-family: "Courier New", monospace;
@@ -150,8 +149,8 @@
   border-radius: 2px;
   overflow: hidden;
   position: relative;
-  width: 75%; /* CHANGED from 100% */
-  margin: 0 auto 3px; /* ADDED auto margins for centering, kept bottom margin */
+  width: 75%;
+  margin: 0 auto 3px;
 }
 
 .military-theme .progress-bar {
@@ -182,8 +181,8 @@
   text-align: center;
   white-space: nowrap;
   letter-spacing: 0.5px;
-  display: block; /* Ensure it takes block space for centering */
-  margin-top: 3px; /* Add some space if needed */
+  display: block;
+  margin-top: 3px;
 }
 
 /* Hull Integrity specific */
@@ -231,8 +230,7 @@
 }
 
 .military-theme .rank-progression .progress-bar-container {
-  /* Inherits width: 75% and auto margins */
-  height: 24px; /* Keep specific height if needed, or remove if base is fine */
+  height: 24px;
 }
 
 .military-theme .rank-progression .progress-bar {
@@ -532,9 +530,6 @@
 
 .military-theme .resume-button,
 .military-theme .main-menu-button {
-  background-color: transparent;
-  color: #5fdc5f;
-  border: 2px solid #5fdc5f;
   border-radius: 4px;
   padding: 12px 30px;
   cursor: pointer;
@@ -544,35 +539,48 @@
   font-size: 1.1rem;
   font-weight: bold;
   text-transform: uppercase;
-  box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
-  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   margin: 10px 0;
   width: 80%;
   max-width: 300px;
 }
 
-.military-theme .resume-button:hover,
-.military-theme .main-menu-button:hover {
-  background-color: rgba(95, 220, 95, 0.1);
-  box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
+/* Resume Button - Primary Action */
+.military-theme .resume-button {
+  background-color: transparent;
+  color: #5fdc5f; /* Bright green for primary action */
+  border: 2px solid #5fdc5f;
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.3);
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
+}
+
+.military-theme .resume-button:hover {
+  background-color: rgba(
+    95,
+    220,
+    95,
+    0.15
+  ); /* Slightly brighter green background */
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.5);
   text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
   transform: translateY(-2px);
 }
 
-/* Specific style for main menu button to make it less prominent */
+/* Main Menu Button - Secondary Action */
 .military-theme .main-menu-button {
-  color: #a0d0a0;
-  border-color: #a0d0a0;
+  background-color: transparent;
+  color: #a0d0a0; /* More muted green for secondary action */
+  border: 2px solid #a0d0a0;
   box-shadow: 0 0 8px rgba(160, 208, 160, 0.2);
-  text-shadow: 0 0 8px rgba(160, 208, 160, 0.5);
+  text-shadow: 0 0 8px rgba(160, 208, 160, 0.4);
 }
 
 .military-theme .main-menu-button:hover {
   background-color: rgba(160, 208, 160, 0.1);
-  color: #c2e8c5;
-  border-color: #c2e8c5;
-  box-shadow: 0 0 15px rgba(160, 208, 160, 0.4);
-  text-shadow: 0 0 12px rgba(160, 208, 160, 0.7);
+  box-shadow: 0 0 15px rgba(160, 208, 160, 0.3);
+  text-shadow: 0 0 12px rgba(160, 208, 160, 0.6);
+  color: #a0d0a0;
+  border-color: #a0d0a0;
+  transform: translateY(-2px);
 }
 
 @keyframes scanlines {
@@ -673,7 +681,7 @@
       transparent 1px
     ),
     linear-gradient(to bottom, var(--color-radar-lines) 1px, transparent 1px);
-  background-size: calc(100% / 20) calc(100% / 20); /* 20x20 grid for 100x100 map */
+  background-size: calc(100% / 20) calc(100% / 20);
   background-position: center center;
   opacity: 0.4;
 }
@@ -691,7 +699,7 @@
       var(--color-radar-sections, #2c5e1e) 2px,
       transparent 2px
     );
-  background-size: calc(100% / 4) calc(100% / 4); /* 5 sections (4 lines) for the 100x100 map */
+  background-size: calc(100% / 4) calc(100% / 4);
   background-position: center center;
   opacity: 0.9;
 }
@@ -1017,29 +1025,6 @@
   min-width: 400px;
 }
 
-.military-theme .resume-button {
-  background-color: rgba(80, 120, 80, 0.2);
-  color: #50ff50;
-  border: 1px solid rgba(80, 255, 80, 0.3);
-  font-family: var(--font-primary);
-  font-size: 1.2em;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  padding: 15px 40px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-shadow: 0 0 5px rgba(80, 255, 80, 0.5);
-  box-shadow: 0 0 10px rgba(80, 255, 80, 0.1);
-}
-
-.military-theme .resume-button:hover {
-  background-color: rgba(80, 255, 80, 0.2);
-  border-color: rgba(80, 255, 80, 0.5);
-  box-shadow: 0 0 20px rgba(80, 255, 80, 0.2);
-  transform: translateY(-2px);
-  text-shadow: 0 0 10px rgba(80, 255, 80, 0.7);
-}
-
 /* Game Over / Mission Failed Overlay */
 .military-theme .game-over-overlay {
   background-color: rgba(10, 15, 10, 0.95);
@@ -1071,7 +1056,7 @@
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   text-align: center;
   position: relative;
-  width: 100%; /* Ensure title spans width for border */
+  width: 100%;
 }
 
 .military-theme .game-over-title:before,
@@ -1143,19 +1128,19 @@
   width: calc(100% - 10px);
   padding: 5px;
   font-size: 80%;
-  gap: 10px; /* Reduce gap for mobile */
+  gap: 10px;
 }
 
 .game-ui.military-theme.mobile .hud-element {
   font-size: 80%;
-  padding: 0 3px; /* Reduce padding */
+  padding: 0 3px;
 }
 
 .game-ui.military-theme.mobile .progress-bar-container {
-  width: 75%; /* CHANGED from 100% */
+  width: 75%;
   height: 20px;
-  margin-left: auto; /* Ensure centering */
-  margin-right: auto; /* Ensure centering */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .game-ui.military-theme.mobile .hull-integrity,
@@ -1180,7 +1165,6 @@
 
 .game-ui.military-theme.mobile .rank-progression .progress-bar-container {
   height: 20px;
-  /* Inherits width: 75% and auto margins */
 }
 
 .game-ui.military-theme.mobile .rank-indicator {
@@ -1199,10 +1183,9 @@
   max-width: 95%;
   width: 95%;
   padding: 10px;
-  margin: 0 auto; /* Center the menu */
+  margin: 0 auto;
 }
 
-/* Mobile Enhancement/Upgrade Title (Assuming .enhancement-content has h2) */
 .game-ui.military-theme.mobile .overlay-content h2 {
   font-size: 1.4rem;
   padding: 8px 10px;
@@ -1278,20 +1261,20 @@
 }
 
 .game-ui.military-theme.mobile .game-over-content p {
-  font-size: 0.9rem; /* Adjust text size */
-  margin: 10px 20px; /* Adjust margins */
+  font-size: 0.9rem;
+  margin: 10px 20px;
 }
 
 .game-ui.military-theme.mobile .restart-button {
-  font-size: 1rem; /* Adjust button text */
-  padding: 10px 25px; /* Adjust button padding */
-  margin: 15px 0 20px; /* Adjust button margin */
+  font-size: 1rem;
+  padding: 10px 25px;
+  margin: 15px 0 20px;
 }
 
 /* Combat Zone Warning */
 .military-theme .combat-zone-warning {
   position: fixed;
-  bottom: 120px; /* Position above controls */
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -1328,31 +1311,20 @@
   justify-content: center;
 }
 
-/* Restore the top-hud section that was accidentally removed */
-/* This was likely intended to style the containers within .top-hud */
-/* Now using .hud-element directly as the container seems more appropriate */
-/* Removed redundant .hud-section rule */
-
-/* Mobile styles re-check */
 .game-ui.military-theme.mobile .hull-integrity {
-  min-width: 80px; /* Adjusted min-width for smaller bar */
+  min-width: 80px;
   flex: 1;
 }
 
-/* .game-ui.military-theme.mobile .combat-score styling already adjusted above */
-
 .game-ui.military-theme.mobile .rank-progression {
-  min-width: 100px; /* Adjusted min-width for smaller bar */
+  min-width: 100px;
   flex: 1;
 }
 
 /* Ensure the enhancement grid is responsive for all screen sizes */
 @media (max-width: 480px) {
   .game-ui.military-theme.mobile .enhancement-options {
-    grid-template-columns: repeat(
-      2,
-      1fr
-    ); /* Change to 2 columns on very small screens */
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
     padding: 6px;
   }
@@ -1364,7 +1336,7 @@
 
 @media (max-width: 350px) {
   .game-ui.military-theme.mobile .enhancement-options {
-    grid-template-columns: 1fr; /* Single column on extremely small screens */
+    grid-template-columns: 1fr;
     gap: 5px;
     padding: 5px;
   }
@@ -1376,38 +1348,21 @@
   width: 90%;
 }
 
-/* New styles for the main menu button and confirmation dialog */
-/* Remove previously added generic styles */
-/*
-.main-menu-button {
-  background-color: var(--color-hull-medium); 
-  color: var(--color-text-light);
-}
-
-.main-menu-button:hover {
-  background-color: #ffc107; 
-  color: var(--color-text-dark);
-}
-*/
-
 /* Confirmation Dialog Styles */
-/* Apply military theme to confirmation dialog */
 .military-theme .confirm-dialog-overlay .overlay-content {
-  /* Match pause content style */
   background-color: rgba(20, 25, 20, 0.9);
   border: 1px solid rgba(80, 120, 80, 0.3);
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-  padding: 0; /* Remove padding, handled by inner elements */
-  min-width: 350px; /* Adjusted min-width */
-  max-width: 400px; /* Slightly larger max-width */
-  position: relative; /* Needed for pseudo-element */
-  color: #c2e8c5; /* Default text color */
+  padding: 0;
+  min-width: 350px;
+  max-width: 400px;
+  position: relative;
+  color: #c2e8c5;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Add scanlines to confirmation dialog */
 .military-theme .confirm-dialog-overlay .overlay-content:before {
   content: "";
   position: absolute;
@@ -1424,24 +1379,23 @@
   pointer-events: none;
   animation: scanlines 2s linear infinite;
   z-index: 2;
-  border-radius: 5px; /* Match content border-radius */
+  border-radius: 5px;
 }
 
 .military-theme .confirm-title {
-  /* Match pause title style */
   background-color: transparent;
   padding: 15px 20px;
   margin: 0;
   width: 100%;
-  color: #5fdc5f; /* Bright green title */
+  color: #5fdc5f;
   font-family: "Courier New", monospace;
-  font-size: 1.6rem; /* Slightly smaller than pause */
+  font-size: 1.6rem;
   text-transform: uppercase;
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
   text-align: center;
   position: relative;
-  border-bottom: 1px solid #2f7c2f; /* Add bottom border */
+  border-bottom: 1px solid #2f7c2f;
 }
 
 .military-theme .confirm-title:before,
@@ -1453,9 +1407,9 @@
 
 .military-theme .confirm-dialog-content p {
   font-family: "Courier New", monospace;
-  font-size: 1rem; /* Adjusted size */
-  color: #a0d0a0; /* Standard text color */
-  margin: 25px 30px; /* Add padding around text */
+  font-size: 1rem;
+  color: #a0d0a0;
+  margin: 25px 30px;
   line-height: 1.5;
   text-align: center;
 }
@@ -1463,32 +1417,31 @@
 .military-theme .confirm-buttons {
   display: flex;
   justify-content: center;
-  gap: 15px; /* Space between buttons */
-  margin-bottom: 25px; /* Space below buttons */
+  gap: 15px;
+  margin-bottom: 25px;
   width: 100%;
   padding: 0 30px;
 }
 
-/* Apply military theme button style to confirm buttons */
 .military-theme .confirm-buttons .ui-button {
   background-color: transparent;
   border-radius: 4px;
-  padding: 10px 25px; /* Adjusted padding */
+  padding: 10px 25px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: "Courier New", monospace;
-  letter-spacing: 1.5px; /* Adjusted spacing */
-  font-size: 1rem; /* Adjusted size */
+  letter-spacing: 1.5px;
+  font-size: 1rem;
   font-weight: bold;
   text-transform: uppercase;
   margin-top: 0;
-  width: auto; /* Allow natural width */
-  flex: 1; /* Make buttons share space */
-  max-width: 150px; /* Limit button width */
+  width: auto;
+  flex: 1;
+  max-width: 150px;
 }
 
 .military-theme .yes-button {
-  color: var(--color-hull-low); /* Red text */
+  color: var(--color-hull-low);
   border: 2px solid var(--color-hull-low);
   box-shadow: 0 0 8px rgba(217, 83, 79, 0.3);
   text-shadow: 0 0 8px rgba(217, 83, 79, 0.5);
@@ -1496,7 +1449,7 @@
 
 .military-theme .yes-button:hover {
   background-color: rgba(217, 83, 79, 0.1);
-  border-color: #ff6666; /* Brighter red border */
+  border-color: #ff6666;
   color: #ff6666;
   box-shadow: 0 0 15px rgba(217, 83, 79, 0.5);
   text-shadow: 0 0 12px rgba(217, 83, 79, 0.7);
@@ -1504,70 +1457,20 @@
 }
 
 .military-theme .no-button {
-  color: #a0d0a0; /* Muted green text */
-  border: 2px solid #a0d0a0;
-  box-shadow: 0 0 8px rgba(160, 208, 160, 0.2);
-  text-shadow: 0 0 8px rgba(160, 208, 160, 0.5);
+  color: #5fdc5f;
+  border: 2px solid #5fdc5f;
+  box-shadow: 0 0 10px rgba(95, 220, 95, 0.2);
+  text-shadow: 0 0 10px rgba(95, 220, 95, 0.5);
 }
 
 .military-theme .no-button:hover {
-  background-color: rgba(160, 208, 160, 0.1);
-  color: #c2e8c5; /* Slightly brighter on hover */
-  border-color: #c2e8c5;
-  box-shadow: 0 0 15px rgba(160, 208, 160, 0.4);
-  text-shadow: 0 0 12px rgba(160, 208, 160, 0.7);
+  background-color: rgba(95, 220, 95, 0.1);
+  box-shadow: 0 0 20px rgba(95, 220, 95, 0.4);
+  text-shadow: 0 0 15px rgba(95, 220, 95, 0.7);
+  color: #5fdc5f;
+  border-color: #5fdc5f;
   transform: translateY(-2px);
 }
-
-/* Remove old generic confirmation styles */
-/*
-.confirm-dialog-overlay .overlay-content {
-  border-color: var(--color-rank-medium);
-  max-width: 350px;
-  padding: 25px 30px;
-}
-
-.confirm-title {
-  color: var(--color-rank-medium);
-  font-size: 2em;
-  margin-bottom: 15px;
-}
-
-.confirm-dialog-content p {
-  font-size: 1.1em;
-  margin-bottom: 20px;
-}
-
-.confirm-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 15px; 
-}
-
-.confirm-buttons .ui-button {
-  margin-top: 0; 
-  padding: 10px 20px;
-  font-size: 1em;
-}
-
-.yes-button {
-  background-color: var(--color-hull-low); 
-  color: var(--color-text-light);
-}
-
-.yes-button:hover {
-  background-color: #dc3545; 
-}
-
-.no-button {
-  background-color: var(--color-accent);
-}
-
-.no-button:hover {
-  background-color: #ffffff;
-  color: var(--color-accent);
-}
-*/
 
 /* Weapon Selection Modal */
 .weapon-selection-modal {
@@ -1634,7 +1537,7 @@
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.1s ease;
-  margin-top: 20px; /* Add some space above buttons */
+  margin-top: 20px;
   text-transform: uppercase;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
@@ -1647,9 +1550,4 @@
 
 .ui-button:active {
   transform: translateY(0);
-}
-
-/* Button specific margins */
-.resume-button {
-  /* margin-right: 10px; Remove - buttons are stacked */
 }

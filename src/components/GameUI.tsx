@@ -734,13 +734,13 @@ const GameUI = () => {
           <div className="overlay pause-overlay">
             <div className="overlay-content pause-content">
               <h2 className="pause-title">OPERATION PAUSED</h2>
-              <button className="ui-button resume-button" onClick={togglePause}>
-                RESUME OPERATION
-              </button>
               <button
                 className="ui-button main-menu-button"
                 onClick={handleReturnToMenuClick}>
-                RETURN TO MAIN MENU
+                MAIN MENU
+              </button>
+              <button className="ui-button resume-button" onClick={togglePause}>
+                RESUME
               </button>
             </div>
           </div>
