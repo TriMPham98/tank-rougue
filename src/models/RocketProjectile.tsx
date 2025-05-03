@@ -183,8 +183,8 @@ const RocketProjectile = ({
     null
   );
 
-  const maxHeight = 5; // Keep the arc height
-  const splashRadius = 10; // Keep the splash radius for damage calculation
+  const maxHeight = 3; // Arc height
+  const splashRadius = 5; // Reduced from 10 to 5 for smaller splash damage radius
   const visualExplosionSize = splashRadius * 0.8; // Control visual size separately
 
   const damageEnemy = useGameState((state) => state.damageEnemy);

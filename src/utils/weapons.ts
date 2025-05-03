@@ -6,8 +6,8 @@ export const availableWeapons: SecondaryWeapon[] = [
     name: "Mortar",
     description:
       "Fires shells that deal high damage and have a large explosion radius.",
-    damage: 75,
-    cooldown: 7,
+    damage: 150,
+    cooldown: 5,
     range: 20,
     projectileSpeed: 1,
   },
