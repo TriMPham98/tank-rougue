@@ -16,7 +16,7 @@ const isPositionClear = (
     type: "rock";
     size: number;
   }>,
-  minClearance: number = 8
+  minClearance: number = 12
 ): boolean => {
   for (const obstacle of terrainObstacles) {
     const dx = obstacle.position[0] - x;
@@ -150,6 +150,7 @@ export const generateEnemies = (
   const safeZoneCenter = gameState.safeZoneCenter;
   const safeZoneRadius = gameState.safeZoneRadius;
   const safeZoneActive = gameState.safeZoneActive;
+  const terrainObstacles = gameState.terrainObstacles;
 
   if (level === 1) {
     const enemyCount = 1;
@@ -159,8 +160,54 @@ export const generateEnemies = (
     const enemies: Omit<Enemy, "id">[] = [];
     const existingPositions: [number, number, number][] = [playerPosition];
 
-    const position = generateRandomPosition(config.gridSize, existingPositions);
-    enemies.push({ position, health: 85, type: "tank", speed: 1.3 });
+    // Use more thorough position validation for initial enemy
+    let validPosition: [number, number, number] | null = null;
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    while (validPosition === null && attempts < maxAttempts) {
+      const candidatePosition = generateRandomPosition(
+        config.gridSize,
+        existingPositions
+      );
+
+      // Extra validation for distance from terrain obstacles
+      let isClear = true;
+      for (const obstacle of terrainObstacles) {
+        const dx = obstacle.position[0] - candidatePosition[0];
+        const dz = obstacle.position[2] - candidatePosition[2];
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        const minClearance = obstacle.size * 2.5 + 7; // Same clearance as respawnManager
+        if (distance < minClearance) {
+          isClear = false;
+          debug.warn(
+            "Initial enemy generation rejected position too close to obstacle:",
+            candidatePosition
+          );
+          break;
+        }
+      }
+
+      if (isClear) {
+        validPosition = candidatePosition;
+      } else {
+        attempts++;
+      }
+    }
+
+    if (validPosition === null) {
+      debug.warn(
+        "Could not find valid initial enemy position after multiple attempts, using fallback"
+      );
+      validPosition = [20, 0.5, 20]; // Fallback position
+    }
+
+    enemies.push({
+      position: validPosition,
+      health: 85,
+      type: "tank",
+      speed: 1.3,
+    });
     return enemies;
   }
 
@@ -241,6 +288,28 @@ export const generateEnemies = (
         existingPositions
       );
 
+      // Extra validation for distance from terrain obstacles
+      let isClear = true;
+      for (const obstacle of terrainObstacles) {
+        const dx = obstacle.position[0] - candidatePosition[0];
+        const dz = obstacle.position[2] - candidatePosition[2];
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        const minClearance = obstacle.size * 2.5 + 7; // Same clearance as respawnManager
+        if (distance < minClearance) {
+          isClear = false;
+          debug.warn(
+            "Enemy generation rejected position too close to obstacle:",
+            candidatePosition
+          );
+          break;
+        }
+      }
+
+      if (!isClear) {
+        attempts++;
+        continue; // Skip to next attempt if not clear
+      }
+
       if ((type === "turret" || type === "tank") && safeZoneActive) {
         const turretPosVec = new THREE.Vector2(
           candidatePosition[0],
@@ -269,14 +338,18 @@ export const generateEnemies = (
               safeZoneCenter[1] + Math.sin(angle) * radiusOffset,
             ];
             // Check if fallback position is clear
-            if (
-              !isPositionClear(
-                fallbackPosition[0],
-                fallbackPosition[2],
-                gameState.terrainObstacles,
-                3
-              )
-            ) {
+            let fallbackClear = true;
+            for (const obstacle of terrainObstacles) {
+              const dx = obstacle.position[0] - fallbackPosition[0];
+              const dz = obstacle.position[2] - fallbackPosition[2];
+              const distance = Math.sqrt(dx * dx + dz * dz);
+              const minClearance = obstacle.size * 2.5 + 7;
+              if (distance < minClearance) {
+                fallbackClear = false;
+                break;
+              }
+            }
+            if (!fallbackClear) {
               fallbackPosition = [safeZoneCenter[0], 0.5, safeZoneCenter[1]];
               debug.warn(
                 `Fallback ${type} position near center also obstructed. Placing AT center.`
@@ -287,7 +360,7 @@ export const generateEnemies = (
           // If not max attempts yet, loop continues, finalPosition remains null
         }
       } else {
-        // Not a turret/tank or safe zone inactive, the candidate position is final
+        // Not a turret/tank or safe zone inactive, the candidate position is final (if clear)
         finalPosition = candidatePosition;
       }
     }
@@ -322,7 +395,8 @@ export const generatePowerUps = (): Omit<PowerUp, "id">[] => {
 
 // Generate a complete level
 export const generateLevel = () => {
-  const { spawnEnemy, terrainObstacles } = useGameState.getState();
+  const { spawnEnemy, terrainObstacles, isTerrainReady } =
+    useGameState.getState();
 
   // Check if terrain obstacles have been generated yet
   if (terrainObstacles.length === 0) {
@@ -331,24 +405,45 @@ export const generateLevel = () => {
     );
   }
 
-  // Use requestAnimationFrame to ensure this work is scheduled
-  // with lower priority than the wireframe animation
-  const startGenerationTime = performance.now();
-  requestAnimationFrame(() => {
-    const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
-
-    enemies.forEach((enemy) => {
-      // The position generated by generateEnemies should already be valid.
-      spawnEnemy(enemy);
-    });
-
-    const generationTime = performance.now() - startGenerationTime;
+  // Ensure terrain is ready before generating enemies
+  if (!isTerrainReady) {
     debug.log(
-      `Level generation completed in ${generationTime.toFixed(2)}ms with ${
-        enemies.length
-      } enemies`
+      "generateLevel: Waiting for terrain to be ready before placing enemies"
     );
-  });
+    // Set up a subscription to wait until terrain is ready
+    const unsubscribe = useGameState.subscribe((state) => {
+      if (state.isTerrainReady) {
+        unsubscribe(); // Clean up the subscription once terrain is ready
+        // Now proceed with enemy generation
+        generateEnemiesWhenReady();
+      }
+    });
+    return { enemies: [], powerUps: [] }; // Return empty arrays immediately
+  } else {
+    // Terrain is already ready, proceed directly
+    generateEnemiesWhenReady();
+    return { enemies: [], powerUps: [] };
+  }
 
-  return { enemies: [], powerUps: [] }; // Return empty arrays immediately, actual content will be added to state asynchronously
+  // Helper function to generate enemies once terrain is confirmed ready
+  function generateEnemiesWhenReady() {
+    // Use requestAnimationFrame to ensure this work is scheduled
+    // with lower priority than the wireframe animation
+    const startGenerationTime = performance.now();
+    requestAnimationFrame(() => {
+      const enemies = generateEnemies(1, [0, 0.5, 0]); // Hardcode defaults as params unused
+
+      enemies.forEach((enemy) => {
+        // The position generated by generateEnemies should already be valid.
+        spawnEnemy(enemy);
+      });
+
+      const generationTime = performance.now() - startGenerationTime;
+      debug.log(
+        `Level generation completed in ${generationTime.toFixed(2)}ms with ${
+          enemies.length
+        } enemies`
+      );
+    });
+  }
 };

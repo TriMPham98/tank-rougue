@@ -5,6 +5,7 @@ import { generateLevel } from "../utils/levelGenerator";
 import { useSound } from "../utils/sound";
 import TankWireframeDisplay from "./TankWireframeDisplay";
 import { AnimState } from "./TankWireframe";
+import { debug } from "../utils/debug";
 
 type TransitionStep = "idle" | "fading" | "assembling";
 
@@ -101,9 +102,16 @@ const StartScreen: React.FC = () => {
     // Setup game state immediately
     restartGame();
 
-    // Generate level concurrently with animation
-    // This will trigger terrain and enemy generation while the tank assembles
-    generateLevel();
+    // Generate level after ensuring terrain is ready
+    // This subscription will be cleaned up when the component unmounts
+    const unsubscribe = useGameState.subscribe((state) => {
+      if (state.isTerrainReady) {
+        // Only generate level once terrain is ready
+        debug.log("StartScreen: Terrain ready, now generating enemies");
+        generateLevel();
+        unsubscribe(); // Clean up subscription once we've called generateLevel
+      }
+    });
   };
 
   // Handler for when the assembly animation completes
