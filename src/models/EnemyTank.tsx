@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { Vector3, Group, Quaternion, MeshStandardMaterial } from "three";
 import { Enemy, useGameState } from "../utils/gameState";
-import EnemyProjectile from "./EnemyProjectile";
+import Projectile from "./Projectile";
 import { debug } from "../utils/debug";
 
 interface EnemyTankProps {
@@ -664,13 +664,14 @@ const EnemyTank = ({ enemy }: EnemyTankProps) => {
           damage = 30; // End game damage
         }
         return (
-          <EnemyProjectile
+          <Projectile
             key={projectile.id}
             id={projectile.id}
             position={projectile.position}
             rotation={projectile.rotation}
             damage={damage}
             onRemove={removeProjectile}
+            isEnemy={true}
           />
         );
       })}

@@ -1,4 +1,17 @@
-import { SecondaryWeapon } from "./gameState";
+// Consolidated weapon types and instances
+
+export interface WeaponInstance {
+  id: string;
+  instanceId?: string;
+  name: string;
+  description: string;
+  damage: number;
+  cooldown: number;
+  range: number;
+  projectileSpeed: number;
+}
+
+export type SecondaryWeapon = WeaponInstance;
 
 export const availableWeapons: SecondaryWeapon[] = [
   {
@@ -44,8 +57,7 @@ export const availableWeapons: SecondaryWeapon[] = [
   {
     id: "tesla",
     name: "Tesla Coil",
-    description:
-      "Emits electricity that chains between nearby enemies.",
+    description: "Emits electricity that chains between nearby enemies.",
     damage: 125,
     cooldown: 1.0,
     range: 7.5,

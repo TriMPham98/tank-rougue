@@ -12,7 +12,7 @@ import Shotgun from "./Shotgun";
 import LaserWeapon from "./LaserWeapon";
 import RocketLauncher from "./RocketLauncher";
 import TeslaCoil from "./TeslaCoil";
-import { WeaponInstance } from "../utils/weaponTypes";
+import { WeaponInstance } from "../utils/weapons";
 
 interface TankProps {
   position: [number, number, number];

@@ -1,13 +1,14 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Group, Vector3 } from "three";
-import { useGameState, SecondaryWeapon, Enemy } from "./gameState";
+import { useGameState, Enemy } from "./gameState";
+import { WeaponInstance } from "./weapons";
 import { debug } from "./debug";
 import { useSound } from "./sound";
 
 // Common interface for weapon tracking props
 export interface WeaponTrackingProps {
-  weaponInstance: SecondaryWeapon;
+  weaponInstance: WeaponInstance;
   position: [number, number, number];
   rotation: number;
   weaponRef: React.RefObject<Group>;

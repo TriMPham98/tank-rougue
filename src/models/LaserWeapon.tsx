@@ -1,27 +1,19 @@
 // src/components/LaserWeapon.tsx
-import { useRef, useEffect, useState } from "react";
-import { Box } from "@react-three/drei";
-import { Group } from "three";
+import { FC, useRef, useEffect, useState } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Box, Cylinder } from "@react-three/drei";
+import { Group, Vector3 } from "three";
 import { debug } from "../utils/debug";
 import LaserBeam from "./LaserBeam";
 import { useWeaponTracking } from "../utils/weaponTracking";
+import { useGameState } from "../utils/gameState";
+import { WeaponInstance } from "../utils/weapons";
 
 // --- UPDATED PROPS INTERFACE ---
 interface LaserWeaponProps {
-  weaponInstance: SecondaryWeapon;
+  weaponInstance: WeaponInstance;
   position: [number, number, number];
   rotation: number;
-}
-
-interface SecondaryWeapon {
-  id: string;
-  name: string;
-  description: string;
-  range: number;
-  damage: number;
-  cooldown: number;
-  projectileSpeed: number;
-  instanceId?: string;
 }
 
 const LaserWeapon = ({
