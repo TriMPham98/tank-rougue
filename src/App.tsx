@@ -5,7 +5,6 @@ import GameUI from "./components/GameUI";
 import { useGameState } from "./utils/gameState";
 import { generateLevel } from "./utils/levelGenerator";
 import { debug } from "./utils/debug";
-import AudioUnlock from "./components/AudioUnlock";
 import StartScreen from "./components/StartScreen";
 
 function App() {
@@ -142,7 +141,6 @@ function App() {
     <div className="app">
       <GameScene />
       <GameUI />
-      <AudioUnlock />
     </div>
   );
 }
