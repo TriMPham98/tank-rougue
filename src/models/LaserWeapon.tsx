@@ -1,12 +1,10 @@
 // src/components/LaserWeapon.tsx
-import { FC, useRef, useEffect, useState } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Box, Cylinder } from "@react-three/drei";
-import { Group, Vector3 } from "three";
+import { useRef, useEffect, useState } from "react";
+import { Box } from "@react-three/drei";
+import { Group } from "three";
 import { debug } from "../utils/debug";
 import LaserBeam from "./LaserBeam";
 import { useWeaponTracking } from "../utils/weaponTracking";
-import { useGameState } from "../utils/gameState";
 import { WeaponInstance } from "../utils/weapons";
 
 // --- UPDATED PROPS INTERFACE ---
