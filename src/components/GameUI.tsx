@@ -4,7 +4,6 @@ import { UpgradeableStat } from "../utils/gameState";
 import { useState, useCallback, useEffect, useRef } from "react";
 import WeaponSelection from "./WeaponSelection";
 import "./WeaponSelection.css";
-import { useSound } from "../utils/sound";
 import StatUpgradeUI from "./StatUpgradeUI";
 import { generateLevel } from "../utils/levelGenerator";
 import TacticalDisplay from "./TacticalDisplay";
@@ -40,7 +39,6 @@ const GameUI = () => {
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
   const [showMainMenuConfirm, setShowMainMenuConfirm] = useState(false);
-  const sound = useSound();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -421,18 +419,6 @@ const GameUI = () => {
     isGameOver,
     showContainmentWarning,
   ]);
-
-  const handleUnlockAudio = () => {
-    // Play and immediately stop a sound to unlock audio
-    sound.setVolume("playerCannon", 0.01);
-    sound.play("playerCannon");
-  };
-
-  // Add background audio unlock on first render
-  useEffect(() => {
-    // Try to unlock audio automatically on first render
-    handleUnlockAudio();
-  }, []);
 
   // Handle ENTER key press for game restart when game over
   useEffect(() => {

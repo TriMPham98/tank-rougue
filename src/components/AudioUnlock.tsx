@@ -1,52 +1,9 @@
-import { useEffect, useState } from "react";
-import { useSound } from "../utils/sound";
+import { useEffect } from "react";
 
 const AudioUnlock = () => {
-  const [unlocked, setUnlocked] = useState(false);
-  const sound = useSound();
-
   useEffect(() => {
-    // If SoundManager already handled the unlock, we don't need to do anything
-    if (sound.isAudioUnlocked()) {
-      setUnlocked(true);
-      return;
-    }
-
-    const handleUserInteraction = () => {
-      if (unlocked) return;
-
-      // Try to play and immediately stop a sound to unlock audio on mobile
-      try {
-        // Play a silent sound
-        sound.setVolume("playerCannon", 0.01);
-        sound.play("playerCannon");
-
-        // Mark as unlocked
-        setUnlocked(true);
-
-        // Remove event listeners
-        document.removeEventListener("touchstart", handleUserInteraction);
-        document.removeEventListener("click", handleUserInteraction);
-        document.removeEventListener("keydown", handleUserInteraction);
-      } catch (error) {
-        console.warn("Failed to unlock audio:", error);
-      }
-    };
-
-    // Add event listeners for user interaction
-    document.addEventListener("touchstart", handleUserInteraction, {
-      once: true,
-    });
-    document.addEventListener("click", handleUserInteraction, { once: true });
-    document.addEventListener("keydown", handleUserInteraction, { once: true });
-
-    return () => {
-      // Clean up event listeners
-      document.removeEventListener("touchstart", handleUserInteraction);
-      document.removeEventListener("click", handleUserInteraction);
-      document.removeEventListener("keydown", handleUserInteraction);
-    };
-  }, [unlocked, sound]);
+    // No sound playing, no event handlers
+  }, []);
 
   // This component doesn't render anything visible
   return null;

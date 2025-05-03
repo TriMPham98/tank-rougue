@@ -6,13 +6,12 @@ class SoundManager {
   private static instance: SoundManager;
   private sounds: Map<string, HTMLAudioElement>;
   private lastPlayTime: Map<string, number>;
-  private audioUnlocked: boolean = false;
+  private audioUnlocked: boolean = true; // Always set to true
 
   private constructor() {
     this.sounds = new Map();
     this.lastPlayTime = new Map();
     this.loadSounds();
-    this.setupAudioUnlockForMobile();
   }
 
   public static getInstance(): SoundManager {
@@ -20,49 +19,6 @@ class SoundManager {
       SoundManager.instance = new SoundManager();
     }
     return SoundManager.instance;
-  }
-
-  private setupAudioUnlockForMobile(): void {
-    // Function to unlock audio on mobile
-    const unlockAudio = () => {
-      if (this.audioUnlocked) return;
-
-      // Create and play a silent sound to unlock audio
-      const silentSound = new Audio();
-      silentSound
-        .play()
-        .then(() => {
-          this.audioUnlocked = true;
-          console.log("Audio unlocked successfully");
-        })
-        .catch((error) => {
-          console.warn("Could not unlock audio automatically:", error);
-        });
-
-      // Don't try to play all sounds at once as this can cause them to load simultaneously
-      // Just unlock the audio context with a single operation
-    };
-
-    // Listen for various user interaction events to unlock audio
-    const unlockEvents = [
-      "touchstart",
-      "touchend",
-      "mousedown",
-      "keydown",
-      "click",
-    ];
-    const unlockHandler = () => {
-      unlockAudio();
-      // Remove event listeners after unlocking
-      unlockEvents.forEach((event) => {
-        document.removeEventListener(event, unlockHandler);
-      });
-    };
-
-    // Add event listeners
-    unlockEvents.forEach((event) => {
-      document.addEventListener(event, unlockHandler);
-    });
   }
 
   private loadSounds(): void {
