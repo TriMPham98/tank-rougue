@@ -616,6 +616,9 @@ const GameUI = () => {
             <h2 className="game-over-title">MISSION FAILED</h2>
             <p>Combat Score: {score}</p>
             <p>Highest Rank Achieved: {rank}</p>
+            <p>
+              Time Survived: {Math.floor(elapsedTime / 60)}m {elapsedTime % 60}s
+            </p>
             <button
               className="ui-button restart-button"
               onClick={handleRestartGame}>
