@@ -22,7 +22,7 @@ export const availableWeapons: SecondaryWeapon[] = [
     damage: 150,
     cooldown: 5,
     range: 20,
-    projectileSpeed: 1,
+    projectileSpeed: 25,
   },
   {
     id: "laser",
