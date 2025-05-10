@@ -4,6 +4,8 @@
 
 ![Early Game](/public/assets/images/earlyGame.png)
 
+![End Game](/public/assets/images/endGame.png)
+
 **Version: 0.0.0**
 
 A roguelike tank game built with React and Three.js where you control a tank in a procedurally generated world, fighting enemy tanks and collecting power-ups.
