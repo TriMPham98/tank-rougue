@@ -2,11 +2,15 @@
 
 ![Start Screen](/public/assets/images/startScreen.png)
 
+![Loading Screen](/public/assets/images/loading.png)
+
 ![Early Game](/public/assets/images/earlyGame.png)
 
-![End Game](/public/assets/images/endGame.png)
+![Attribute Upgrade](/public/assets/images/attributeUpgrade.png)
 
-**Version: 0.0.0**
+![Secondary Upgrade](/public/assets/images/secondaryUpgrade.png)
+
+![End Game](/public/assets/images/endGame.png)
 
 A roguelike tank game built with React and Three.js where you control a tank in a procedurally generated world, fighting enemy tanks and collecting power-ups.
 
@@ -85,18 +89,3 @@ The game uses a centralized state management approach with Zustand:
 - **Zustand** - State management
 - **TypeScript** - Type safety
 - **Vite** - Fast development server and build tool
-
-## Future Improvements
-
-- Add sound effects and background music
-- Implement more enemy types
-- Add obstacles and terrain variations
-- Create more weapon types
-- Implement a minimap
-- Add local storage for saving high scores
-- Implement game levels with increasing difficulty
-- Add mobile device support with touch controls
-
-## License
-
-MIT
