@@ -33,6 +33,99 @@ const enforceMapBoundaries = (
   return constrainedPosition;
 };
 
+// New helper function to generate varied spawn positions
+const generateVariedSpawnPosition = (
+  level: number,
+  existingPositions: [number, number, number][],
+  minDistance: number,
+  maxDistance: number,
+  enemyType: "tank" | "turret" | "bomber"
+): [number, number, number] => {
+  const mapSize = 100;
+  const halfMapSize = mapSize / 2;
+
+  // Define spawn zones based on enemy type
+  let spawnZone: "edge" | "mid" | "any" = "any";
+  if (enemyType === "turret") {
+    spawnZone = "mid"; // Turrets prefer middle areas
+  } else if (enemyType === "bomber") {
+    spawnZone = "edge"; // Bombers prefer edge areas
+  }
+
+  // Calculate dynamic spawn parameters based on level
+  const baseGridSize = Math.min(40 + level * 2, 70);
+  const spawnAttempts = 20; // Increased attempts for better position finding
+
+  for (let attempt = 0; attempt < spawnAttempts; attempt++) {
+    let x: number, z: number;
+
+    // Generate position based on spawn zone
+    switch (spawnZone) {
+      case "edge":
+        // Edge spawn with some randomness
+        const edge = Math.random() < 0.5 ? "north" : "south";
+        const edgeOffset = Math.random() * 20 + 10; // 10-30 units from edge
+        x = (Math.random() - 0.5) * (halfMapSize - edgeOffset);
+        z =
+          edge === "north"
+            ? halfMapSize - edgeOffset
+            : -halfMapSize + edgeOffset;
+        break;
+      case "mid":
+        // Mid area spawn with tighter bounds
+        const midRange = halfMapSize * 0.4;
+        x = (Math.random() - 0.5) * midRange;
+        z = (Math.random() - 0.5) * midRange;
+        break;
+      default:
+        // Anywhere spawn with level-based distribution
+        const distribution = Math.random();
+        if (distribution < 0.4) {
+          // 40% chance for edge spawns
+          const edge = Math.random() < 0.5 ? "north" : "south";
+          const edgeOffset = Math.random() * 15 + 5;
+          x = (Math.random() - 0.5) * (halfMapSize - edgeOffset);
+          z =
+            edge === "north"
+              ? halfMapSize - edgeOffset
+              : -halfMapSize + edgeOffset;
+        } else {
+          // 60% chance for general area spawns
+          x = (Math.random() - 0.5) * baseGridSize;
+          z = (Math.random() - 0.5) * baseGridSize;
+        }
+    }
+
+    const position: [number, number, number] = [x, 0.5, z];
+
+    // Check distance from existing positions
+    let isTooClose = false;
+    for (const existingPos of existingPositions) {
+      const dx = existingPos[0] - position[0];
+      const dz = existingPos[2] - position[2];
+      const distance = Math.sqrt(dx * dx + dz * dz);
+      if (distance < minDistance) {
+        isTooClose = true;
+        break;
+      }
+    }
+
+    if (!isTooClose) {
+      return enforceMapBoundaries(position);
+    }
+  }
+
+  // Fallback to original random position if no good position found
+  return enforceMapBoundaries(
+    generateRandomPosition(
+      baseGridSize,
+      existingPositions,
+      minDistance,
+      maxDistance
+    )
+  );
+};
+
 const BASE_ENEMIES = 1;
 const getMaxEnemies = (level: number) => {
   if (level === 1) return 1;
@@ -124,20 +217,17 @@ export const useRespawnManager = () => {
           playerTankPosition,
           ...enemies.map((e: any) => e.position),
         ];
-        const gridSize = Math.min(40 + level * 2, 70);
 
         while (attempts < turretMaxRegenAttempts && !positionFound) {
-          position = generateRandomPosition(
-            gridSize,
+          position = generateVariedSpawnPosition(
+            level,
             existingPositions,
             7,
-            400
+            400,
+            type
           );
 
-          // Apply map boundaries right after generating random position
-          position = enforceMapBoundaries(position);
-
-          // Extra validation for distance from terrain obstacles (already in generateRandomPosition, but good failsafe)
+          // Extra validation for distance from terrain obstacles
           let isClear = true;
           for (const obstacle of terrainObstacles) {
             const dx = obstacle.position[0] - position[0];
@@ -154,8 +244,8 @@ export const useRespawnManager = () => {
             }
           }
           if (!isClear) {
-            attempts++; // Count as an attempt even if rejected by obstacle
-            continue; // Try generating a new position
+            attempts++;
+            continue;
           }
 
           // Check safe zone if it's a turret
