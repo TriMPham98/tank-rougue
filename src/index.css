@@ -79,7 +79,7 @@ button:focus-visible {
 }
 
 /* Landscape mode styles */
-@media screen and (orientation: portrait) {
+@media screen and (orientation: portrait) and (max-width: 1024px) {
   /* Don't apply the portrait warning to tablets */
   body:not(.tablet-device) #root {
     display: none;

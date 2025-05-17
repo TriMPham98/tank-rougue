@@ -901,7 +901,11 @@ export const useGameState = create<GameState>((set, get) => ({
         navigator.userAgent
       ) && !document.body.classList.contains("tablet-device");
 
-    if (!isMobileDevice) return;
+    // ADDITION: If not a mobile device, always hide the orientation warning and return
+    if (!isMobileDevice) {
+      set(() => ({ showOrientationWarning: false }));
+      return;
+    }
 
     // Check if the device is in portrait mode
     const isPortrait = window.matchMedia("(orientation: portrait)").matches;
