@@ -21,6 +21,7 @@ import { Vector3, SpotLight as ThreeSpotLight, PerspectiveCamera } from "three";
 import "./GameScene.css";
 import { useRespawnManager } from "../utils/respawnManager";
 import { debug } from "../utils/debug";
+import { globalFPSTracker } from "../utils/fpsTracker";
 import MobileJoysticks from "../components/MobileJoysticks";
 
 // Custom hook to calculate light intensity based on game level
@@ -224,10 +225,19 @@ const FollowCamera = memo(() => {
   }, [camera]);
 
   useFrame((_, delta) => {
-    const playerPosition = getState().playerTankPosition;
-    const cameraRange = getState().playerCameraRange;
-    const isWireframeAssembled = getState().isWireframeAssembled;
-    const isTerrainReady = getState().isTerrainReady;
+    const gameState = getState();
+
+    // Track FPS performance with level and secondary weapon count
+    globalFPSTracker.update(
+      delta,
+      gameState.level,
+      gameState.selectedWeapons.length
+    );
+
+    const playerPosition = gameState.playerTankPosition;
+    const cameraRange = gameState.playerCameraRange;
+    const isWireframeAssembled = gameState.isWireframeAssembled;
+    const isTerrainReady = gameState.isTerrainReady;
 
     if (playerPosition) {
       // Set positive distance for camera to stay in front of the tank
