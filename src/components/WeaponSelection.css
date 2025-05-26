@@ -343,6 +343,15 @@
   font-family: "Courier New", monospace;
   text-align: right; /* Align value to the right */
 }
+
+/* Range enhancement indicator */
+.range-enhancement {
+  color: #5fdc5f;
+  font-size: 0.85em;
+  font-weight: 500;
+  text-shadow: 0 0 3px rgba(95, 220, 95, 0.5);
+  margin-left: 2px;
+}
 /* --- End Stats Section --- */
 
 /* Card Hover/Active Effects */

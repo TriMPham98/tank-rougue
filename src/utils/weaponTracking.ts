@@ -5,6 +5,7 @@ import { useGameState, Enemy } from "./gameState";
 import { WeaponInstance } from "./weapons";
 import { debug } from "./debug";
 import { useSound } from "./sound";
+import { calculateEnhancedWeaponRange } from "./tankStats";
 
 // Common interface for weapon tracking props
 export interface WeaponTrackingProps {
@@ -36,6 +37,7 @@ export const useWeaponTracking = ({
   const sound = useSound();
 
   const playerTurretDamage = useGameState((state) => state.playerTurretDamage);
+  const playerCameraRange = useGameState((state) => state.playerCameraRange);
   const isPaused = useGameState((state) => state.isPaused);
   const isGameOver = useGameState((state) => state.isGameOver);
   const enemies = useGameState((state) => state.enemies);
@@ -43,7 +45,12 @@ export const useWeaponTracking = ({
   const terrainObstacles = useGameState((state) => state.terrainObstacles);
 
   const cooldown = weaponInstance.cooldown || 5;
-  const weaponRange = weaponInstance.range || 40;
+  const baseWeaponRange = weaponInstance.range || 40;
+  // Calculate enhanced weapon range based on camera sensor upgrades
+  const weaponRange = calculateEnhancedWeaponRange(
+    baseWeaponRange,
+    playerCameraRange
+  );
   const baseDamage = weaponInstance.damage || 30;
   const instanceId = weaponInstance.instanceId || "default_weapon";
 

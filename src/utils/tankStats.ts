@@ -20,6 +20,20 @@ export const STAT_UPGRADE_INCREMENTS: Record<
   penetration: { amount: 1, maxValue: 3 }, // Reduced max value to 3 but kept increment at 1
 };
 
+// Calculate enhanced weapon range based on camera sensor upgrades
+export const calculateEnhancedWeaponRange = (
+  baseRange: number,
+  playerCameraRange: number
+): number => {
+  const baseCameraRange = 8; // Initial camera range
+  const cameraUpgrades = Math.max(0, (playerCameraRange - baseCameraRange) / 2);
+
+  // Each camera sensor upgrade increases weapon range by 15%
+  const rangeMultiplier = 1 + cameraUpgrades * 0.15;
+
+  return Math.round(baseRange * rangeMultiplier * 10) / 10; // Round to 1 decimal place
+};
+
 // Get human-readable display name for each stat
 export const getStatDisplayName = (stat: UpgradeableStat): string => {
   switch (stat) {
@@ -150,7 +164,7 @@ export const getStatDescription = (stat: UpgradeableStat): string => {
     case "fireRate":
       return "Optimize loading mechanism for increased rounds per second.";
     case "cameraRange":
-      return "Upgrade sensor suite for extended tactical awareness.";
+      return "Upgrade sensor suite for extended tactical awareness and secondary weapon range.";
     case "maxHealth":
       return "Reinforce hull structure, increasing damage tolerance.";
     case "healthRegen":

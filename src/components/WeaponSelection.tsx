@@ -6,6 +6,8 @@ import React, {
   useMemo,
 } from "react";
 import { WeaponSelectionProps, SecondaryWeapon } from "../types";
+import { useGameState } from "../utils/gameState";
+import { calculateEnhancedWeaponRange } from "../utils/tankStats";
 
 // Fisher-Yates shuffle algorithm
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -25,6 +27,9 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
   const { availableWeapons, level, canSelect } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSelectionLocked, setIsSelectionLocked] = useState(false);
+
+  // Get current camera range for enhanced weapon range calculation
+  const playerCameraRange = useGameState((state) => state.playerCameraRange);
 
   // Shuffle and limit weapons to 4 max
   const displayWeapons = useMemo(() => {
@@ -179,7 +184,29 @@ const WeaponSelection: React.FC<WeaponSelectionProps> = ({
                   </div>
                   <div className="stat">
                     <span className="stat-label">EFFECTIVE RANGE:</span>
-                    <span className="stat-value">{weapon.range}</span>
+                    <span className="stat-value">
+                      {calculateEnhancedWeaponRange(
+                        weapon.range,
+                        playerCameraRange
+                      )}
+                      m
+                      {playerCameraRange > 8 && (
+                        <span className="range-enhancement">
+                          {" "}
+                          (+
+                          {(
+                            (calculateEnhancedWeaponRange(
+                              weapon.range,
+                              playerCameraRange
+                            ) /
+                              weapon.range -
+                              1) *
+                            100
+                          ).toFixed(0)}
+                          %)
+                        </span>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
