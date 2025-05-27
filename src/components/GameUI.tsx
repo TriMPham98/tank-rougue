@@ -39,6 +39,7 @@ const GameUI = () => {
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
   const [showMainMenuConfirm, setShowMainMenuConfirm] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -382,6 +383,15 @@ const GameUI = () => {
     setShowMainMenuConfirm(false);
   };
 
+  // Settings handlers
+  const handleOpenSettings = () => {
+    setShowSettings(true);
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettings(false);
+  };
+
   useEffect(() => {
     let animationFrameId: number;
     if (
@@ -630,7 +640,8 @@ const GameUI = () => {
       {isPaused &&
         !isGameOver &&
         !showEnhancementUI &&
-        !showWeaponSelection && (
+        !showWeaponSelection &&
+        !showSettings && (
           <div className="overlay pause-overlay">
             <div className="overlay-content pause-content">
               <h2 className="pause-title">OPERATION PAUSED</h2>
@@ -639,12 +650,84 @@ const GameUI = () => {
                 onClick={handleReturnToMenuClick}>
                 MAIN MENU
               </button>
+              <button
+                className="ui-button main-menu-button"
+                onClick={handleOpenSettings}>
+                SETTINGS
+              </button>
               <button className="ui-button resume-button" onClick={togglePause}>
                 RESUME
               </button>
             </div>
           </div>
         )}
+      {showSettings && (
+        <div className="overlay settings-overlay">
+          <div className="overlay-content settings-content">
+            <h2 className="settings-title">SETTINGS</h2>
+            <div className="settings-body">
+              <div className="setting-group">
+                <label className="setting-label">Master Volume</label>
+                <div className="setting-control">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="50"
+                    className="setting-slider"
+                  />
+                  <span className="setting-value">50%</span>
+                </div>
+              </div>
+              <div className="setting-group">
+                <label className="setting-label">Sound Effects</label>
+                <div className="setting-control">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="75"
+                    className="setting-slider"
+                  />
+                  <span className="setting-value">75%</span>
+                </div>
+              </div>
+              <div className="setting-group">
+                <label className="setting-label">Show FPS</label>
+                <div className="setting-control">
+                  <input
+                    type="checkbox"
+                    defaultChecked={false}
+                    className="setting-checkbox"
+                  />
+                </div>
+              </div>
+              <div className="setting-group">
+                <label className="setting-label">
+                  Auto-Pause on Focus Loss
+                </label>
+                <div className="setting-control">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="setting-checkbox"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="settings-buttons">
+              <button
+                className="settings-button secondary"
+                onClick={handleCloseSettings}>
+                CLOSE
+              </button>
+              <button className="settings-button" onClick={handleCloseSettings}>
+                APPLY
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showMainMenuConfirm && (
         <div className="overlay confirm-dialog-overlay">
           <div className="overlay-content confirm-dialog-content">

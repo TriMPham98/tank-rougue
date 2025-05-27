@@ -161,6 +161,38 @@
   opacity: 1;
 }
 
+.settings-button-start {
+  background-color: transparent;
+  color: #a0d0a0;
+  border: 2px solid #a0d0a0;
+  border-radius: 4px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-primary);
+  letter-spacing: 2px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px rgba(160, 208, 160, 0.2);
+  text-shadow: 0 0 8px rgba(160, 208, 160, 0.4);
+  margin: 10px 0;
+  position: relative;
+  z-index: 20;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.settings-button-start:hover {
+  background-color: rgba(160, 208, 160, 0.1);
+  box-shadow: 0 0 15px rgba(160, 208, 160, 0.3);
+  text-shadow: 0 0 12px rgba(160, 208, 160, 0.6);
+  color: #a0d0a0;
+  border-color: #a0d0a0;
+  transform: translateY(-2px);
+}
+
 .controls-info {
   margin-top: 25px;
   color: var(--color-text-secondary);
@@ -211,6 +243,12 @@
   font-size: 1.1rem;
   padding: 12px 25px;
   margin: 10px 0 8px;
+}
+
+.start-screen.mobile .settings-button-start {
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 8px 0;
 }
 
 .start-screen.mobile .controls-info {

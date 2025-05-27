@@ -25,6 +25,7 @@ const StartScreen: React.FC = () => {
   const [wireframeAnimMode, setWireframeAnimMode] = useState<AnimState>(
     AnimState.IDLE
   );
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     // Check if the device is mobile with improved detection
@@ -125,6 +126,15 @@ const StartScreen: React.FC = () => {
     }
   };
 
+  // Settings handlers
+  const handleOpenSettings = () => {
+    setShowSettings(true);
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettings(false);
+  };
+
   return (
     <div className={`start-screen military-theme ${isMobile ? "mobile" : ""}`}>
       {/* Tank wireframe as background */}
@@ -160,10 +170,82 @@ const StartScreen: React.FC = () => {
         <button className="start-button" onClick={handleStartGame}>
           DEPLOY UNIT
         </button>
+        <button className="settings-button-start" onClick={handleOpenSettings}>
+          SETTINGS
+        </button>
       </div>
       {/* Conditionally render Loading text during fade/assembly */}
       {transitionStep === "fading" && (
         <div className="loading-text">Loading...</div>
+      )}
+
+      {/* Settings overlay */}
+      {showSettings && (
+        <div className="overlay settings-overlay">
+          <div className="overlay-content settings-content">
+            <h2 className="settings-title">SETTINGS</h2>
+            <div className="settings-body">
+              <div className="setting-group">
+                <label className="setting-label">Master Volume</label>
+                <div className="setting-control">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="50"
+                    className="setting-slider"
+                  />
+                  <span className="setting-value">50%</span>
+                </div>
+              </div>
+              <div className="setting-group">
+                <label className="setting-label">Sound Effects</label>
+                <div className="setting-control">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="75"
+                    className="setting-slider"
+                  />
+                  <span className="setting-value">75%</span>
+                </div>
+              </div>
+              <div className="setting-group">
+                <label className="setting-label">Show FPS</label>
+                <div className="setting-control">
+                  <input
+                    type="checkbox"
+                    defaultChecked={false}
+                    className="setting-checkbox"
+                  />
+                </div>
+              </div>
+              <div className="setting-group">
+                <label className="setting-label">
+                  Auto-Pause on Focus Loss
+                </label>
+                <div className="setting-control">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="setting-checkbox"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="settings-buttons">
+              <button
+                className="settings-button secondary"
+                onClick={handleCloseSettings}>
+                CLOSE
+              </button>
+              <button className="settings-button" onClick={handleCloseSettings}>
+                APPLY
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
