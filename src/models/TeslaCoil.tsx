@@ -26,8 +26,8 @@ const TeslaCoil = ({ weaponInstance, position, rotation }: TeslaCoilProps) => {
   const coilRef = useRef<Group<Object3DEventMap>>(null);
   const [activeArcs, setActiveArcs] = useState<ActiveArcData[]>([]);
 
-  // Use the shared weapon tracking logic
-  const { instanceId } = useWeaponTracking({
+  // Use the shared weapon tracking logic and get enhanced range
+  const { instanceId, weaponRange } = useWeaponTracking({
     weaponInstance,
     position,
     rotation,
@@ -49,7 +49,7 @@ const TeslaCoil = ({ weaponInstance, position, rotation }: TeslaCoilProps) => {
           rotation: coilRef.current?.rotation.y ?? 0,
           targetId: targetId,
           damage: weaponInstance.damage,
-          range: weaponInstance.range,
+          range: weaponRange, // Use enhanced range
         },
       ]);
     },

@@ -28,7 +28,6 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   const projectilesRef = useRef<PelletData[]>([]);
 
   const {
-    range: weaponRange,
     projectileSpeed,
     damage: damagePerShot,
     instanceId = "default_shotgun",
@@ -37,9 +36,9 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
   const PELLET_COUNT: number = 5;
   const SPREAD_ANGLE: number = 0.25;
   const damagePerPellet: number = damagePerShot / PELLET_COUNT;
-  const projectileTTL: number = weaponRange / projectileSpeed;
 
-  useWeaponTracking({
+  // Get enhanced weapon range from weapon tracking
+  const { weaponRange } = useWeaponTracking({
     weaponInstance,
     position,
     rotation,
@@ -48,6 +47,9 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
     onFire: (firePosition) => {
       debug.log(`Firing from position: ${firePosition}`);
       const currentRotation = shotgunRef.current?.rotation.y ?? rotation;
+
+      // Calculate TTL using enhanced range
+      const projectileTTL: number = weaponRange / projectileSpeed;
 
       for (let i = 0; i < PELLET_COUNT; i++) {
         const spreadOffset = (Math.random() - 0.5) * SPREAD_ANGLE;
@@ -60,7 +62,7 @@ const Shotgun: FC<ShotgunProps> = ({ weaponInstance, position, rotation }) => {
           rotation: pelletRotation,
           damage: damagePerPellet,
           speed: projectileSpeed,
-          range: weaponRange,
+          range: weaponRange, // Use enhanced range
           ttl: projectileTTL,
         };
         projectilesRef.current.push(newPelletData);

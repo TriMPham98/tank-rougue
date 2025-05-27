@@ -54,6 +54,16 @@ export const useWeaponTracking = ({
   const baseDamage = weaponInstance.damage || 30;
   const instanceId = weaponInstance.instanceId || "default_weapon";
 
+  // Debug log enhanced range calculation (only occasionally to avoid spam)
+  useRef(() => {
+    if (Math.random() < 0.01) {
+      // 1% chance to log
+      debug.log(
+        `Weapon ${instanceId}: Base range ${baseWeaponRange}m, Camera range ${playerCameraRange}m, Enhanced range ${weaponRange}m`
+      );
+    }
+  }).current;
+
   // Check if a shot would collide with the player tank
   const wouldCollideWithPlayer = (
     firePosition: [number, number, number],
@@ -276,6 +286,7 @@ export const useWeaponTracking = ({
     lastShootTimeRef,
     cooldown,
     weaponRange,
+    baseWeaponRange,
     baseDamage,
     instanceId,
     playerTurretDamage,

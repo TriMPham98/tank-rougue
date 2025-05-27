@@ -23,16 +23,12 @@ const LaserWeapon = ({
   const [isBeamActive, setIsBeamActive] = useState(false);
   const firingDurationRef = useRef(0);
 
-  const {
-    range: weaponRange,
-    damage: laserDamage,
-    instanceId = "default_laser",
-  } = weaponInstance;
+  const { damage: laserDamage, instanceId = "default_laser" } = weaponInstance;
 
   const DAMAGE_TICK_RATE = 0.1;
 
-  // Use the shared weapon tracking logic
-  const { targetEnemyRef } = useWeaponTracking({
+  // Use the shared weapon tracking logic and get enhanced range
+  const { targetEnemyRef, weaponRange } = useWeaponTracking({
     weaponInstance,
     position,
     rotation,
