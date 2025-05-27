@@ -1,17 +1,11 @@
 export class FPSTracker {
   private frameTimes: number[] = [];
   private lastTime: number = performance.now();
-  private logInterval: number;
-  private lastLogTime: number = 0;
   private frameCount: number = 0;
   private totalFrameTime: number = 0;
   private currentLevel: number = 1;
   private lastLoggedLevel: number = 0;
   private secondaryWeaponCount: number = 0;
-
-  constructor(logIntervalSeconds: number = 5) {
-    this.logInterval = logIntervalSeconds * 1000; // Convert to milliseconds
-  }
 
   /**
    * Call this method in your useFrame hook to track frame performance
@@ -48,7 +42,6 @@ export class FPSTracker {
 
     if (shouldLogLevelChange) {
       this.logFPS(true); // Always pass true since we only log on level changes
-      this.lastLogTime = currentTime;
       this.lastLoggedLevel = this.currentLevel;
     }
 
@@ -155,18 +148,9 @@ export class FPSTracker {
     this.frameCount = 0;
     this.totalFrameTime = 0;
     this.lastTime = performance.now();
-    this.lastLogTime = 0;
     this.currentLevel = 1;
     this.lastLoggedLevel = 0;
     this.secondaryWeaponCount = 0;
-  }
-
-  /**
-   * Set a new logging interval
-   * @param seconds - How often to log FPS (in seconds)
-   */
-  setLogInterval(seconds: number): void {
-    this.logInterval = seconds * 1000;
   }
 
   /**
@@ -199,6 +183,3 @@ export class FPSTracker {
     return this.secondaryWeaponCount;
   }
 }
-
-// Create a singleton instance for easy use across the app
-export const globalFPSTracker = new FPSTracker(5); // Log every 5 seconds by default
