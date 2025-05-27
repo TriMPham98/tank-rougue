@@ -183,3 +183,6 @@ export class FPSTracker {
     return this.secondaryWeaponCount;
   }
 }
+
+// Create and export a global instance
+export const globalFPSTracker = new FPSTracker();
