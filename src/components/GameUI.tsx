@@ -7,6 +7,7 @@ import "./WeaponSelection.css";
 import StatUpgradeUI from "./StatUpgradeUI";
 import { generateLevel } from "../utils/levelGenerator";
 import TacticalDisplay from "./TacticalDisplay";
+import { useSettings } from "../utils/settingsContext";
 
 // Define BASE_TARGETS constant for enemy count calculation
 const BASE_TARGETS = 1;
@@ -40,6 +41,14 @@ const GameUI = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [showMainMenuConfirm, setShowMainMenuConfirm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+
+  // Settings context
+  const {
+    masterVolume,
+    soundEffectsVolume,
+    setMasterVolume,
+    setSoundEffectsVolume,
+  } = useSettings();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -673,10 +682,11 @@ const GameUI = () => {
                     type="range"
                     min="0"
                     max="100"
-                    defaultValue="50"
+                    value={masterVolume}
+                    onChange={(e) => setMasterVolume(parseInt(e.target.value))}
                     className="setting-slider"
                   />
-                  <span className="setting-value">50%</span>
+                  <span className="setting-value">{masterVolume}%</span>
                 </div>
               </div>
               <div className="setting-group">
@@ -686,10 +696,13 @@ const GameUI = () => {
                     type="range"
                     min="0"
                     max="100"
-                    defaultValue="75"
+                    value={soundEffectsVolume}
+                    onChange={(e) =>
+                      setSoundEffectsVolume(parseInt(e.target.value))
+                    }
                     className="setting-slider"
                   />
-                  <span className="setting-value">75%</span>
+                  <span className="setting-value">{soundEffectsVolume}%</span>
                 </div>
               </div>
             </div>

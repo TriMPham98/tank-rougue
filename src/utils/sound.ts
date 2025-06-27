@@ -1,6 +1,26 @@
 // Sound management utility for the game
 import { useRef } from "react";
 
+// Global volume settings
+let globalVolumeSettings = {
+  masterVolume: 50,
+  soundEffectsVolume: 75,
+  getEffectiveVolume: (baseVolume: number) => {
+    const masterMultiplier = globalVolumeSettings.masterVolume / 100;
+    const effectsMultiplier = globalVolumeSettings.soundEffectsVolume / 100;
+    return baseVolume * masterMultiplier * effectsMultiplier;
+  },
+};
+
+// Function to update global volume settings
+export const updateGlobalVolumeSettings = (
+  masterVolume: number,
+  soundEffectsVolume: number
+) => {
+  globalVolumeSettings.masterVolume = masterVolume;
+  globalVolumeSettings.soundEffectsVolume = soundEffectsVolume;
+};
+
 // Class to handle sound effects
 class SoundManager {
   private static instance: SoundManager;
@@ -79,7 +99,9 @@ class SoundManager {
   public setVolume(id: string, volume: number): void {
     const sound = this.sounds.get(id);
     if (sound) {
-      sound.volume = Math.max(0, Math.min(1, volume));
+      // Apply global volume settings to the base volume
+      const effectiveVolume = globalVolumeSettings.getEffectiveVolume(volume);
+      sound.volume = Math.max(0, Math.min(1, effectiveVolume));
     }
   }
 
@@ -90,7 +112,9 @@ class SoundManager {
       return;
     }
 
-    sound.volume = Math.max(0, Math.min(1, volume));
+    // Apply global volume settings to the base volume
+    const effectiveVolume = globalVolumeSettings.getEffectiveVolume(volume);
+    sound.volume = Math.max(0, Math.min(1, effectiveVolume));
     sound.loop = true;
     sound.play().catch((error) => {
       console.warn(`Error playing sound ${id}:`, error);

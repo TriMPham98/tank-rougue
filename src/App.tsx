@@ -8,8 +8,10 @@ import { debug } from "./utils/debug";
 import { globalFPSTracker } from "./utils/fpsTracker";
 import StartScreen from "./components/StartScreen";
 import FPSDisplay from "./components/FPSDisplay";
+import { SettingsProvider, useSettings } from "./utils/settingsContext";
+import { updateGlobalVolumeSettings } from "./utils/sound";
 
-function App() {
+function AppContent() {
   // Use a ref to ensure initialization only happens once
   const initialized = useRef(false);
   // Ref to track if the current pause state was initiated by the upgrade UI effect
@@ -28,6 +30,13 @@ function App() {
     isGameStarted,
     checkOrientation,
   } = useGameState();
+
+  const { masterVolume, soundEffectsVolume } = useSettings();
+
+  // Update global volume settings whenever they change
+  useEffect(() => {
+    updateGlobalVolumeSettings(masterVolume, soundEffectsVolume);
+  }, [masterVolume, soundEffectsVolume]);
 
   // Initialize game state on first render, but don't start the game automatically
   useEffect(() => {
@@ -196,6 +205,14 @@ function App() {
       <GameUI />
       <FPSDisplay visible={showFPSDisplay} position="top-right" />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <SettingsProvider>
+      <AppContent />
+    </SettingsProvider>
   );
 }
 

@@ -6,6 +6,7 @@ import { useSound } from "../utils/sound";
 import TankWireframeDisplay from "./TankWireframeDisplay";
 import { AnimState } from "./TankWireframe";
 import { debug } from "../utils/debug";
+import { useSettings } from "../utils/settingsContext";
 
 type TransitionStep = "idle" | "fading" | "assembling";
 
@@ -26,6 +27,14 @@ const StartScreen: React.FC = () => {
     AnimState.IDLE
   );
   const [showSettings, setShowSettings] = useState(false);
+
+  // Settings context
+  const {
+    masterVolume,
+    soundEffectsVolume,
+    setMasterVolume,
+    setSoundEffectsVolume,
+  } = useSettings();
 
   useEffect(() => {
     // Check if the device is mobile with improved detection
@@ -192,10 +201,11 @@ const StartScreen: React.FC = () => {
                     type="range"
                     min="0"
                     max="100"
-                    defaultValue="50"
+                    value={masterVolume}
+                    onChange={(e) => setMasterVolume(parseInt(e.target.value))}
                     className="setting-slider"
                   />
-                  <span className="setting-value">50%</span>
+                  <span className="setting-value">{masterVolume}%</span>
                 </div>
               </div>
               <div className="setting-group">
@@ -205,10 +215,13 @@ const StartScreen: React.FC = () => {
                     type="range"
                     min="0"
                     max="100"
-                    defaultValue="75"
+                    value={soundEffectsVolume}
+                    onChange={(e) =>
+                      setSoundEffectsVolume(parseInt(e.target.value))
+                    }
                     className="setting-slider"
                   />
-                  <span className="setting-value">75%</span>
+                  <span className="setting-value">{soundEffectsVolume}%</span>
                 </div>
               </div>
             </div>
