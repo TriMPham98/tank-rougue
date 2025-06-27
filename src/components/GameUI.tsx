@@ -692,28 +692,6 @@ const GameUI = () => {
                   <span className="setting-value">75%</span>
                 </div>
               </div>
-              <div className="setting-group">
-                <label className="setting-label">Show FPS</label>
-                <div className="setting-control">
-                  <input
-                    type="checkbox"
-                    defaultChecked={false}
-                    className="setting-checkbox"
-                  />
-                </div>
-              </div>
-              <div className="setting-group">
-                <label className="setting-label">
-                  Auto-Pause on Focus Loss
-                </label>
-                <div className="setting-control">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    className="setting-checkbox"
-                  />
-                </div>
-              </div>
             </div>
             <div className="settings-buttons">
               <button
