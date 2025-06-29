@@ -297,7 +297,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
       // Only play health pickup sound if collected by player, not when expired
       if (byPlayer) {
-        SoundManager.setVolume("healthPickUp", 0.35);
+        SoundManager.setVolume("healthPickUp", 0.385);
         SoundManager.play("healthPickUp");
       }
 
@@ -306,7 +306,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
   restartGame: () => {
     // Play tank deploy sound when game is restarted
-    SoundManager.setVolume("deployTank", 0.5);
+    SoundManager.setVolume("deployTank", 0.55);
     SoundManager.play("deployTank");
 
     return set({
@@ -410,8 +410,8 @@ export const useGameState = create<GameState>((set, get) => ({
 
       const newLevel = state.level + 1;
 
-      // Play level up sound at 150% volume
-      SoundManager.setVolume("levelUp", 1.5);
+      // Play level up sound at 165% volume
+      SoundManager.setVolume("levelUp", 1.65);
       SoundManager.play("levelUp");
 
       // Check if this is a level right before a zone change (levels 4, 9, 14, etc.)
@@ -660,8 +660,8 @@ export const useGameState = create<GameState>((set, get) => ({
       const distance = Math.sqrt(dx * dx + dz * dz);
 
       // Set volume based on distance (max volume at 0 distance, min volume at 50 distance)
-      const maxVolume = 0.175; // Maximum volume (17.5%)
-      const minVolume = 0.01; // Minimum volume (1%)
+      const maxVolume = 0.1925; // Maximum volume (19.25%)
+      const minVolume = 0.011; // Minimum volume (1.1%)
       const maxDistance = 50; // Maximum distance for volume calculation
       const volume = Math.max(
         minVolume,

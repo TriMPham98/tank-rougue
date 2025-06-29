@@ -184,7 +184,7 @@ const SafeZone = () => {
         isSoundPlaying.current = false;
       }
     } else if (!isSoundPlaying.current) {
-      playLoop("zoneWarning", 1.25);
+      playLoop("zoneWarning", 1.375);
       isSoundPlaying.current = true;
     }
   }, [

@@ -253,16 +253,16 @@ export const useWeaponTracking = ({
         // Play the appropriate weapon sound based on the weapon type
         const weaponType = weaponInstance.id || "";
         if (weaponType === "shotgun") {
-          sound.setVolume("shotgun", 0.1);
+          sound.setVolume("shotgun", 0.11);
           sound.play("shotgun");
         } else if (weaponType === "sniper") {
-          sound.setVolume("sniper", 0.25);
+          sound.setVolume("sniper", 0.275);
           sound.play("sniper");
         } else if (weaponType === "rocket") {
-          sound.setVolume("rocket", 0.35);
+          sound.setVolume("rocket", 0.385);
           sound.play("rocket");
         } else if (weaponType === "laser") {
-          sound.setVolume("laser", 0.075);
+          sound.setVolume("laser", 0.0825);
           sound.play("laser");
         }
 

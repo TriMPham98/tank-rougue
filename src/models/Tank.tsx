@@ -288,7 +288,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
       ]);
       lastShootTimeRef.current = currentTime;
 
-      sound.setVolume("playerCannon", 0.2);
+      sound.setVolume("playerCannon", 0.22);
       sound.play("playerCannon");
     }
 

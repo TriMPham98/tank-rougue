@@ -217,7 +217,7 @@ const TeslaArc = ({
         position: nextTargetPos,
       });
       chainCount++;
-      sound.setVolume("teslaZap", 0.30);
+      sound.setVolume("teslaZap", 0.33);
       sound.play("teslaZap");
     }
     setChainArcPoints(newChainArcs);
@@ -248,7 +248,7 @@ const TeslaArc = ({
     const lightningPoints = generateLightningPath(startPos, targetPos);
     setPrimaryArcPoints(lightningPoints);
     setForks(generateForks(lightningPoints));
-    sound.setVolume("teslaZap", 0.25);
+    sound.setVolume("teslaZap", 0.275);
     sound.play("teslaZap");
     targetPositionsRef.current.push({ id: targetId, position: targetPos });
     return () => {};
