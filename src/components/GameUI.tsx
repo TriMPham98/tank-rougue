@@ -98,6 +98,7 @@ const GameUI = () => {
     safeZoneRadius: combatZoneRadius,
     safeZoneCenter: combatZoneCenter,
     playerTankPosition,
+    playerTurretRotation,
     enemies: hostiles,
     safeZoneTargetRadius: combatZoneTargetRadius,
     safeZoneShrinkRate: combatZoneShrinkRate,
@@ -515,6 +516,7 @@ const GameUI = () => {
       {!isGameOver && !isPaused && !isMobile && (
         <TacticalDisplay
           playerTankPosition={playerTankPosition}
+          playerTurretRotation={playerTurretRotation}
           combatZoneRadius={combatZoneRadius}
           combatZoneCenter={combatZoneCenter}
           combatZoneActive={combatZoneActive}

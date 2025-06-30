@@ -3,6 +3,7 @@ import "./TacticalDisplay.css";
 
 interface TacticalDisplayProps {
   playerTankPosition: [number, number, number] | null;
+  playerTurretRotation: number;
   combatZoneRadius: number;
   combatZoneCenter: [number, number];
   combatZoneActive: boolean;
@@ -19,6 +20,7 @@ interface TacticalDisplayProps {
 
 const TacticalDisplay: React.FC<TacticalDisplayProps> = ({
   playerTankPosition,
+  playerTurretRotation,
   combatZoneRadius,
   combatZoneCenter,
   combatZoneActive,
@@ -139,13 +141,20 @@ const TacticalDisplay: React.FC<TacticalDisplayProps> = ({
             style={{
               left: `${playerX}px`,
               top: `${playerY}px`,
-            }}
-          />
+            }}>
+            <div
+              className="turret-indicator"
+              style={{
+                transform: `rotate(${playerTurretRotation}rad)`,
+              }}
+            />
+          </div>
         </div>
       </>
     );
   }, [
     playerTankPosition,
+    playerTurretRotation,
     combatZoneRadius,
     combatZoneCenter,
     combatZoneActive,

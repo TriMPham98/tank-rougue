@@ -83,6 +83,7 @@ interface GameState {
 
   // Player position for tracking
   playerTankPosition: [number, number, number];
+  playerTurretRotation: number; // Absolute turret rotation for minimap
 
   // Game entities
   enemies: Enemy[];
@@ -128,6 +129,7 @@ interface GameState {
   togglePause: () => void;
   advanceLevel: () => void;
   updatePlayerPosition: (position: [number, number, number]) => void;
+  updatePlayerTurretRotation: (rotation: number) => void;
   damageEnemy: (id: string, amount: number) => boolean; // Returns true if enemy is destroyed
   updateEnemyPosition: (id: string, position: [number, number, number]) => void; // Add function to update enemy position
   incrementEnemyDefeatCount: () => void; // New function to track enemy defeats
@@ -186,6 +188,7 @@ export const useGameState = create<GameState>((set, get) => ({
 
   // Initial player position
   playerTankPosition: [0, 0.5, 0],
+  playerTurretRotation: 0, // Initial turret rotation
 
   // Initial game entities
   enemies: [],
@@ -620,6 +623,10 @@ export const useGameState = create<GameState>((set, get) => ({
     // Enforce map boundaries to ensure player stays within playable area
     const constrainedPosition = enforceMapBoundaries(position);
     set(() => ({ playerTankPosition: constrainedPosition }));
+  },
+
+  updatePlayerTurretRotation: (rotation) => {
+    set(() => ({ playerTurretRotation: rotation }));
   },
 
   // Add function to update enemy position in state

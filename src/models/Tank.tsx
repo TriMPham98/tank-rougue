@@ -76,6 +76,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     isPaused,
     isGameOver,
     updatePlayerPosition,
+    updatePlayerTurretRotation,
     healPlayer,
     selectedWeapons,
     terrainObstacles,
@@ -256,13 +257,17 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
 
       turretRef.current.rotation.y = turretRotationRef.current;
 
+      // Update the absolute turret rotation in game state for minimap
+      let absoluteTurretAngle =
+        (tankRotationRef.current + turretRotationRef.current) % (Math.PI * 2);
+      while (absoluteTurretAngle < 0) absoluteTurretAngle += Math.PI * 2;
+      updatePlayerTurretRotation(absoluteTurretAngle);
+
       if (
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"
       ) {
-        let absoluteTurretAngle =
-          (tankRotationRef.current + turretRotationRef.current) % (Math.PI * 2);
-        while (absoluteTurretAngle < 0) absoluteTurretAngle += Math.PI * 2;
+        // Debug logging kept for development
       }
     }
 
