@@ -145,7 +145,7 @@ const TacticalDisplay: React.FC<TacticalDisplayProps> = ({
             <div
               className="turret-indicator"
               style={{
-                transform: `rotate(${playerTurretRotation}rad)`,
+                transform: `rotate(${playerTurretRotation + Math.PI / 2}rad)`,
               }}
             />
           </div>
