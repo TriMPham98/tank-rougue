@@ -238,110 +238,110 @@ const FollowCamera = memo(() => {
     const cameraRange = gameState.playerCameraRange;
     const isWireframeAssembled = gameState.isWireframeAssembled;
     const isTerrainReady = gameState.isTerrainReady;
-
+    const isFirstPersonView = gameState.isFirstPersonView;
+    const turretRotation = gameState.playerTurretRotation;
     if (playerPosition) {
-      // Set positive distance for camera to stay in front of the tank
-      const distanceInFront = cameraRange;
-
-      // Prevent re-running the animation once it's completed
-      if (animationStateRef.current.hasCompleted) {
-        // Update the camera offset based on current cameraRange when animation is completed
-        offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
-        offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
-        offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
-      }
-      // Intro camera pan animation - trigger when wireframe AND terrain are ready and animation hasn't completed
-      else if (isWireframeAssembled && isTerrainReady && !isIntroPanComplete) {
-        // Mark animation as running
-        animationStateRef.current.isRunning = true;
-
-        introPanTimeRef.current += delta;
-        const progress = Math.min(
-          introPanTimeRef.current / introPanDuration,
-          1.0
+      if (isFirstPersonView) {
+        const turretPos = [
+          playerPosition[0],
+          playerPosition[1] + 0.5,
+          playerPosition[2],
+        ];
+        const eyeHeight = 0.5;
+        const forwardOffset = 0.2;
+        const direction = new Vector3(
+          Math.sin(turretRotation),
+          0,
+          Math.cos(turretRotation)
         );
-
-        // Ease-out function for smooth deceleration
-        const easeOutProgress = 1 - Math.pow(1 - progress, 3);
-
-        // Interpolate camera height and distance
-        const currentHeight =
-          initialHeight + (8 - initialHeight) * easeOutProgress;
-        const currentDistance =
-          initialDistance +
-          (distanceInFront - initialDistance) * easeOutProgress;
-
-        // Update camera position with dramatic pan
-        offsetRef.current.x = Math.sin(camera.rotation.y) * currentDistance;
-        offsetRef.current.y = currentHeight + (cameraRange - 12) * 0.3;
-        offsetRef.current.z = Math.cos(camera.rotation.y) * currentDistance;
-
-        // Camera field of view animation - use type assertion for PerspectiveCamera
+        const cameraPos = new Vector3(...turretPos).add(
+          direction.clone().multiplyScalar(forwardOffset)
+        );
+        cameraPos.y += eyeHeight;
+        const lookAtPos = cameraPos.clone().add(direction);
+        camera.position.copy(cameraPos);
+        camera.lookAt(lookAtPos);
         const perspCamera = camera as PerspectiveCamera;
-        perspCamera.fov = initialFov + (60 - initialFov) * easeOutProgress;
+        perspCamera.fov = 75;
         perspCamera.updateProjectionMatrix();
-
-        // Additional slight rotation effect
-        const rotationOffset = (1 - easeOutProgress) * (Math.PI / 8);
-        camera.rotation.x = -0.2 - rotationOffset;
-
-        // Mark animation as complete once done
-        if (progress >= 1.0) {
-          setIsIntroPanComplete(true);
-          animationStateRef.current.hasCompleted = true;
-        }
-      }
-      // Remove the else if block that handled non-intro camera movement
-      // else if (initialPositionSetRef.current) {
-      //   offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
-      //   offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
-      //   offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
-      // }
-      else if (!initialPositionSetRef.current) {
-        // On first frame (before wireframe/terrain ready), set the initial dramatic camera position
-        if (!isWireframeAssembled || !isTerrainReady) {
-          // Use || condition here
-          // Start with camera high and far away - SET POSITION DIRECTLY
-          camera.position.set(
-            playerPosition[0],
-            playerPosition[1] + initialHeight,
-            playerPosition[2] + initialDistance
+      } else {
+        // Existing third-person logic
+        const distanceInFront = cameraRange;
+        if (animationStateRef.current.hasCompleted) {
+          offsetRef.current.x = Math.sin(camera.rotation.y) * distanceInFront;
+          offsetRef.current.y = 8 + (cameraRange - 12) * 0.3;
+          offsetRef.current.z = Math.cos(camera.rotation.y) * distanceInFront;
+        } else if (
+          isWireframeAssembled &&
+          isTerrainReady &&
+          !isIntroPanComplete
+        ) {
+          animationStateRef.current.isRunning = true;
+          introPanTimeRef.current += delta;
+          const progress = Math.min(
+            introPanTimeRef.current / introPanDuration,
+            1.0
           );
-          // SET LOOKAT DIRECTLY
+          const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+          const currentHeight =
+            initialHeight + (8 - initialHeight) * easeOutProgress;
+          const currentDistance =
+            initialDistance +
+            (distanceInFront - initialDistance) * easeOutProgress;
+          offsetRef.current.x = Math.sin(camera.rotation.y) * currentDistance;
+          offsetRef.current.y = currentHeight + (cameraRange - 12) * 0.3;
+          offsetRef.current.z = Math.cos(camera.rotation.y) * currentDistance;
+          const perspCamera = camera as PerspectiveCamera;
+          perspCamera.fov = initialFov + (60 - initialFov) * easeOutProgress;
+          perspCamera.updateProjectionMatrix();
+          const rotationOffset = (1 - easeOutProgress) * (Math.PI / 8);
+          camera.rotation.x = -0.2 - rotationOffset;
+          if (progress >= 1.0) {
+            setIsIntroPanComplete(true);
+            animationStateRef.current.hasCompleted = true;
+          }
+        } else if (!initialPositionSetRef.current) {
+          if (!isWireframeAssembled || !isTerrainReady) {
+            camera.position.set(
+              playerPosition[0],
+              playerPosition[1] + initialHeight,
+              playerPosition[2] + initialDistance
+            );
+            camera.lookAt(
+              playerPosition[0],
+              playerPosition[1],
+              playerPosition[2]
+            );
+            const perspCamera = camera as PerspectiveCamera;
+            if (perspCamera.fov !== initialFov) {
+              perspCamera.fov = initialFov;
+              perspCamera.updateProjectionMatrix();
+            }
+            camera.rotation.x = -0.2 - Math.PI / 8;
+          }
+          initialPositionSetRef.current = true;
+        }
+        if (
+          animationStateRef.current.isRunning ||
+          animationStateRef.current.hasCompleted
+        ) {
+          targetPositionRef.current.set(
+            playerPosition[0] + offsetRef.current.x,
+            playerPosition[1] + offsetRef.current.y,
+            playerPosition[2] + offsetRef.current.z
+          );
+          const lerpFactor = animationStateRef.current.isRunning ? 0.05 : 0.03;
+          camera.position.lerp(targetPositionRef.current, lerpFactor);
           camera.lookAt(
             playerPosition[0],
             playerPosition[1],
             playerPosition[2]
           );
-          // Ensure initial FOV is also set here
-          const perspCamera = camera as PerspectiveCamera;
-          if (perspCamera.fov !== initialFov) {
-            // Only set if different
-            perspCamera.fov = initialFov;
-            perspCamera.updateProjectionMatrix();
-          }
-          // Ensure initial rotation is set here too
-          camera.rotation.x = -0.2 - Math.PI / 8; // Match initial rotation offset
         }
-        initialPositionSetRef.current = true;
-      }
-
-      // Only update target and lerp if the animation is running or completed
-      if (
-        animationStateRef.current.isRunning ||
-        animationStateRef.current.hasCompleted
-      ) {
-        targetPositionRef.current.set(
-          playerPosition[0] + offsetRef.current.x,
-          playerPosition[1] + offsetRef.current.y,
-          playerPosition[2] + offsetRef.current.z
-        );
-
-        // Use a slower lerp for smoother camera movement AFTER intro animation
-        // Faster lerp during intro animation for more dramatic effect
-        const lerpFactor = animationStateRef.current.isRunning ? 0.05 : 0.03;
-        camera.position.lerp(targetPositionRef.current, lerpFactor);
-        camera.lookAt(playerPosition[0], playerPosition[1], playerPosition[2]);
+        // Set FOV to 60 in third-person view
+        const perspCamera = camera as PerspectiveCamera;
+        perspCamera.fov = 60;
+        perspCamera.updateProjectionMatrix();
       }
     }
   });

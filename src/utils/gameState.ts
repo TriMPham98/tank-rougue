@@ -152,6 +152,8 @@ interface GameState {
   returnToMainMenu: () => void; // New action to return to main menu
   setOrientationWarning: (show: boolean) => void; // New action to control orientation warning
   checkOrientation: () => void; // New action to check device orientation
+  toggleFirstPersonView: () => void;
+  isFirstPersonView: boolean;
 }
 
 // Create the game state store
@@ -201,6 +203,7 @@ export const useGameState = create<GameState>((set, get) => ({
   shouldResetCameraAnimation: true,
   isWireframeAssembled: false, // Initial state
   isTerrainReady: false, // Initial state
+  isFirstPersonView: false,
 
   // Mobile orientation handling
   isLandscapeOrientationRequired: true, // Landscape orientation is required for mobile
@@ -339,6 +342,7 @@ export const useGameState = create<GameState>((set, get) => ({
       availableWeapons,
       selectedWeapons: [],
       showOrientationWarning: false, // Reset orientation warning
+      isFirstPersonView: false,
 
       // Reset safe zone
       safeZoneRadius: 50,
@@ -894,6 +898,7 @@ export const useGameState = create<GameState>((set, get) => ({
       moveZ: 0,
       turretRotation: null,
       isFiring: false,
+      isFirstPersonView: false,
     });
   },
 
@@ -938,6 +943,9 @@ export const useGameState = create<GameState>((set, get) => ({
       set(() => ({ showOrientationWarning: false }));
     }
   },
+
+  toggleFirstPersonView: () =>
+    set((state) => ({ isFirstPersonView: !state.isFirstPersonView })),
 }));
 
 // Helper function to keep entities within map boundaries

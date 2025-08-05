@@ -9,6 +9,7 @@ interface KeyboardControls {
   turretLeft: boolean;
   turretRight: boolean;
   shoot: boolean;
+  povToggle: boolean;
 }
 
 export const useKeyboardControls = (): KeyboardControls => {
@@ -20,6 +21,7 @@ export const useKeyboardControls = (): KeyboardControls => {
     turretLeft: false,
     turretRight: false,
     shoot: false,
+    povToggle: false,
   });
 
   useEffect(() => {
@@ -50,6 +52,9 @@ export const useKeyboardControls = (): KeyboardControls => {
           setKeys((keys) => ({ ...keys, shoot: true }));
           debug.log("Shoot key pressed!");
           break;
+        case "v":
+          setKeys((keys) => ({ ...keys, povToggle: true }));
+          break;
       }
     };
 
@@ -76,6 +81,9 @@ export const useKeyboardControls = (): KeyboardControls => {
         case " ": // Spacebar
           setKeys((keys) => ({ ...keys, shoot: false }));
           debug.log("Shoot key released!");
+          break;
+        case "v":
+          setKeys((keys) => ({ ...keys, povToggle: false }));
           break;
       }
     };

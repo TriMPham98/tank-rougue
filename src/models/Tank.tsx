@@ -48,6 +48,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
   const isInitializedRef = useRef(false);
   const _quat = useRef(new Quaternion()).current;
   const _euler = useRef(new Euler()).current;
+  const prevPovToggleRef = useRef(false);
 
   const [projectiles, setProjectiles] = useState<
     { id: string; position: [number, number, number]; rotation: number }[]
@@ -61,6 +62,7 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
     turretLeft: keyTurretLeft,
     turretRight: keyTurretRight,
     shoot: keyShoot,
+    povToggle,
   } = useKeyboardControls();
 
   const {
@@ -322,6 +324,11 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
         tankRef.current.position.z,
       ];
     }
+
+    if (povToggle && !prevPovToggleRef.current) {
+      useGameState.getState().toggleFirstPersonView();
+    }
+    prevPovToggleRef.current = povToggle;
   });
 
   const removeProjectile = (id: string) => {
