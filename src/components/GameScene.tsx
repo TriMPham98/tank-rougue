@@ -247,8 +247,8 @@ const FollowCamera = memo(() => {
           playerPosition[1] + 0.5,
           playerPosition[2],
         ];
-        const eyeHeight = 1.0;
-        const forwardOffset = -2.0;
+        const eyeHeight = 1.5;
+        const forwardOffset = -4.5;
         const direction = new Vector3(
           Math.sin(turretRotation),
           0,
@@ -463,9 +463,6 @@ const IntroSpotlight = () => {
     />
   );
 };
-
-// Scene Content as a separate component to load within Canvas
-interface SceneContentProps {}
 
 const SceneContent = memo((): JSX.Element => {
   const getState = useRef(useGameState.getState).current;
