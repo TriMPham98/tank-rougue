@@ -247,8 +247,8 @@ const FollowCamera = memo(() => {
           playerPosition[1] + 0.5,
           playerPosition[2],
         ];
-        const eyeHeight = 0.5;
-        const forwardOffset = 0.2;
+        const eyeHeight = 1.0;
+        const forwardOffset = -2.0;
         const direction = new Vector3(
           Math.sin(turretRotation),
           0,
