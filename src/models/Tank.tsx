@@ -153,6 +153,7 @@ const Tank = ({ position = [0, 0, 0], isFirstPerson = false }: TankProps) => {
     let moved = false;
     const moveSpeed = playerSpeed;
     const turnSpeed = 4.0;
+    const turretTurnSpeed = isFirstPerson ? 2.0 : 4.0;
 
     const currentQuat = tankRef.current.quaternion;
 
@@ -225,8 +226,8 @@ const Tank = ({ position = [0, 0, 0], isFirstPerson = false }: TankProps) => {
     );
 
     if (turretRef.current) {
-      if (keyTurretLeft) turretRotationRef.current += delta * 4.0;
-      if (keyTurretRight) turretRotationRef.current -= delta * 4.0;
+      if (keyTurretLeft) turretRotationRef.current += delta * turretTurnSpeed;
+      if (keyTurretRight) turretRotationRef.current -= delta * turretTurnSpeed;
 
       if (touchTurretRotation !== null) {
         const targetAbsoluteAngle = touchTurretRotation;
@@ -238,7 +239,9 @@ const Tank = ({ position = [0, 0, 0], isFirstPerson = false }: TankProps) => {
         while (desiredRelativeAngle >= Math.PI * 2)
           desiredRelativeAngle -= Math.PI * 2;
 
-        const turretLerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 5.0);
+        const turretLerpFactor = isFirstPerson
+          ? 1.0 - Math.exp(-turnSpeed * delta * 2.5)
+          : 1.0 - Math.exp(-turnSpeed * delta * 5.0);
 
         let angleDifference = desiredRelativeAngle - turretRotationRef.current;
 
