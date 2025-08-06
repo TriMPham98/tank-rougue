@@ -465,11 +465,9 @@ const IntroSpotlight = () => {
 };
 
 // Scene Content as a separate component to load within Canvas
-interface SceneContentProps {
-  playerTank: React.ReactNode;
-}
+interface SceneContentProps {}
 
-const SceneContent = memo(({ playerTank }: SceneContentProps) => {
+const SceneContent = memo((): JSX.Element => {
   const getState = useRef(useGameState.getState).current;
   const {
     ambientIntensity,
@@ -485,6 +483,9 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
   const [terrainObstacles, setTerrainObstacles] = useState(
     getState().terrainObstacles
   );
+  const [isFirstPersonView, setIsFirstPersonView] = useState(
+    getState().isFirstPersonView
+  );
 
   useEffect(() => {
     const unsubscribe = useGameState.subscribe((state) => {
@@ -494,6 +495,7 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       if (state.terrainObstacles !== terrainObstacles) {
         setTerrainObstacles(state.terrainObstacles);
       }
+      setIsFirstPersonView(state.isFirstPersonView);
     });
 
     return unsubscribe;
@@ -522,7 +524,7 @@ const SceneContent = memo(({ playerTank }: SceneContentProps) => {
       <SpotlightUpdater />
       <IntroSpotlight />
       <SafeZone />
-      {playerTank}
+      <Tank position={[0, 0.5, 0]} isFirstPerson={isFirstPersonView} />
       {enemies.map((enemy) => (
         <EnemyTank key={`enemy-${enemy.id}`} enemy={enemy} />
       ))}
@@ -703,7 +705,7 @@ const GameScene = () => {
           <color attach="background" args={[skyColor]} />
           <fog attach="fog" args={[skyColor, fogNear, fogFar]} />
           <TerrainObstacleGenerator />
-          <SceneContent playerTank={<Tank position={[0, 0.5, 0]} />} />
+          <SceneContent />
         </Canvas>
         <MobileJoysticks />
       </div>

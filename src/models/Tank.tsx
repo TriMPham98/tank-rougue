@@ -16,6 +16,7 @@ import { WeaponInstance } from "../utils/weapons";
 
 interface TankProps {
   position: [number, number, number];
+  isFirstPerson?: boolean;
 }
 
 const SIDE_WEAPON_DISTANCE = 2.75;
@@ -36,7 +37,7 @@ const WeaponComponents: Record<string, WeaponComponentType> = {
   tesla: TeslaCoil,
 };
 
-const Tank = ({ position = [0, 0, 0] }: TankProps) => {
+const Tank = ({ position = [0, 0, 0], isFirstPerson = false }: TankProps) => {
   const tankRef = useRef<Group>(null);
   const turretRef = useRef<Group>(null);
   const [isBraking, setIsBraking] = useState(false);
@@ -630,22 +631,29 @@ const Tank = ({ position = [0, 0, 0] }: TankProps) => {
               roughness={0.2}
             />
           </Cylinder>
-          <Box args={[0.25, 0.15, 0.15]} position={[0, 0.4, 0.5]} castShadow>
-            <meshStandardMaterial
-              color="black"
-              emissive="blue"
-              emissiveIntensity={0.3}
-            />
-          </Box>
-          <Sphere args={[0.15, 16, 16]} position={[0, 0.6, 0.2]} castShadow>
-            <meshStandardMaterial
-              color="cyan"
-              emissive="cyan"
-              emissiveIntensity={0.6 + Math.sin(Date.now() * 0.005) * 0.4}
-              transparent
-              opacity={0.85}
-            />
-          </Sphere>
+          {!isFirstPerson && (
+            <>
+              <Box
+                args={[0.25, 0.15, 0.15]}
+                position={[0, 0.4, 0.5]}
+                castShadow>
+                <meshStandardMaterial
+                  color="black"
+                  emissive="blue"
+                  emissiveIntensity={0.3}
+                />
+              </Box>
+              <Sphere args={[0.15, 16, 16]} position={[0, 0.6, 0.2]} castShadow>
+                <meshStandardMaterial
+                  color="cyan"
+                  emissive="cyan"
+                  emissiveIntensity={0.6 + Math.sin(Date.now() * 0.005) * 0.4}
+                  transparent
+                  opacity={0.85}
+                />
+              </Sphere>
+            </>
+          )}
         </group>
       </group>
 
