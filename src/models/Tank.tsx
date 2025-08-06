@@ -152,7 +152,7 @@ const Tank = ({ position = [0, 0, 0], isFirstPerson = false }: TankProps) => {
 
     let moved = false;
     const moveSpeed = playerSpeed;
-    const turnSpeed = 4.0;
+    const turnSpeed = isFirstPerson ? 1.0 : 4.0;
     const turretTurnSpeed = isFirstPerson ? 1.0 : 4.0;
 
     const currentQuat = tankRef.current.quaternion;
@@ -170,7 +170,7 @@ const Tank = ({ position = [0, 0, 0], isFirstPerson = false }: TankProps) => {
         targetAngleY
       );
 
-      const slerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 2.5);
+      const slerpFactor = 1.0 - Math.exp(-turnSpeed * delta * 1.25);
       currentQuat.slerp(targetQuat, slerpFactor);
     }
 
