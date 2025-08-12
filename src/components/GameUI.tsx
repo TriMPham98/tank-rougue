@@ -747,7 +747,7 @@ const GameUI = () => {
           {!isMobile && (
             <>
               <span>[WASD] Move</span> | <span>[J/K] Aim</span> |{" "}
-              <span>[ESC] Pause</span>
+              <span>[V] View</span> | <span>[ESC] Pause</span>
             </>
           )}
         </div>
