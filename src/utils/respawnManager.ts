@@ -492,12 +492,46 @@ export const useRespawnManager = () => {
               // 5% chance to drop a health power-up
               if (Math.random() < 0.05) {
                 const { spawnPowerUp } = state;
+                // Slight random offset so multiple drops don't overlap perfectly
+                const offsetX = (Math.random() - 0.5) * 1.5;
+                const offsetZ = (Math.random() - 0.5) * 1.5;
+                const dropPosition: [number, number, number] = [
+                  enemy.position[0] + offsetX,
+                  0.5,
+                  enemy.position[2] + offsetZ,
+                ];
                 spawnPowerUp({
-                  position: enemy.position,
+                  position: dropPosition,
                   type: "health",
                 });
                 if (SPAWN_STATS_DEBUG) {
                   debug.log(`Enemy ${enemy.id} dropped a health power-up`);
+                }
+              }
+              // 35% chance to drop coins; value scales mildly with level and enemy type
+              if (Math.random() < 0.35) {
+                const { spawnPowerUp } = state;
+                const base =
+                  enemy.type === "tank" ? 3 : enemy.type === "turret" ? 4 : 2;
+                const levelFactor = Math.max(1, Math.floor(state.level / 5));
+                const coinValue = Math.min(
+                  99,
+                  base + Math.floor(Math.random() * (2 + levelFactor))
+                );
+                const offsetX = (Math.random() - 0.5) * 1.5;
+                const offsetZ = (Math.random() - 0.5) * 1.5;
+                const dropPosition: [number, number, number] = [
+                  enemy.position[0] + offsetX,
+                  0.5,
+                  enemy.position[2] + offsetZ,
+                ];
+                spawnPowerUp({
+                  position: dropPosition,
+                  type: "coin",
+                  value: coinValue,
+                });
+                if (SPAWN_STATS_DEBUG) {
+                  debug.log(`Enemy ${enemy.id} dropped ${coinValue} coin(s)`);
                 }
               }
             });

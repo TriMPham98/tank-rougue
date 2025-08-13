@@ -75,30 +75,50 @@ const PowerUpItem = ({ powerUp }: PowerUpItemProps) => {
     }
   });
 
+  const isCoin = powerUp.type === "coin";
+
   return (
     <group ref={powerUpRef} position={powerUp.position}>
-      {/* Power-up base */}
-      <Sphere args={[0.6, 16, 16]}>
-        <meshStandardMaterial
-          ref={materialRef}
-          color="red"
-          transparent
-          opacity={0.7}
-          emissive="red"
-          emissiveIntensity={0.5}
-        />
-      </Sphere>
-
-      {/* Health pack cross symbol */}
-      <Box args={[0.3, 0.8, 0.3]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="white" />
-      </Box>
-      <Box args={[0.8, 0.3, 0.3]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="white" />
-      </Box>
-
-      {/* Power-up glow */}
-      <pointLight color="red" intensity={1} distance={5} decay={2} />
+      {isCoin ? (
+        <>
+          <Sphere args={[0.35, 16, 16]}>
+            <meshStandardMaterial
+              ref={materialRef}
+              color="#FFD54F"
+              transparent
+              opacity={0.9}
+              emissive="#FFC107"
+              emissiveIntensity={0.6}
+              metalness={0.6}
+              roughness={0.3}
+            />
+          </Sphere>
+          <pointLight color="#FFC107" intensity={1} distance={4} decay={2} />
+        </>
+      ) : (
+        <>
+          {/* Health power-up */}
+          <Sphere args={[0.6, 16, 16]}>
+            <meshStandardMaterial
+              ref={materialRef}
+              color="red"
+              transparent
+              opacity={0.7}
+              emissive="red"
+              emissiveIntensity={0.5}
+            />
+          </Sphere>
+          {/* Health pack cross symbol */}
+          <Box args={[0.3, 0.8, 0.3]} position={[0, 0, 0]}>
+            <meshStandardMaterial color="white" />
+          </Box>
+          <Box args={[0.8, 0.3, 0.3]} position={[0, 0, 0]}>
+            <meshStandardMaterial color="white" />
+          </Box>
+          {/* Power-up glow */}
+          <pointLight color="red" intensity={1} distance={5} decay={2} />
+        </>
+      )}
     </group>
   );
 };

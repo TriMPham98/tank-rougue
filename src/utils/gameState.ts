@@ -15,7 +15,8 @@ export interface Enemy {
 export interface PowerUp {
   id: string;
   position: [number, number, number];
-  type: "health";
+  type: "health" | "coin";
+  value?: number; // Used for coins
 }
 
 // Define available stats for upgrades
@@ -64,6 +65,7 @@ interface GameState {
   playerPenetration: number; // Number of enemies a bullet can pass through
   playerLevel: number; // Player's current level
   score: number;
+  coins: number; // Player currency collected from coin drops
   level: number;
   enemiesDefeated: number;
   enemiesRequiredForNextLevel: number;
@@ -171,6 +173,7 @@ export const useGameState = create<GameState>((set, get) => ({
   playerPenetration: 0, // No penetration at start
   playerLevel: 1, // Initial player level
   score: 0,
+  coins: 0,
   level: 1,
   enemiesDefeated: 0,
   enemiesRequiredForNextLevel: 1, // Changed: Initial threshold - level 1 only needs 1 enemy
@@ -295,16 +298,32 @@ export const useGameState = create<GameState>((set, get) => ({
       const newPowerUps = state.powerUps.filter((p) => p.id !== id);
       let updates: Partial<GameState> = { powerUps: newPowerUps };
 
-      // Only handle health power-up
-      updates = {
-        ...updates,
-        playerHealth: Math.min(state.playerMaxHealth, state.playerHealth + 25),
-      };
-
-      // Only play health pickup sound if collected by player, not when expired
-      if (byPlayer) {
-        SoundManager.setVolume("healthPickUp", 0.385);
-        SoundManager.play("healthPickUp");
+      // Handle power-up by type
+      if (powerUp.type === "health") {
+        // Apply only if collected by player or on expire? Keep original behavior: heal only when collected
+        if (byPlayer) {
+          updates = {
+            ...updates,
+            playerHealth: Math.min(
+              state.playerMaxHealth,
+              state.playerHealth + 25
+            ),
+          };
+          SoundManager.setVolume("healthPickUp", 0.385);
+          SoundManager.play("healthPickUp");
+        }
+      } else if (powerUp.type === "coin") {
+        // Award coins only when collected by player
+        if (byPlayer) {
+          const coinValue = powerUp.value ?? 1;
+          updates = {
+            ...updates,
+            coins: (state.coins || 0) + coinValue,
+          };
+          // Reuse pickup sound for now
+          SoundManager.setVolume("healthPickUp", 0.3);
+          SoundManager.play("healthPickUp");
+        }
       }
 
       return updates;
@@ -327,6 +346,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerBulletVelocity: 15,
       playerLevel: 1, // Reset player level
       score: 0,
+      coins: 0,
       level: 1,
       playerTankPosition: [0, 0.5, 0],
       enemies: [],
@@ -866,6 +886,7 @@ export const useGameState = create<GameState>((set, get) => ({
       playerPenetration: 0,
       playerLevel: 1,
       score: 0,
+      coins: 0,
       level: 1,
       playerTankPosition: [0, 0.5, 0],
       enemies: [],
